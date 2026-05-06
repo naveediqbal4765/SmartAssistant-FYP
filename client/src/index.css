@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ====================== */
+/* Senior-Friendly Styles */
+/* ====================== */
+
+body {
+  font-size: 1.125rem;        /* Larger default text for seniors */
+  line-height: 1.7;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: #f8fafc;
+}
+
+/* Large, easy-to-tap buttons */
+.btn-large {
+  @apply px-8 py-5 text-xl font-semibold rounded-3xl shadow-lg 
+         transition-all active:scale-95 focus:outline-none focus:ring-4;
+}
+
+/* Cards used in dashboard */
+.senior-card {
+  @apply bg-white p-8 rounded-3xl shadow-xl border border-gray-100;
+}
+
+/* High contrast mode for elderly users */
+.high-contrast {
+  background-color: #ffffff;
+  color: #111827;
+}
+
+/* Big headings */
+h1 {
+  @apply text-4xl md:text-5xl font-bold text-gray-900 mb-6;
+}
+
+h2 {
+  @apply text-3xl font-semibold text-gray-800 mb-4;
+}
+
+/* Make inputs and buttons easier to use */
+input, select, textarea {
+  @apply text-lg px-6 py-4 border-2 border-gray-300 rounded-2xl 
+         focus:border-blue-600 focus:outline-none w-full;
+}
+
+/* SOS Button - Very Important */
+.sos-button {
+  @apply fixed bottom-8 right-8 bg-red-600 hover:bg-red-700 
+         text-white font-bold text-2xl px-10 py-6 rounded-3xl shadow-2xl 
+         flex items-center gap-4 z-50 transition-all active:scale-95;
+}

@@ -1,0 +1,14 @@
+{
+  "name": "smart-senior-assistant",
+  "version": "1.0.0",
+  "description": "Smart Assistant for Senior Citizens",
+  "scripts": {
+    "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
+    "backend": "cd server && nodemon server.js",
+    "frontend": "cd client && npm run dev",
+    "install-all": "cd server && npm install && cd ../client && npm install"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
