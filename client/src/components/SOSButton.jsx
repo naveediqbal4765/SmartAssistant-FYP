@@ -1,6 +1,13 @@
 import { AlertTriangle } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 
 export default function SOSButton() {
+  const location = useLocation();
+
+  if (location.pathname === '/chat') {
+    return null;
+  }
+
   const triggerSOS = () => {
     if (window.confirm("🚨 Are you sure you want to send SOS? This will alert your emergency contacts and nearby volunteers.")) {
       alert("🚨 SOS ACTIVATED!\n\nEmergency contacts and nearby volunteers have been notified.\nHelp is on the way!");

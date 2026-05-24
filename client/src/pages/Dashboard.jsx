@@ -1,4 +1,4 @@
-import { LogOut, User, Bell, Heart, Phone, Clipboard, Activity, Users, Award, Calendar, Eye, FileText } from 'lucide-react';
+import { LogOut, User, Bell, Heart, Phone, Clipboard, Activity, Users, Award, Calendar, MessageCircle, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export default function Dashboard({ role, onLogout }) {
@@ -27,7 +27,8 @@ export default function Dashboard({ role, onLogout }) {
       { title: "My Requests", icon: <Clipboard size={32} />, color: "bg-gradient-to-r from-purple-500 to-purple-700", action: () => navigate('/my-requests') },
       { title: "Medication", icon: <Bell size={32} />, color: "bg-gradient-to-r from-orange-500 to-orange-700", action: () => alert("Medication Reminders - Coming Soon") },
       { title: "Emergency SOS", icon: <Phone size={32} />, color: "bg-gradient-to-r from-red-500 to-red-700", action: () => alert("Emergency SOS - Coming Soon") },
-      { title: "My Documents", icon: <FileText size={32} />, color: "bg-gradient-to-r from-indigo-500 to-indigo-700", action: () => navigate('/documents') }
+      { title: "My Documents", icon: <FileText size={32} />, color: "bg-gradient-to-r from-indigo-500 to-indigo-700", action: () => navigate('/documents') },
+      { title: "Chat", icon: <MessageCircle size={32} />, color: "bg-gradient-to-r from-emerald-500 to-emerald-700", action: () => navigate('/chat') }
     ];
 
     return (
@@ -79,7 +80,8 @@ export default function Dashboard({ role, onLogout }) {
       { title: "My Profile", icon: <User size={32} />, color: "bg-gradient-to-r from-purple-500 to-purple-700", action: () => navigate('/profile') },
       { title: "My Rewards", icon: <Award size={32} />, color: "bg-gradient-to-r from-yellow-500 to-yellow-700", action: () => alert("My Rewards - Coming Soon") },
       { title: "Help Seniors", icon: <Users size={32} />, color: "bg-gradient-to-r from-indigo-500 to-indigo-700", action: () => alert("Help Seniors - Coming Soon") },
-      { title: "Impact Stats", icon: <Activity size={32} />, color: "bg-gradient-to-r from-teal-500 to-teal-700", action: () => alert("Impact Stats - Coming Soon") }
+      { title: "Impact Stats", icon: <Activity size={32} />, color: "bg-gradient-to-r from-teal-500 to-teal-700", action: () => alert("Impact Stats - Coming Soon") },
+      { title: "Chat", icon: <MessageCircle size={32} />, color: "bg-gradient-to-r from-emerald-500 to-emerald-700", action: () => navigate('/chat') }
     ];
 
     return (
@@ -131,7 +133,8 @@ export default function Dashboard({ role, onLogout }) {
       { title: "Medication Schedule", icon: <Calendar size={32} />, color: "bg-gradient-to-r from-teal-500 to-teal-700", action: () => alert("Medication Schedule - Coming Soon") },
       { title: "My Profile", icon: <User size={32} />, color: "bg-gradient-to-r from-indigo-500 to-indigo-700", action: () => navigate('/profile') },
       { title: "Emergency Alerts", icon: <Bell size={32} />, color: "bg-gradient-to-r from-red-500 to-red-700", action: () => alert("Emergency Alerts - Coming Soon") },
-      { title: "Care Notes", icon: <FileText size={32} />, color: "bg-gradient-to-r from-orange-500 to-orange-700", action: () => alert("Care Notes - Coming Soon") }
+      { title: "Care Notes", icon: <FileText size={32} />, color: "bg-gradient-to-r from-orange-500 to-orange-700", action: () => alert("Care Notes - Coming Soon") },
+      { title: "Chat", icon: <MessageCircle size={32} />, color: "bg-gradient-to-r from-emerald-500 to-emerald-700", action: () => navigate('/chat') }
     ];
 
     return (

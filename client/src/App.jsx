@@ -13,6 +13,9 @@ import MyRequests from './pages/MyRequests';
 import SocialLoginHandler from './pages/SocialLoginHandler';
 import PrivacySettings from './pages/PrivacySettings';
 import ActivityLogs from './pages/ActivityLogs';
+import ChatPage from './features/communication/chat/pages/ChatPage';
+import { disconnectChatSocket } from './features/communication/chat/services/socket';
+import NotificationBell from './features/communication/notifications/NotificationBell';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -67,6 +70,7 @@ function App() {
 
   const handleLogout = () => {
     console.log('🚪 User logged out');
+    disconnectChatSocket();
     setIsAuthenticated(false);
     setUserRole(null);
     localStorage.removeItem('token');
@@ -171,6 +175,15 @@ function App() {
               </PrivateRoute>
             }
           />
+
+          <Route
+            path="/chat"
+            element={
+              <PrivateRoute>
+                <ChatPage />
+              </PrivateRoute>
+            }
+          />
           
           <Route path="/social-login" element={<SocialLoginHandler onLogin={handleLogin} />} />
           
@@ -178,6 +191,8 @@ function App() {
           {/* Default Route */}
           <Route path="/" element={<Navigate to="/login" />} />
         </Routes>
+
+        {isAuthenticated && <NotificationBell />}
 
         {/* SOS Button - Only show when authenticated */}
         {isAuthenticated && <SOSButton />}

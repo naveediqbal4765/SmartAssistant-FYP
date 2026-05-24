@@ -31,10 +31,12 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use('/api/auth', require('./modules/auth/auth.routes'));
 app.use('/api/user', require('./modules/profile/profile.routes'));
 app.use('/api/tasks', require('./modules/tasks/task.routes'));
+app.use('/api/communication', require('./modules/communication/communication.routes'));
 
 app.get('/', (req, res) => {
   res.json({ message: 'Smart Assistant Backend is Running!' });

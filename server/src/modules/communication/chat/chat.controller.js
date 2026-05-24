@@ -1,11 +1,13 @@
 const mongoose = require('mongoose');
 const chatService = require('./chat.service');
+const { emitNewMessage } = require('../sockets/socket.manager');
+const notificationService = require('../notifications/notification.service');
 
 const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
 const sendMessage = async (req, res) => {
   try {
-    const { receiverId, message, messageType, mediaUrl } = req.body;
+    const { receiverId, message, messageType, mediaUrl, duration } = req.body;
 
     if (!receiverId || !isValidObjectId(receiverId)) {
       return res.status(400).json({ success: false, msg: 'Valid receiverId is required' });
@@ -20,13 +22,27 @@ const sendMessage = async (req, res) => {
       receiverId,
       message,
       messageType,
-      mediaUrl
+      mediaUrl,
+      duration
     });
+
+    emitNewMessage(chatMessage);
+
+    try {
+      await notificationService.createNotification({
+        userId: receiverId,
+        type: 'chat',
+        title: `New message from ${req.user.name || 'Someone'}`,
+        message: message || 'Sent an attachment'
+      });
+    } catch (notificationErr) {
+      console.error('Chat notification failed:', notificationErr.message);
+    }
 
     return res.status(201).json({ success: true, message: chatMessage });
   } catch (err) {
     console.error('Send chat message error:', err);
-    return res.status(500).json({ success: false, msg: 'Server error' });
+    return res.status(err.status || 500).json({ success: false, msg: err.status ? err.message : 'Server error' });
   }
 };
 
@@ -43,7 +59,7 @@ const getMessages = async (req, res) => {
     return res.json({ success: true, messages });
   } catch (err) {
     console.error('Fetch chat messages error:', err);
-    return res.status(500).json({ success: false, msg: 'Server error' });
+    return res.status(err.status || 500).json({ success: false, msg: err.status ? err.message : 'Server error' });
   }
 };
 

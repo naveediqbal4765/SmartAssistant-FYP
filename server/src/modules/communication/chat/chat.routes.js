@@ -1,5 +1,7 @@
 const express = require('express');
 const auth = require('../../../middleware/auth');
+const conversationRoutes = require('./conversation.routes');
+const { searchUsers } = require('./conversation.controller');
 const {
   sendMessage,
   getMessages
@@ -7,6 +9,8 @@ const {
 
 const router = express.Router();
 
+router.use('/conversations', conversationRoutes);
+router.get('/search-users', auth, searchUsers);
 router.post('/message', auth, sendMessage);
 router.get('/:userId', auth, getMessages);
 

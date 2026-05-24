@@ -1,5 +1,6 @@
 const Task = require('./task.model');
 const ActivityLog = require('../../shared/models/ActivityLog');
+const notificationService = require('../communication/notifications/notification.service');
 
 const createTaskRequest = async (user, payload) => {
   if (user.role !== 'elder') {
@@ -33,6 +34,17 @@ const createTaskRequest = async (user, payload) => {
     });
   } catch (logErr) {
     console.error('Task activity log failed:', logErr.message);
+  }
+
+  try {
+    await notificationService.createNotification({
+      userId: user._id,
+      type: 'task',
+      title: 'Task request created',
+      message: `Your help request "${title}" was submitted.`
+    });
+  } catch (notificationErr) {
+    console.error('Task notification failed:', notificationErr.message);
   }
 
   return {
@@ -85,6 +97,17 @@ const cancelTask = async (taskId, user) => {
 
   task.status = 'cancelled';
   await task.save();
+
+  try {
+    await notificationService.createNotification({
+      userId: user._id,
+      type: 'task',
+      title: 'Task request cancelled',
+      message: `Your help request "${task.title}" was cancelled.`
+    });
+  } catch (notificationErr) {
+    console.error('Task cancellation notification failed:', notificationErr.message);
+  }
 
   return { status: 200, body: { success: true, msg: 'Task cancelled' } };
 };
