@@ -6,7 +6,6 @@ import Dashboard from './pages/Dashboard';
 import TaskRequest from './pages/TaskRequest';
 import Profile from './pages/Profile';
 import ForgotPassword from './pages/ForgotPassword';
-import SOSButton from './components/SOSButton';
 import DocumentVault from './pages/DocumentVault';
 import RequestHelp from './pages/RequestHelp';
 import MyRequests from './pages/MyRequests';
@@ -14,6 +13,7 @@ import SocialLoginHandler from './pages/SocialLoginHandler';
 import PrivacySettings from './pages/PrivacySettings';
 import ActivityLogs from './pages/ActivityLogs';
 import ChatPage from './features/communication/chat/pages/ChatPage';
+import GroupPage from './features/communication/groups/GroupPage';
 import { disconnectChatSocket } from './features/communication/chat/services/socket';
 import NotificationBell from './features/communication/notifications/NotificationBell';
 
@@ -184,6 +184,24 @@ function App() {
               </PrivateRoute>
             }
           />
+
+          <Route
+            path="/groups"
+            element={
+              <PrivateRoute>
+                <GroupPage />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/groups/:groupId"
+            element={
+              <PrivateRoute>
+                <GroupPage />
+              </PrivateRoute>
+            }
+          />
           
           <Route path="/social-login" element={<SocialLoginHandler onLogin={handleLogin} />} />
           
@@ -194,8 +212,6 @@ function App() {
 
         {isAuthenticated && <NotificationBell />}
 
-        {/* SOS Button - Only show when authenticated */}
-        {isAuthenticated && <SOSButton />}
       </div>
     </Router>
   );

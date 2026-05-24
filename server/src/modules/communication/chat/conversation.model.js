@@ -15,6 +15,10 @@ const ConversationSchema = new mongoose.Schema({
     type: Date,
     default: null
   },
+  hiddenFor: {
+    type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    default: []
+  },
   createdAt: {
     type: Date,
     default: Date.now

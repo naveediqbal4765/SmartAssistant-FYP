@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Conversation = require('./conversation.model');
+const ChatMessage = require('./chat.model');
 const User = require('../../../shared/models/User');
 const Task = require('../../../shared/models/Task');
 
@@ -251,6 +252,9 @@ const upsertConversationForMessage = async (message) => {
     existingConversation.lastMessage = message._id;
     existingConversation.lastMessageAt = now;
     existingConversation.updatedAt = now;
+    existingConversation.hiddenFor = (existingConversation.hiddenFor || []).filter((userId) => (
+      !participants.map(toId).includes(toId(userId))
+    ));
     return existingConversation.save();
   }
 
@@ -263,6 +267,29 @@ const upsertConversationForMessage = async (message) => {
   });
 };
 
+const createConversation = async (userId, participantId) => {
+  await assertCanCommunicate(userId, participantId);
+
+  const existingConversation = await findConversation(userId, participantId);
+  if (existingConversation) {
+    existingConversation.hiddenFor = (existingConversation.hiddenFor || []).filter((hiddenUserId) => (
+      toId(hiddenUserId) !== toId(userId)
+    ));
+    existingConversation.updatedAt = new Date();
+    await existingConversation.save();
+    return existingConversation;
+  }
+
+  const now = new Date();
+  return Conversation.create({
+    participants: [userId, participantId],
+    lastMessage: null,
+    lastMessageAt: null,
+    createdAt: now,
+    updatedAt: now
+  });
+};
+
 const getConversations = async (userId) => {
   const currentUser = await getUserById(userId);
   if (!currentUser) {
@@ -270,7 +297,7 @@ const getConversations = async (userId) => {
   }
 
   const [conversations, allowedParticipants] = await Promise.all([
-    Conversation.find({ participants: userId })
+    Conversation.find({ participants: userId, hiddenFor: { $ne: userId } })
       .populate('participants', 'name email role phone linkedSeniorId linkedCaregivers')
       .populate('lastMessage')
       .sort({ lastMessageAt: -1, updatedAt: -1 }),
@@ -320,10 +347,63 @@ const getConversations = async (userId) => {
   return visibleConversations;
 };
 
+const hideConversationForUser = async (conversationId, userId) => {
+  if (!mongoose.Types.ObjectId.isValid(conversationId)) {
+    throw createServiceError(400, 'Valid conversation id is required');
+  }
+
+  const conversation = await Conversation.findById(conversationId);
+  if (!conversation) {
+    throw createServiceError(404, 'Conversation not found');
+  }
+
+  const isParticipant = conversation.participants.map(toId).includes(toId(userId));
+  if (!isParticipant) {
+    throw createServiceError(403, 'Not authorized to delete this conversation');
+  }
+
+  await Conversation.updateOne(
+    { _id: conversationId },
+    { $addToSet: { hiddenFor: userId } },
+    { runValidators: false }
+  );
+
+  return conversation;
+};
+
+const hardDeleteConversation = async (conversationId, userId) => {
+  if (!mongoose.Types.ObjectId.isValid(conversationId)) {
+    throw createServiceError(400, 'Valid conversation id is required');
+  }
+
+  const conversation = await Conversation.findById(conversationId);
+  if (!conversation) {
+    throw createServiceError(404, 'Conversation not found');
+  }
+
+  const participantIds = conversation.participants.map(toId);
+  if (!participantIds.includes(toId(userId))) {
+    throw createServiceError(403, 'Not authorized to delete this conversation');
+  }
+
+  await ChatMessage.deleteMany({
+    $or: [
+      { senderId: conversation.participants[0], receiverId: conversation.participants[1] },
+      { senderId: conversation.participants[1], receiverId: conversation.participants[0] }
+    ]
+  });
+  await Conversation.deleteOne({ _id: conversationId });
+
+  return conversation;
+};
+
 module.exports = {
   assertCanCommunicate,
   upsertConversationForMessage,
   getConversations,
   searchUsers,
-  findConversation
+  findConversation,
+  createConversation,
+  hideConversationForUser,
+  hardDeleteConversation
 };

@@ -26,8 +26,30 @@ const getMessages = async (userId, otherUserId) => {
     $or: [
       { senderId: userId, receiverId: otherUserId },
       { senderId: otherUserId, receiverId: userId }
-    ]
+    ],
+    deletedFor: { $ne: userId }
   }).sort({ createdAt: 1 });
+};
+
+const deleteMessageForUser = async (messageId, userId) => {
+  const message = await ChatMessage.findById(messageId);
+  if (!message) {
+    const err = new Error('Message not found');
+    err.status = 404;
+    throw err;
+  }
+
+  const isSender = String(message.senderId) === String(userId);
+
+  if (!isSender) {
+    const err = new Error('Unauthorized delete request');
+    err.status = 403;
+    throw err;
+  }
+
+  await ChatMessage.deleteOne({ _id: messageId });
+
+  return message;
 };
 
 const markMessageAsRead = async () => {
@@ -38,5 +60,6 @@ const markMessageAsRead = async () => {
 module.exports = {
   sendMessage,
   getMessages,
+  deleteMessageForUser,
   markMessageAsRead
 };

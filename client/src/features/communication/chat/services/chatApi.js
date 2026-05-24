@@ -14,6 +14,15 @@ export const fetchConversations = async () => {
   return response.data.conversations || [];
 };
 
+export const createConversation = async (participantId) => {
+  const response = await axios.post(
+    `${API_BASE_URL}/conversations`,
+    { participantId },
+    { headers: authHeaders() }
+  );
+  return response.data.conversation;
+};
+
 export const fetchMessages = async (userId) => {
   const response = await axios.get(`${API_BASE_URL}/${userId}`, {
     headers: authHeaders()
@@ -34,6 +43,20 @@ export const sendMessage = async ({
     { headers: authHeaders() }
   );
   return response.data.message;
+};
+
+export const deleteMessage = async (messageId) => {
+  const response = await axios.delete(`${API_BASE_URL}/message/${messageId}`, {
+    headers: authHeaders()
+  });
+  return response.data;
+};
+
+export const deleteConversation = async (conversationId) => {
+  const response = await axios.delete(`http://localhost:5000/api/communication/conversation/${conversationId}`, {
+    headers: authHeaders()
+  });
+  return response.data;
 };
 
 export const uploadAudio = async (audioBlob) => {

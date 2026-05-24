@@ -1,5 +1,7 @@
 import { LogOut, User, Bell, Heart, Phone, Clipboard, Activity, Users, Award, Calendar, MessageCircle, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import SOSButton from '../components/SOSButton';
+import CallReminderPanel from '../components/CallReminderPanel';
 
 export default function Dashboard({ role, onLogout }) {
   const navigate = useNavigate();
@@ -28,11 +30,13 @@ export default function Dashboard({ role, onLogout }) {
       { title: "Medication", icon: <Bell size={32} />, color: "bg-gradient-to-r from-orange-500 to-orange-700", action: () => alert("Medication Reminders - Coming Soon") },
       { title: "Emergency SOS", icon: <Phone size={32} />, color: "bg-gradient-to-r from-red-500 to-red-700", action: () => alert("Emergency SOS - Coming Soon") },
       { title: "My Documents", icon: <FileText size={32} />, color: "bg-gradient-to-r from-indigo-500 to-indigo-700", action: () => navigate('/documents') },
-      { title: "Chat", icon: <MessageCircle size={32} />, color: "bg-gradient-to-r from-emerald-500 to-emerald-700", action: () => navigate('/chat') }
+      { title: "Chat", icon: <MessageCircle size={32} />, color: "bg-gradient-to-r from-emerald-500 to-emerald-700", action: () => navigate('/chat') },
+      { title: "Groups", icon: <Users size={32} />, color: "bg-gradient-to-r from-cyan-500 to-cyan-700", action: () => navigate('/groups') }
     ];
 
     return (
       <div className="min-h-screen" style={{ backgroundColor: '#A9C6B2' }}>
+        <SOSButton />
         <nav className="w-full shadow-md border-b sticky top-0 z-50" style={{ backgroundColor: '#1C382A' }}>
           <div className="max-w-6xl mx-auto px-6 py-5 flex justify-between items-center">
             <div>
@@ -50,6 +54,8 @@ export default function Dashboard({ role, onLogout }) {
             <h2 className="text-4xl font-bold text-gray-800 mb-2">{getGreeting()}! 👋</h2>
             <p className="text-xl text-gray-700">How can we help you today?</p>
           </div>
+
+          <CallReminderPanel />
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
             {elderActions.map((action, index) => (
@@ -81,7 +87,8 @@ export default function Dashboard({ role, onLogout }) {
       { title: "My Rewards", icon: <Award size={32} />, color: "bg-gradient-to-r from-yellow-500 to-yellow-700", action: () => alert("My Rewards - Coming Soon") },
       { title: "Help Seniors", icon: <Users size={32} />, color: "bg-gradient-to-r from-indigo-500 to-indigo-700", action: () => alert("Help Seniors - Coming Soon") },
       { title: "Impact Stats", icon: <Activity size={32} />, color: "bg-gradient-to-r from-teal-500 to-teal-700", action: () => alert("Impact Stats - Coming Soon") },
-      { title: "Chat", icon: <MessageCircle size={32} />, color: "bg-gradient-to-r from-emerald-500 to-emerald-700", action: () => navigate('/chat') }
+      { title: "Chat", icon: <MessageCircle size={32} />, color: "bg-gradient-to-r from-emerald-500 to-emerald-700", action: () => navigate('/chat') },
+      { title: "Groups", icon: <Users size={32} />, color: "bg-gradient-to-r from-cyan-500 to-cyan-700", action: () => navigate('/groups') }
     ];
 
     return (
@@ -134,7 +141,8 @@ export default function Dashboard({ role, onLogout }) {
       { title: "My Profile", icon: <User size={32} />, color: "bg-gradient-to-r from-indigo-500 to-indigo-700", action: () => navigate('/profile') },
       { title: "Emergency Alerts", icon: <Bell size={32} />, color: "bg-gradient-to-r from-red-500 to-red-700", action: () => alert("Emergency Alerts - Coming Soon") },
       { title: "Care Notes", icon: <FileText size={32} />, color: "bg-gradient-to-r from-orange-500 to-orange-700", action: () => alert("Care Notes - Coming Soon") },
-      { title: "Chat", icon: <MessageCircle size={32} />, color: "bg-gradient-to-r from-emerald-500 to-emerald-700", action: () => navigate('/chat') }
+      { title: "Chat", icon: <MessageCircle size={32} />, color: "bg-gradient-to-r from-emerald-500 to-emerald-700", action: () => navigate('/chat') },
+      { title: "Groups", icon: <Users size={32} />, color: "bg-gradient-to-r from-cyan-500 to-cyan-700", action: () => navigate('/groups') }
     ];
 
     return (

@@ -8,7 +8,11 @@ export default function ChatBox({
   loadingMessages,
   sending,
   onSendMessage,
-  onSendVoice
+  onSendVoice,
+  onDeleteMessage,
+  callDisabled,
+  onStartAudioCall,
+  onStartVideoCall
 }) {
   return (
     <div className="flex h-[70vh] flex-col rounded-xl bg-white shadow">
@@ -18,6 +22,10 @@ export default function ChatBox({
           messages={messages}
           currentUserId={currentUserId}
           loading={loadingMessages}
+          callDisabled={callDisabled}
+          onStartAudioCall={onStartAudioCall}
+          onStartVideoCall={onStartVideoCall}
+          onDeleteMessage={onDeleteMessage}
         />
       </div>
       <ChatInput

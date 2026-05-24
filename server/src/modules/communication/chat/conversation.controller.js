@@ -10,6 +10,20 @@ const getConversations = async (req, res) => {
   }
 };
 
+const createConversation = async (req, res) => {
+  try {
+    const { participantId } = req.body;
+    const conversation = await conversationService.createConversation(req.user._id, participantId);
+    return res.status(201).json({ success: true, conversation });
+  } catch (err) {
+    console.error('Create conversation error:', err);
+    return res.status(err.status || 500).json({
+      success: false,
+      msg: err.status ? err.message : 'Server error'
+    });
+  }
+};
+
 const searchUsers = async (req, res) => {
   try {
     const users = await conversationService.searchUsers(req.user._id, req.query.query || '');
@@ -23,4 +37,4 @@ const searchUsers = async (req, res) => {
   }
 };
 
-module.exports = { getConversations, searchUsers };
+module.exports = { getConversations, createConversation, searchUsers };

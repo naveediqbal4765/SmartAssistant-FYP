@@ -36,6 +36,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/auth', require('./modules/auth/auth.routes'));
 app.use('/api/user', require('./modules/profile/profile.routes'));
 app.use('/api/tasks', require('./modules/tasks/task.routes'));
+app.use('/api/reminders', require('./modules/reminders/reminder.routes'));
 app.use('/api/communication', require('./modules/communication/communication.routes'));
 
 app.get('/', (req, res) => {

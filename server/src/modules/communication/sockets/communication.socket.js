@@ -1,5 +1,6 @@
 const { registerChatSocketHandlers } = require('../chat/chat.socket');
 const { registerCallSocketHandlers } = require('../calls/call.socket');
+const { registerGroupSocketHandlers } = require('../groups/group.socket');
 const { registerUploadSocketHandlers } = require('../uploads/upload.socket');
 const { authenticateSocket } = require('./socket.auth');
 const { userRoom } = require('./socket.manager');
@@ -14,6 +15,7 @@ const registerCommunicationSocketHandlers = (io) => {
 
     registerChatSocketHandlers(io, socket);
     registerCallSocketHandlers(io, socket);
+    registerGroupSocketHandlers(io, socket);
     registerUploadSocketHandlers(io, socket);
   });
 };

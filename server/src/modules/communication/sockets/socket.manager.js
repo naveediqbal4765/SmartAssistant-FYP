@@ -26,10 +26,28 @@ const emitNotification = (userId, notification) => {
   });
 };
 
+const emitMessageDeleted = ({ userId, messageId, chatType }) => {
+  emitToUser(String(userId), 'message-deleted', {
+    messageId: String(messageId),
+    userId: String(userId),
+    chatType
+  });
+};
+
+const emitConversationDeleted = ({ userId, conversationId, chatType }) => {
+  emitToUser(String(userId), 'conversation-deleted', {
+    conversationId: String(conversationId),
+    userId: String(userId),
+    chatType
+  });
+};
+
 module.exports = {
   userRoom,
   setSocketServer,
   emitToUser,
   emitNewMessage,
-  emitNotification
+  emitNotification,
+  emitMessageDeleted,
+  emitConversationDeleted
 };

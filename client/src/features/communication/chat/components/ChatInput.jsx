@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Mic } from 'lucide-react';
 import VoiceRecorder from './VoiceRecorder';
 
 export default function ChatInput({ disabled, sending, onSend, onSendVoice }) {
@@ -27,9 +28,15 @@ export default function ChatInput({ disabled, sending, onSend, onSendVoice }) {
           type="button"
           disabled={disabled}
           onClick={() => setShowRecorder((value) => !value)}
-          className="rounded-xl bg-gray-200 px-4 py-3 font-semibold disabled:opacity-50"
+          aria-label="Record voice note"
+          title="Record voice note"
+          className={`flex h-12 w-12 items-center justify-center rounded-full transition-all disabled:opacity-50 ${
+            showRecorder
+              ? 'bg-green-100 text-green-700 ring-2 ring-green-500'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-gray-900'
+          }`}
         >
-          Mic
+          <Mic size={22} />
         </button>
         <input
           value={text}

@@ -4,7 +4,8 @@ const conversationRoutes = require('./conversation.routes');
 const { searchUsers } = require('./conversation.controller');
 const {
   sendMessage,
-  getMessages
+  getMessages,
+  deleteMessage
 } = require('./chat.controller');
 
 const router = express.Router();
@@ -12,6 +13,7 @@ const router = express.Router();
 router.use('/conversations', conversationRoutes);
 router.get('/search-users', auth, searchUsers);
 router.post('/message', auth, sendMessage);
+router.delete('/message/:id', auth, deleteMessage);
 router.get('/:userId', auth, getMessages);
 
 module.exports = router;

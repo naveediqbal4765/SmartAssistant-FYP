@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const chatService = require('./chat.service');
-const { emitNewMessage } = require('../sockets/socket.manager');
+const { emitMessageDeleted, emitNewMessage } = require('../sockets/socket.manager');
 const notificationService = require('../notifications/notification.service');
 
 const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
@@ -63,7 +63,34 @@ const getMessages = async (req, res) => {
   }
 };
 
+const deleteMessage = async (req, res) => {
+  try {
+    const messageId = req.params.id;
+
+    if (!req.user?._id) {
+      return res.status(401).json({ success: false, msg: 'Unauthorized delete request' });
+    }
+
+    if (!messageId || !isValidObjectId(messageId)) {
+      return res.status(400).json({ success: false, msg: 'Valid message id is required' });
+    }
+
+    await chatService.deleteMessageForUser(messageId, req.user._id);
+    emitMessageDeleted({
+      userId: req.user._id,
+      messageId,
+      chatType: 'private'
+    });
+
+    return res.json({ success: true, msg: 'Message deleted successfully', messageId });
+  } catch (err) {
+    console.error('Delete chat message error:', err);
+    return res.status(err.status || 500).json({ success: false, msg: err.status ? err.message : 'Server error' });
+  }
+};
+
 module.exports = {
   sendMessage,
-  getMessages
+  getMessages,
+  deleteMessage
 };

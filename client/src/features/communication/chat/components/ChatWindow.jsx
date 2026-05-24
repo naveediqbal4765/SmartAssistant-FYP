@@ -1,7 +1,17 @@
 import { useEffect, useRef } from 'react';
 import MessageBubble from './MessageBubble';
+import CallButton from '../../calls/CallButton';
 
-export default function ChatWindow({ conversation, messages, currentUserId, loading }) {
+export default function ChatWindow({
+  conversation,
+  messages,
+  currentUserId,
+  loading,
+  callDisabled,
+  onStartAudioCall,
+  onStartVideoCall,
+  onDeleteMessage
+}) {
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
@@ -22,8 +32,17 @@ export default function ChatWindow({ conversation, messages, currentUserId, load
   return (
     <div className="flex h-full flex-col">
       <div className="border-b bg-white p-4">
-        <h2 className="font-bold text-gray-900">{conversation.participant?.name || 'Conversation'}</h2>
-        <p className="text-sm text-gray-500 capitalize">{conversation.participant?.role || ''}</p>
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <h2 className="font-bold text-gray-900">{conversation.participant?.name || 'Conversation'}</h2>
+            <p className="text-sm text-gray-500 capitalize">{conversation.participant?.role || ''}</p>
+          </div>
+          <CallButton
+            disabled={callDisabled}
+            onStartAudioCall={onStartAudioCall}
+            onStartVideoCall={onStartVideoCall}
+          />
+        </div>
       </div>
 
       <div className="flex-1 space-y-3 overflow-y-auto p-4 bg-gray-50">
@@ -36,6 +55,7 @@ export default function ChatWindow({ conversation, messages, currentUserId, load
                 key={message._id || message.clientId}
                 message={message}
                 currentUserId={currentUserId}
+                onDelete={onDeleteMessage}
               />
             ))}
             <div ref={messagesEndRef} />

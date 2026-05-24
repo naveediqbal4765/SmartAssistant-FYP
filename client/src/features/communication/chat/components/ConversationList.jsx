@@ -5,7 +5,8 @@ export default function ConversationList({
   activeParticipantId,
   loading,
   error,
-  onSelectConversation
+  onSelectConversation,
+  onDeleteConversation
 }) {
   if (loading) {
     return <div className="p-4 text-gray-500">Loading conversations...</div>;
@@ -27,6 +28,7 @@ export default function ConversationList({
           conversation={conversation}
           active={String(conversation.participant?._id || '') === String(activeParticipantId || '')}
           onSelect={onSelectConversation}
+          onDelete={onDeleteConversation}
         />
       ))}
     </div>

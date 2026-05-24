@@ -454,7 +454,7 @@ export default function Login({ onLogin }) {
               </div>
 
               <p className="text-center text-gray-600 text-xs mt-6">
-                © 2025 Smart Assistant. Care for Seniors, By Community.
+                © 2026 Smart Assistant. Care for Seniors, By Group 41.
               </p>
             </div>
           </div>

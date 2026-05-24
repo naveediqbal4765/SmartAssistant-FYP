@@ -19,7 +19,7 @@ const ChatMessageSchema = new mongoose.Schema({
   },
   messageType: {
     type: String,
-    enum: ['text', 'image', 'video', 'document', 'voice'],
+    enum: ['text', 'image', 'video', 'document', 'voice', 'call'],
     default: 'text'
   },
   mediaUrl: {
@@ -29,6 +29,10 @@ const ChatMessageSchema = new mongoose.Schema({
   duration: {
     type: Number,
     default: null
+  },
+  deletedFor: {
+    type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    default: []
   },
   createdAt: {
     type: Date,
