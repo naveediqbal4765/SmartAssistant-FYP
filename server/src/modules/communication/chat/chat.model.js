@@ -1,2 +1,38 @@
-// Placeholder model boundary for future MongoDB chat/conversation schemas.
-module.exports = {};
+const mongoose = require('mongoose');
+
+const ChatMessageSchema = new mongoose.Schema({
+  senderId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+    index: true
+  },
+  receiverId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+    index: true
+  },
+  message: {
+    type: String,
+    default: ''
+  },
+  messageType: {
+    type: String,
+    enum: ['text', 'image', 'video', 'document', 'voice'],
+    default: 'text'
+  },
+  mediaUrl: {
+    type: String,
+    default: ''
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
+});
+
+ChatMessageSchema.index({ senderId: 1, receiverId: 1, createdAt: 1 });
+ChatMessageSchema.index({ receiverId: 1, senderId: 1, createdAt: 1 });
+
+module.exports = mongoose.model('ChatMessage', ChatMessageSchema);
