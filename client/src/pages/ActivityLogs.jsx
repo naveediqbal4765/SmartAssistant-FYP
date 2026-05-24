@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Activity, Clock, Login, UserPlus, Phone, FileText, ArrowLeft, Loader } from 'lucide-react';
+import { Activity, LogIn, UserPlus, Phone, FileText, ArrowLeft, Loader } from 'lucide-react';
 
 export default function ActivityLogs() {
   const navigate = useNavigate();
@@ -30,7 +30,7 @@ export default function ActivityLogs() {
 
   const getActivityIcon = (action) => {
     switch(action) {
-      case 'login': return <Login size={20} className="text-green-600" />;
+      case 'login': return <LogIn size={20} className="text-green-600" />;
       case 'profile_view': return <UserPlus size={20} className="text-blue-600" />;
       case 'profile_update': return <UserPlus size={20} className="text-blue-600" />;
       case 'contact_added': return <Phone size={20} className="text-purple-600" />;

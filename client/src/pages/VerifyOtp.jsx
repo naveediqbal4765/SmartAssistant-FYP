@@ -79,7 +79,8 @@ const VerifyOtp = ({ email, onVerificationSuccess, onBackToLogin }) => {
           role: response.data.user.role,
           phone: response.data.user.phone || '',
           address: response.data.user.address || '',
-          dateOfBirth: response.data.user.dateOfBirth || ''
+          dateOfBirth: response.data.user.dateOfBirth || '',
+          linkedSeniorId: response.data.user.linkedSeniorId || null
         };
         localStorage.setItem('user', JSON.stringify(userData));
         

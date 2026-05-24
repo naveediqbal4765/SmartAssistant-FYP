@@ -11,6 +11,32 @@ const {
   verifyResetOTP,
   resetPassword
 } = require('../controllers/authController');
+const { refreshSeniorCaregiverLinkCode } = require('../utils/seniorCaregiverLink');
+
+const buildOAuthRedirect = async (user, res) => {
+  if (user.role === 'elder') {
+    await refreshSeniorCaregiverLinkCode(user);
+  }
+
+  const token = jwt.sign(
+    { userId: user._id, id: user._id, role: user.role },
+    process.env.JWT_SECRET || 'smart-senior-secret-2026',
+    { expiresIn: '7d' }
+  );
+
+  const userData = encodeURIComponent(JSON.stringify({
+    id: user._id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    phone: user.phone || '',
+    address: user.address || '',
+    dateOfBirth: user.dateOfBirth || null,
+    linkedSeniorId: user.linkedSeniorId || null
+  }));
+
+  res.redirect(`http://localhost:5173/social-login?token=${token}&user=${userData}`);
+};
 
 // ========== AUTHENTICATION ROUTES ==========
 
@@ -47,25 +73,9 @@ router.get('/google',
 // Google OAuth - Callback
 router.get('/google/callback',
   passport.authenticate('google', { failureRedirect: 'http://localhost:5173/login' }),
-  (req, res) => {
+  async (req, res) => {
     try {
-      const token = jwt.sign(
-        { userId: req.user._id, id: req.user._id, role: req.user.role },
-        process.env.JWT_SECRET || "smart-senior-secret-2026",
-        { expiresIn: '7d' }
-      );
-      
-      const userData = encodeURIComponent(JSON.stringify({
-        id: req.user._id,
-        name: req.user.name,
-        email: req.user.email,
-        role: req.user.role,
-        phone: req.user.phone || '',
-        address: req.user.address || '',
-        dateOfBirth: req.user.dateOfBirth || null
-      }));
-      
-      res.redirect(`http://localhost:5173/social-login?token=${token}&user=${userData}`);
+      await buildOAuthRedirect(req.user, res);
     } catch (err) {
       res.redirect('http://localhost:5173/login');
     }
@@ -82,25 +92,9 @@ router.get('/facebook',
 // Facebook OAuth - Callback
 router.get('/facebook/callback',
   passport.authenticate('facebook', { failureRedirect: 'http://localhost:5173/login' }),
-  (req, res) => {
+  async (req, res) => {
     try {
-      const token = jwt.sign(
-        { userId: req.user._id, id: req.user._id, role: req.user.role },
-        process.env.JWT_SECRET || "smart-senior-secret-2026",
-        { expiresIn: '7d' }
-      );
-      
-      const userData = encodeURIComponent(JSON.stringify({
-        id: req.user._id,
-        name: req.user.name,
-        email: req.user.email,
-        role: req.user.role,
-        phone: req.user.phone || '',
-        address: req.user.address || '',
-        dateOfBirth: req.user.dateOfBirth || null
-      }));
-      
-      res.redirect(`http://localhost:5173/social-login?token=${token}&user=${userData}`);
+      await buildOAuthRedirect(req.user, res);
     } catch (err) {
       res.redirect('http://localhost:5173/login');
     }

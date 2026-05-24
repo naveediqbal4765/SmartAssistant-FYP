@@ -1,29 +1,9 @@
 const express = require('express');
-const jwt = require('jsonwebtoken');
 const Task = require('../models/Task');
-const User = require('../models/User');
+const ActivityLog = require('../models/ActivityLog');
+const auth = require('../utils/authMiddleware');
 
 const router = express.Router();
-
-// Auth middleware
-const auth = async (req, res, next) => {
-  try {
-    const token = req.header('Authorization')?.replace('Bearer ', '');
-    if (!token) {
-      return res.status(401).json({ success: false, msg: 'No token provided' });
-    }
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || "smart-senior-secret-2026");
-    const userId = decoded.userId || decoded.id;
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(401).json({ success: false, msg: 'User not found' });
-    }
-    req.user = user;
-    next();
-  } catch (err) {
-    res.status(401).json({ success: false, msg: 'Please authenticate' });
-  }
-};
 
 // CREATE task (Senior)
 router.post('/request', auth, async (req, res) => {
@@ -51,6 +31,16 @@ router.post('/request', auth, async (req, res) => {
     });
 
     await task.save();
+
+    try {
+      await ActivityLog.create({
+        userId: req.user._id,
+        action: 'task_requested',
+        details: title
+      });
+    } catch (logErr) {
+      console.error('Task activity log failed:', logErr.message);
+    }
 
     res.json({ 
       success: true, 

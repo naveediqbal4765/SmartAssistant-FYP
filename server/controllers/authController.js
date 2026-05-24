@@ -1,12 +1,17 @@
 const User = require('../models/User');
+const ActivityLog = require('../models/ActivityLog');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { sendOTPEmail, sendResetOTPEmail } = require('../utils/sendEmail');
+const {
+  findSeniorByLinkCode,
+  refreshSeniorCaregiverLinkCode
+} = require('../utils/seniorCaregiverLink');
 
 // ========== REGISTER (with OTP & Profile Fields) ==========
 const register = async (req, res) => {
   try {
-    let { name, email, password, role, phone, address, dateOfBirth } = req.body;
+    let { name, email, password, role, phone, address, dateOfBirth, seniorLinkCode } = req.body;
 
     if (!name || !email || !password || !role) {
       return res.status(400).json({
@@ -36,6 +41,23 @@ const register = async (req, res) => {
       });
     }
 
+    let linkedSenior = null;
+    if (role === 'caregiver') {
+      if (!seniorLinkCode) {
+        return res.status(400).json({
+          success: false,
+          msg: "Senior link code is required. Ask your senior to log in and share the 6-digit code from their email."
+        });
+      }
+      linkedSenior = await findSeniorByLinkCode(seniorLinkCode);
+      if (!linkedSenior) {
+        return res.status(400).json({
+          success: false,
+          msg: "Invalid or expired senior link code. Ask your senior to log in again for a new code."
+        });
+      }
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Generate 6-digit OTP
@@ -62,6 +84,7 @@ const register = async (req, res) => {
       address: address || '',
       dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
       emergencyContacts: [],
+      linkedSeniorId: linkedSenior ? linkedSenior._id : null,
       isVerified: false,
       location: {
         type: 'Point',
@@ -75,6 +98,17 @@ const register = async (req, res) => {
 
     await user.save();
 
+    if (role === 'caregiver' && linkedSenior) {
+      linkedSenior.linkedCaregivers = linkedSenior.linkedCaregivers || [];
+      const alreadyLinked = linkedSenior.linkedCaregivers.some(
+        (id) => id.toString() === user._id.toString()
+      );
+      if (!alreadyLinked) {
+        linkedSenior.linkedCaregivers.push(user._id);
+        await linkedSenior.save();
+      }
+    }
+
     // Send OTP email
     try {
       await sendOTPEmail(email, otpCode, name);
@@ -82,11 +116,18 @@ const register = async (req, res) => {
       console.error("Email sending failed:", emailErr.message);
     }
 
+    const registerMsg = role === 'caregiver' && linkedSenior
+      ? `Registration successful! You are linked to ${linkedSenior.name}. OTP sent to your email.`
+      : "Registration successful! OTP sent to your email.";
+
     return res.status(201).json({
       success: true,
-      msg: "Registration successful! OTP sent to your email.",
+      msg: registerMsg,
       email: email,
-      requiresVerification: true
+      requiresVerification: true,
+      linkedSenior: linkedSenior
+        ? { id: linkedSenior._id, name: linkedSenior.name, email: linkedSenior.email }
+        : undefined
     });
 
   } catch (err) {
@@ -143,7 +184,12 @@ const verifyOTP = async (req, res) => {
     // Mark as verified and clear OTP
     user.isVerified = true;
     user.otp = { code: null, expiresAt: null };
+    if (!user.linkedCaregivers) user.linkedCaregivers = [];
     await user.save();
+
+    if (user.role === 'elder') {
+      await refreshSeniorCaregiverLinkCode(user);
+    }
 
     // Include BOTH 'id' and 'userId' for compatibility
     const token = jwt.sign(
@@ -152,9 +198,13 @@ const verifyOTP = async (req, res) => {
       { expiresIn: '7d' }
     );
 
+    const verifyMsg = user.role === 'elder'
+      ? 'Account verified! A caregiver link code was sent to your email.'
+      : 'Account verified successfully!';
+
     return res.json({
       success: true,
-      msg: "Account verified successfully!",
+      msg: verifyMsg,
       token,
       user: {
         id: user._id,
@@ -163,7 +213,8 @@ const verifyOTP = async (req, res) => {
         role: user.role,
         phone: user.phone || '',
         address: user.address || '',
-        dateOfBirth: user.dateOfBirth || null
+        dateOfBirth: user.dateOfBirth || null,
+        linkedSeniorId: user.linkedSeniorId || null
       }
     });
 
@@ -220,8 +271,30 @@ const login = async (req, res) => {
       { expiresIn: '7d' }
     );
 
+    let loginMsg = 'Login successful';
+    if (user.role === 'elder') {
+      await refreshSeniorCaregiverLinkCode(user);
+      loginMsg = 'Welcome back! A caregiver link code was sent to your email.';
+    }
+
+    try {
+      await ActivityLog.create({
+        userId: user._id,
+        action: 'login',
+        details: 'User logged in'
+      });
+    } catch (logErr) {
+      console.error('Login activity log failed:', logErr.message);
+    }
+
+    let linkedSenior = null;
+    if (user.role === 'caregiver' && user.linkedSeniorId) {
+      linkedSenior = await User.findById(user.linkedSeniorId).select('name email');
+    }
+
     res.json({
       success: true,
+      msg: loginMsg,
       token,
       user: {
         id: user._id,
@@ -230,7 +303,11 @@ const login = async (req, res) => {
         role: user.role,
         phone: user.phone || '',
         address: user.address || '',
-        dateOfBirth: user.dateOfBirth || null
+        dateOfBirth: user.dateOfBirth || null,
+        linkedSeniorId: user.linkedSeniorId || null,
+        linkedSenior: linkedSenior
+          ? { id: linkedSenior._id, name: linkedSenior.name, email: linkedSenior.email }
+          : null
       }
     });
 

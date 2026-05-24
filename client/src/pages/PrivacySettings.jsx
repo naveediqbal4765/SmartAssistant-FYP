@@ -3,6 +3,30 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Shield, ArrowLeft, Save, Lock } from 'lucide-react';
 
+function PrivacyToggle({ label, description, field, value, onChange }) {
+  return (
+    <div className="flex items-center justify-between py-4 border-b border-gray-100">
+      <div className="flex-1">
+        <h3 className="font-semibold text-gray-800">{label}</h3>
+        <p className="text-sm text-gray-500">{description}</p>
+      </div>
+      <button
+        type="button"
+        onClick={() => onChange(field, !value)}
+        className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${
+          value ? 'bg-blue-600' : 'bg-gray-300'
+        }`}
+      >
+        <span
+          className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
+            value ? 'translate-x-6' : 'translate-x-1'
+          }`}
+        />
+      </button>
+    </div>
+  );
+}
+
 export default function PrivacySettings() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -59,27 +83,6 @@ export default function PrivacySettings() {
     }
   };
 
-  const ToggleSwitch = ({ label, description, field, value }) => (
-    <div className="flex items-center justify-between py-4 border-b border-gray-100">
-      <div className="flex-1">
-        <h3 className="font-semibold text-gray-800">{label}</h3>
-        <p className="text-sm text-gray-500">{description}</p>
-      </div>
-      <button
-        onClick={() => setSettings({ ...settings, [field]: !value })}
-        className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${
-          value ? 'bg-blue-600' : 'bg-gray-300'
-        }`}
-      >
-        <span
-          className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
-            value ? 'translate-x-6' : 'translate-x-1'
-          }`}
-        />
-      </button>
-    </div>
-  );
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -122,39 +125,44 @@ export default function PrivacySettings() {
           )}
 
           <div className="space-y-2">
-            <ToggleSwitch
+            <PrivacyToggle
               label="Phone Number"
               description="Allow volunteers and caregivers to see your phone number"
               field="showPhone"
               value={settings.showPhone}
+              onChange={(field, next) => setSettings({ ...settings, [field]: next })}
             />
             
-            <ToggleSwitch
+            <PrivacyToggle
               label="Email Address"
               description="Allow others to see your email address"
               field="showEmail"
               value={settings.showEmail}
+              onChange={(field, next) => setSettings({ ...settings, [field]: next })}
             />
             
-            <ToggleSwitch
+            <PrivacyToggle
               label="Home Address"
               description="Share your address with verified volunteers"
               field="showAddress"
               value={settings.showAddress}
+              onChange={(field, next) => setSettings({ ...settings, [field]: next })}
             />
             
-            <ToggleSwitch
+            <PrivacyToggle
               label="Date of Birth"
               description="Allow others to see your age and birth date"
               field="showDateOfBirth"
               value={settings.showDateOfBirth}
+              onChange={(field, next) => setSettings({ ...settings, [field]: next })}
             />
             
-            <ToggleSwitch
+            <PrivacyToggle
               label="Emergency Contacts"
               description="Share your emergency contacts with caregivers"
               field="showEmergencyContacts"
               value={settings.showEmergencyContacts}
+              onChange={(field, next) => setSettings({ ...settings, [field]: next })}
             />
           </div>
 

@@ -1,6 +1,5 @@
 const nodemailer = require('nodemailer');
 
-// Create transporter (reused for all emails)
 const createTransporter = () => {
   return nodemailer.createTransport({
     service: 'gmail',
@@ -11,11 +10,10 @@ const createTransporter = () => {
   });
 };
 
-// ========== OTP EMAIL FOR REGISTRATION ==========
 const sendOTPEmail = async (email, otp, name) => {
   const transporter = createTransporter();
 
-  const mailOptions = {
+  await transporter.sendMail({
     from: `"Smart Assistant for Seniors" <${process.env.EMAIL_USER}>`,
     to: email,
     subject: 'Verify Your Account - Smart Assistant for Senior Citizens',
@@ -33,16 +31,13 @@ const sendOTPEmail = async (email, otp, name) => {
         <p style="color: #6b7280; font-size: 12px;">Smart Assistant for Senior Citizens - Keeping your loved ones safe.</p>
       </div>
     `
-  };
-
-  await transporter.sendMail(mailOptions);
+  });
 };
 
-// ========== RESET PASSWORD OTP EMAIL ==========
 const sendResetOTPEmail = async (email, otp, name) => {
   const transporter = createTransporter();
 
-  const mailOptions = {
+  await transporter.sendMail({
     from: `"Smart Assistant for Seniors" <${process.env.EMAIL_USER}>`,
     to: email,
     subject: 'Password Reset Request - Smart Assistant',
@@ -61,16 +56,37 @@ const sendResetOTPEmail = async (email, otp, name) => {
         <p style="color: #6b7280; font-size: 12px;">Smart Assistant for Senior Citizens - Keeping your loved ones safe.</p>
       </div>
     `
-  };
-
-  await transporter.sendMail(mailOptions);
+  });
 };
 
-// ========== ACCOUNT DELETION CONFIRMATION EMAIL (Optional) ==========
+const sendSeniorWelcomeLinkEmail = async (email, name, linkCode) => {
+  const transporter = createTransporter();
+
+  await transporter.sendMail({
+    from: `"Smart Assistant for Seniors" <${process.env.EMAIL_USER}>`,
+    to: email,
+    subject: 'Welcome back — Your caregiver link code',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
+        <h2 style="color: #1C382A;">Welcome back, ${name}! 👋</h2>
+        <p>Thank you for using <strong>Smart Assistant for Senior Citizens</strong>. We are glad you are here.</p>
+        <p>If a family member or caregiver is creating their account, share this <strong>6-digit link code</strong> with them. It connects their caregiver account to yours.</p>
+        <div style="background-color: #BAE4C7; padding: 20px; text-align: center; font-size: 36px; letter-spacing: 8px; font-weight: bold; border-radius: 8px; margin: 24px 0; color: #1C382A;">
+          ${linkCode}
+        </div>
+        <p>This code is valid until your next login or for <strong>7 days</strong>, whichever comes first.</p>
+        <p style="color: #6b7280; font-size: 14px;">For your security, do not share this code publicly. Only give it to caregivers you trust.</p>
+        <hr style="margin: 20px 0;" />
+        <p style="color: #6b7280; font-size: 12px;">Smart Assistant for Senior Citizens — Care for Seniors, By Community.</p>
+      </div>
+    `
+  });
+};
+
 const sendAccountDeletionEmail = async (email, name) => {
   const transporter = createTransporter();
 
-  const mailOptions = {
+  await transporter.sendMail({
     from: `"Smart Assistant for Seniors" <${process.env.EMAIL_USER}>`,
     to: email,
     subject: 'Account Deleted - Smart Assistant',
@@ -85,14 +101,12 @@ const sendAccountDeletionEmail = async (email, name) => {
         <p style="color: #6b7280; font-size: 12px;">Smart Assistant for Senior Citizens - Keeping your loved ones safe.</p>
       </div>
     `
-  };
-
-  await transporter.sendMail(mailOptions);
+  });
 };
 
-// Export all email functions
-module.exports = { 
-  sendOTPEmail, 
+module.exports = {
+  sendOTPEmail,
   sendResetOTPEmail,
+  sendSeniorWelcomeLinkEmail,
   sendAccountDeletionEmail
 };

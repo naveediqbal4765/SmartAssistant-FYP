@@ -11,6 +11,8 @@ import DocumentVault from './pages/DocumentVault';
 import RequestHelp from './pages/RequestHelp';
 import MyRequests from './pages/MyRequests';
 import SocialLoginHandler from './pages/SocialLoginHandler';
+import PrivacySettings from './pages/PrivacySettings';
+import ActivityLogs from './pages/ActivityLogs';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -151,9 +153,26 @@ function App() {
               </PrivateRoute>
             } 
           />
+
+          <Route
+            path="/privacy"
+            element={
+              <PrivateRoute>
+                <PrivacySettings />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/activity-logs"
+            element={
+              <PrivateRoute>
+                <ActivityLogs />
+              </PrivateRoute>
+            }
+          />
           
-          
-<Route path="/social-login" element={<SocialLoginHandler onLogin={handleLogin} />} />
+          <Route path="/social-login" element={<SocialLoginHandler onLogin={handleLogin} />} />
           
 
           {/* Default Route */}

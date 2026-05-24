@@ -56,4 +56,8 @@ const TaskSchema = new mongoose.Schema({
   }
 });
 
+TaskSchema.index({ userId: 1, createdAt: -1 });
+TaskSchema.index({ status: 1, createdAt: -1 });
+TaskSchema.index({ volunteerId: 1 });
+
 module.exports = mongoose.model('Task', TaskSchema);

@@ -1,5 +1,4 @@
 const express = require('express');
-const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const ActivityLog = require('../models/ActivityLog');
 const Document = require('../models/Document');
@@ -7,6 +6,11 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const Task = require('../models/Task');
+const auth = require('../utils/authMiddleware');
+const {
+  resolveUploadFilePath,
+  unlinkUserRelationships
+} = require('../utils/userLinks');
 const router = express.Router();
 
 // Configure multer for file uploads
@@ -47,47 +51,6 @@ const logActivity = async (userId, action, details = '', ipAddress = '') => {
   }
 };
 
-// Auth middleware - SIMPLIFIED
-const auth = async (req, res, next) => {
-  try {
-    const authHeader = req.header('Authorization');
-    console.log('Auth Header:', authHeader);
-    
-    if (!authHeader) {
-      console.log('No Authorization header');
-      return res.status(401).json({ success: false, msg: 'No token provided' });
-    }
-    
-    const token = authHeader.replace('Bearer ', '');
-    console.log('Token extracted:', token.substring(0, 50) + '...');
-    
-    // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || "smart-senior-secret-2026");
-    console.log('Decoded token:', decoded);
-    
-    // Get user ID from token (try both formats)
-    const userId = decoded.userId || decoded.id;
-    console.log('User ID from token:', userId);
-    
-    if (!userId) {
-      return res.status(401).json({ success: false, msg: 'Invalid token format' });
-    }
-    
-    const user = await User.findById(userId);
-    console.log('User found:', user ? user.email : 'NOT FOUND');
-    
-    if (!user) {
-      return res.status(401).json({ success: false, msg: 'User not found' });
-    }
-    
-    req.user = user;
-    next();
-  } catch (err) {
-    console.error('Auth middleware error:', err.message);
-    res.status(401).json({ success: false, msg: 'Please authenticate', error: err.message });
-  }
-};
-
 // ========== PROFILE ROUTES ==========
 
 // GET user profile
@@ -96,6 +59,29 @@ router.get('/profile', auth, async (req, res) => {
     // Log activity
     await logActivity(req.user._id, 'profile_view', 'Viewed profile');
     
+    let linkedSenior = null;
+    let linkedCaregivers = [];
+
+    if (req.user.role === 'caregiver' && req.user.linkedSeniorId) {
+      linkedSenior = await User.findById(req.user.linkedSeniorId).select('name email phone');
+    }
+
+    if (req.user.role === 'elder') {
+      const caregiverIds = req.user.linkedCaregivers || [];
+      if (caregiverIds.length) {
+        linkedCaregivers = await User.find({
+          _id: { $in: caregiverIds },
+          role: 'caregiver'
+        }).select('name email phone');
+      }
+    }
+
+    const caregiverLinkActive =
+      req.user.role === 'elder' &&
+      req.user.caregiverLinkCode?.code &&
+      req.user.caregiverLinkCode?.expiresAt &&
+      new Date(req.user.caregiverLinkCode.expiresAt) > new Date();
+
     res.json({ 
       success: true, 
       user: {
@@ -106,6 +92,15 @@ router.get('/profile', auth, async (req, res) => {
         phone: req.user.phone || '',
         address: req.user.address || '',
         dateOfBirth: req.user.dateOfBirth || null,
+        linkedSeniorId: req.user.linkedSeniorId || null,
+        linkedSenior,
+        linkedCaregivers,
+        caregiverLinkCode: caregiverLinkActive
+          ? {
+              expiresAt: req.user.caregiverLinkCode.expiresAt,
+              hint: 'Check your email for the 6-digit code (refreshed each login).'
+            }
+          : null,
         privacySettings: req.user.privacySettings || {
           showPhone: true,
           showAddress: false,
@@ -225,11 +220,13 @@ router.post('/contacts', auth, async (req, res) => {
     
     req.user.emergencyContacts.push(newContact);
     await req.user.save();
+
+    const savedContact =
+      req.user.emergencyContacts[req.user.emergencyContacts.length - 1];
     
-    // Log activity
     await logActivity(req.user._id, 'contact_added', `Added ${name} as emergency contact`);
     
-    res.json({ success: true, contact: newContact });
+    res.json({ success: true, contact: savedContact });
   } catch (err) {
     console.error('Add contact error:', err);
     res.status(500).json({ success: false, msg: 'Server error' });
@@ -325,7 +322,7 @@ router.delete('/documents/:id', auth, async (req, res) => {
     }
     
     // Delete file from disk
-    const filePath = path.join(__dirname, '..', document.fileUrl);
+    const filePath = resolveUploadFilePath(document.fileUrl);
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
     }
@@ -351,38 +348,22 @@ router.delete('/account', auth, async (req, res) => {
     const userEmail = req.user.email;
     
     console.log(`🗑️ Account deletion requested for: ${userEmail}`);
-    
-    // 1. Delete all user's documents from uploads folder
-    const Document = require('../models/Document');
-    const documents = await Document.find({ userId: userId });
-    
-    const fs = require('fs');
-    const path = require('path');
-    
+
+    await unlinkUserRelationships(req.user);
+
+    const documents = await Document.find({ userId });
     for (const doc of documents) {
-      const filePath = path.join(__dirname, '..', doc.fileUrl);
+      const filePath = resolveUploadFilePath(doc.fileUrl);
       if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
-        console.log(`📄 Deleted file: ${doc.fileName}`);
       }
     }
-    
-    // 2. Delete all documents from database
-    await Document.deleteMany({ userId: userId });
-    console.log(`📋 Deleted ${documents.length} documents`);
-    
-    // 3. Delete all activity logs
-    const ActivityLog = require('../models/ActivityLog');
-    const logs = await ActivityLog.deleteMany({ userId: userId });
-    console.log(`📊 Deleted ${logs.deletedCount} activity logs`);
-    
-    // 4. Delete all tasks
-    const Task = require('../models/Task');
-    const tasks = await Task.deleteMany({ userId: userId });
-    console.log(`✅ Deleted ${tasks.deletedCount} tasks`);
-    
-    // 5. Delete emergency contacts (already in User schema)
-    // 6. Finally delete the user
+    await Document.deleteMany({ userId });
+    await ActivityLog.deleteMany({ userId });
+    await Task.deleteMany({
+      $or: [{ userId }, { volunteerId: userId }]
+    });
+
     await User.findByIdAndDelete(userId);
     
     console.log(`✅ Account permanently deleted: ${userEmail}`);

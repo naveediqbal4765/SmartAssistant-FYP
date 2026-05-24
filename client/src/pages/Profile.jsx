@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { ArrowLeft, Save, User, Phone, FileText, Trash2, LogOut } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { ArrowLeft, Save, User, Phone, FileText, Trash2, LogOut, Shield, Activity, Users, Link2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
@@ -22,6 +22,10 @@ export default function Profile() {
   const [emergencyContacts, setEmergencyContacts] = useState([]);
   const [newContact, setNewContact] = useState({ name: '', phone: '', relation: '' });
   const [userRole, setUserRole] = useState('');
+  const [linkedSenior, setLinkedSenior] = useState(null);
+  const [linkedCaregivers, setLinkedCaregivers] = useState([]);
+  const [caregiverLinkHint, setCaregiverLinkHint] = useState(null);
+  const [privacySummary, setPrivacySummary] = useState(null);
 
   // Get auth token helper
   const getAuthToken = () => {
@@ -46,12 +50,7 @@ export default function Profile() {
     }
   }, []);
 
-  // Fetch user data from BACKEND
-  useEffect(() => {
-    fetchUserData();
-  }, []);
-
-  const fetchUserData = async () => {
+  const fetchUserData = useCallback(async () => {
     try {
       const token = getAuthToken();
       if (!token) return;
@@ -72,6 +71,11 @@ export default function Profile() {
           address: userData.address || '',
           dateOfBirth: userData.dateOfBirth ? userData.dateOfBirth.split('T')[0] : '',
         });
+        setUserRole(userData.role || '');
+        setLinkedSenior(userData.linkedSenior || null);
+        setLinkedCaregivers(userData.linkedCaregivers || []);
+        setCaregiverLinkHint(userData.caregiverLinkCode || null);
+        setPrivacySummary(userData.privacySettings || null);
         
         const updatedUser = { 
           ...JSON.parse(localStorage.getItem('user') || '{}'), 
@@ -118,7 +122,11 @@ export default function Profile() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [navigate]);
+
+  useEffect(() => {
+    fetchUserData();
+  }, [fetchUserData]);
 
   const saveProfile = async () => {
     setSaving(true);
@@ -509,6 +517,89 @@ export default function Profile() {
               </button>
             </div>
           </div>
+        </div>
+
+        {(userRole === 'elder' || userRole === 'caregiver') && (
+          <div className="rounded-2xl shadow-xl p-6 sm:p-8 mt-8" style={{ backgroundColor: '#BAE4C7' }}>
+            <h2 className="text-2xl font-semibold mb-6 flex items-center gap-3">
+              <Users size={32} className="text-green-700" />
+              {userRole === 'elder' ? 'Linked Caregivers' : 'Linked Senior'}
+            </h2>
+
+            {userRole === 'caregiver' && (
+              linkedSenior ? (
+                <div className="bg-white rounded-xl p-4 border border-green-200">
+                  <p className="font-semibold text-lg">{linkedSenior.name}</p>
+                  <p className="text-gray-600">{linkedSenior.email}</p>
+                  {linkedSenior.phone && <p className="text-gray-600">📞 {linkedSenior.phone}</p>}
+                </div>
+              ) : (
+                <p className="text-gray-600">No senior linked to this account.</p>
+              )
+            )}
+
+            {userRole === 'elder' && (
+              <>
+                {caregiverLinkHint && (
+                  <div className="bg-white/80 rounded-xl p-4 mb-4 border border-green-300 flex gap-3">
+                    <Link2 className="text-green-700 shrink-0" size={24} />
+                    <div>
+                      <p className="font-medium text-gray-800">Caregiver link code active</p>
+                      <p className="text-sm text-gray-600">{caregiverLinkHint.hint}</p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Expires: {new Date(caregiverLinkHint.expiresAt).toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                )}
+                {linkedCaregivers.length === 0 ? (
+                  <p className="text-gray-600">No caregivers linked yet. Share your email link code when they sign up.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {linkedCaregivers.map((c) => (
+                      <div key={c._id || c.id} className="bg-white rounded-xl p-4 border border-gray-200">
+                        <p className="font-semibold">{c.name}</p>
+                        <p className="text-gray-600 text-sm">{c.email}</p>
+                        {c.phone && <p className="text-gray-600 text-sm">📞 {c.phone}</p>}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+          <button
+            type="button"
+            onClick={() => navigate('/privacy')}
+            className="rounded-2xl shadow-xl p-6 text-left hover:shadow-2xl transition"
+            style={{ backgroundColor: '#BAE4C7' }}
+          >
+            <div className="flex items-center gap-3 mb-2">
+              <Shield size={28} className="text-purple-600" />
+              <h3 className="text-xl font-semibold">Privacy Settings</h3>
+            </div>
+            <p className="text-gray-600 text-sm">
+              {privacySummary
+                ? `Phone ${privacySummary.showPhone ? 'visible' : 'hidden'} · Email ${privacySummary.showEmail ? 'visible' : 'hidden'}`
+                : 'Control who can see your profile details'}
+            </p>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => navigate('/activity-logs')}
+            className="rounded-2xl shadow-xl p-6 text-left hover:shadow-2xl transition"
+            style={{ backgroundColor: '#BAE4C7' }}
+          >
+            <div className="flex items-center gap-3 mb-2">
+              <Activity size={28} className="text-teal-600" />
+              <h3 className="text-xl font-semibold">Activity History</h3>
+            </div>
+            <p className="text-gray-600 text-sm">View logins, profile updates, documents, and help requests</p>
+          </button>
         </div>
 
         {/* Digital Document Vault - Background color #BAE4C7 */}

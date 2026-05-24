@@ -33,4 +33,6 @@ const DocumentSchema = new mongoose.Schema({
   }
 });
 
+DocumentSchema.index({ userId: 1, createdAt: -1 });
+
 module.exports = mongoose.model('Document', DocumentSchema);

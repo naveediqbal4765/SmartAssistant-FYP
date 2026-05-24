@@ -40,12 +40,6 @@ const UserSchema = new mongoose.Schema({
     priority: { type: Number, default: 1 }
   }],
 
-  // Add after emergencyContacts
-documents: [{
-  type: mongoose.Schema.Types.ObjectId,
-  ref: 'Document'
-}],
-
   // ========== PRIVACY SETTINGS ==========
   privacySettings: {
     showPhone: { type: Boolean, default: true },
@@ -113,6 +107,23 @@ documents: [{
     sparse: true
   },
   // ==========================================
+
+  // ========== SENIOR ↔ CAREGIVER LINKING ==========
+  // Active code emailed to senior on login (caregivers use it when registering)
+  caregiverLinkCode: {
+    code: { type: String, default: null },
+    expiresAt: { type: Date, default: null }
+  },
+  linkedSeniorId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null
+  },
+  linkedCaregivers: {
+    type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    default: []
+  },
+  // ==========================================
   
   createdAt: { 
     type: Date, 
@@ -120,7 +131,8 @@ documents: [{
   }
 });
 
-// Geospatial index for future volunteer matching
-UserSchema.index({ location: "2dsphere" });
+UserSchema.index({ location: '2dsphere' });
+UserSchema.index({ role: 1, 'caregiverLinkCode.code': 1 });
+UserSchema.index({ linkedSeniorId: 1 });
 
 module.exports = mongoose.model('User', UserSchema);
