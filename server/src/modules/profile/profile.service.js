@@ -6,7 +6,7 @@ const Task = require('../../shared/models/Task');
 const {
   resolveUploadFilePath,
   unlinkUserRelationships
-} = require('../../shared/utils/userLinks');
+} = require('../../shared/links/userLinks');
 
 const defaultPrivacySettings = {
   showPhone: true,

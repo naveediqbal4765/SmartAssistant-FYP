@@ -2,11 +2,11 @@ const User = require('../models/User');
 const ActivityLog = require('../models/ActivityLog');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { sendOTPEmail, sendResetOTPEmail } = require('../utils/sendEmail');
+const { sendOTPEmail, sendResetOTPEmail } = require('../src/shared/email/sendEmail');
 const {
   findSeniorByLinkCode,
   refreshSeniorCaregiverLinkCode
-} = require('../utils/seniorCaregiverLink');
+} = require('../src/shared/links/seniorCaregiverLink');
 
 // ========== REGISTER (with OTP & Profile Fields) ==========
 const register = async (req, res) => {

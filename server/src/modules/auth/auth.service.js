@@ -2,11 +2,11 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('./user.model');
 const ActivityLog = require('../../shared/models/ActivityLog');
-const { sendOTPEmail, sendResetOTPEmail } = require('../../shared/utils/sendEmail');
+const { sendOTPEmail, sendResetOTPEmail } = require('../../shared/email/sendEmail');
 const {
   findSeniorByLinkCode,
   refreshSeniorCaregiverLinkCode
-} = require('../../shared/utils/seniorCaregiverLink');
+} = require('../../shared/links/seniorCaregiverLink');
 const {
   normalizeEmail,
   normalizeRole,

@@ -36,7 +36,10 @@ server/src/
 │   └── auth.js
 ├── shared/
 │   ├── models/            # Mongoose schemas (cross-cutting)
-│   └── utils/             # Email, user links, caregiver codes
+│   ├── jwt/               # JWT auth middleware
+│   ├── email/             # Email utilities
+│   ├── helpers/           # Generic filesystem/path helpers
+│   └── links/             # User/caregiver relationship utilities
 ├── modules/
 │   ├── auth/
 │   │   ├── auth.controller.js
@@ -63,7 +66,7 @@ Legacy folders under `server/` remain until manually removed.
 | Phase | Scope | Status |
 |-------|--------|--------|
 | 0 | `src/app.js`, `src/server.js`, `config/database.js`, `uploads/.gitkeep` | Pending |
-| 1 | `shared/models/*`, `shared/utils/*`, `middleware/auth.js`, `config/passport.js` | Pending |
+| 1 | `shared/models/*`, `shared/{jwt,email,helpers,links}/*`, `middleware/auth.js`, `config/passport.js` | Pending |
 | 2 | `modules/auth/*` → `/api/auth` | Pending |
 | 3 | `modules/tasks/*` → `/api/tasks` | Pending |
 | 4 | `modules/user/*` → `/api/user` | Pending |
@@ -76,9 +79,9 @@ Legacy folders under `server/` remain until manually removed.
 | `../models/User` | `../../shared/models/User` |
 | `../utils/authMiddleware` | `../../middleware/auth` |
 | `../controllers/authController` | `./auth.controller` (auth module) |
-| `../utils/sendEmail` | `../../shared/utils/sendEmail` |
-| `../utils/userLinks` | `../../shared/utils/userLinks` |
-| `../utils/seniorCaregiverLink` | `../../shared/utils/seniorCaregiverLink` |
+| `../utils/sendEmail` | `../../shared/email/sendEmail` |
+| `../utils/userLinks` | `../../shared/links/userLinks` |
+| `../utils/seniorCaregiverLink` | `../../shared/links/seniorCaregiverLink` |
 | `./config/passport` | `./config/passport` (from `app.js`) |
 
 ## Verification checklist

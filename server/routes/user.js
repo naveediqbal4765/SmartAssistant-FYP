@@ -6,11 +6,11 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const Task = require('../models/Task');
-const auth = require('../utils/authMiddleware');
+const auth = require('../src/shared/jwt/authMiddleware');
 const {
   resolveUploadFilePath,
   unlinkUserRelationships
-} = require('../utils/userLinks');
+} = require('../src/shared/links/userLinks');
 const router = express.Router();
 
 // Configure multer for file uploads

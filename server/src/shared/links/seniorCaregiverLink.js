@@ -1,5 +1,5 @@
 const User = require('../models/User');
-const { sendSeniorWelcomeLinkEmail } = require('./sendEmail');
+const { sendSeniorWelcomeLinkEmail } = require('../email/sendEmail');
 
 const LINK_CODE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 

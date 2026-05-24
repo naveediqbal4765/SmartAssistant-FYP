@@ -1,1 +1,1 @@
-module.exports = require('../../utils/authMiddleware');
+module.exports = require('../shared/jwt/authMiddleware');

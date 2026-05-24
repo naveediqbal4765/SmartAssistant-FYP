@@ -11,7 +11,7 @@ const {
   verifyResetOTP,
   resetPassword
 } = require('../controllers/authController');
-const { refreshSeniorCaregiverLinkCode } = require('../utils/seniorCaregiverLink');
+const { refreshSeniorCaregiverLinkCode } = require('../src/shared/links/seniorCaregiverLink');
 
 const buildOAuthRedirect = async (user, res) => {
   if (user.role === 'elder') {

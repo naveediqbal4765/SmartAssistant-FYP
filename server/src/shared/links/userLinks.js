@@ -1,14 +1,7 @@
-const path = require('path');
 const User = require('../models/User');
+const { resolveUploadFilePath } = require('../helpers/uploadPaths');
 
-/** Resolve stored fileUrl (/uploads/name) to absolute path on disk */
-function resolveUploadFilePath(fileUrl) {
-  const basename = path.basename((fileUrl || '').replace(/\\/g, '/'));
-  return path.join(__dirname, '..', 'uploads', basename);
-}
-
-/** Remove bidirectional senior ↔ caregiver references before deleting a user */
-async function unlinkUserRelationships(user) {
+const unlinkUserRelationships = async (user) => {
   if (!user) return;
 
   if (user.role === 'caregiver' && user.linkedSeniorId) {
@@ -23,10 +16,9 @@ async function unlinkUserRelationships(user) {
       { $set: { linkedSeniorId: null } }
     );
   }
-}
+};
 
-/** Ensure legacy user documents have consistent link arrays */
-async function normalizeUserDocuments() {
+const normalizeUserDocuments = async () => {
   await User.updateMany(
     { role: 'elder', linkedCaregivers: { $exists: false } },
     { $set: { linkedCaregivers: [] } }
@@ -36,7 +28,7 @@ async function normalizeUserDocuments() {
     { $set: { linkedSeniorId: null } }
   );
   await User.updateMany({}, { $unset: { documents: '' } });
-}
+};
 
 module.exports = {
   resolveUploadFilePath,

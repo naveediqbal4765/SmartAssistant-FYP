@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { normalizeUserDocuments } = require('../shared/utils/userLinks');
+const { normalizeUserDocuments } = require('../shared/links/userLinks');
 
 const connectDatabase = async () => {
   await mongoose.connect(

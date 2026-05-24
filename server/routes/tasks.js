@@ -1,7 +1,7 @@
 const express = require('express');
 const Task = require('../models/Task');
 const ActivityLog = require('../models/ActivityLog');
-const auth = require('../utils/authMiddleware');
+const auth = require('../src/shared/jwt/authMiddleware');
 
 const router = express.Router();
 
