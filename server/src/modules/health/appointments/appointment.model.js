@@ -1,11 +1,35 @@
 const mongoose = require('mongoose');
 
-// Placeholder schema for future appointment scheduling implementation.
 const AppointmentSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true },
-  title: { type: String, trim: true },
-  scheduledAt: { type: Date, default: null },
+  seniorId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+    index: true
+  },
+  title: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  date: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  time: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  notes: {
+    type: String,
+    default: '',
+    trim: true
+  },
   createdAt: { type: Date, default: Date.now }
 });
+
+AppointmentSchema.index({ seniorId: 1, date: 1, time: 1 });
 
 module.exports = mongoose.model('Appointment', AppointmentSchema);

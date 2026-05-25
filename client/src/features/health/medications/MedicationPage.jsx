@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import MedicationList from './MedicationList';
 import MedicationForm from './MedicationForm';
+import MedicationReminder from './MedicationReminder';
 import HealthPlaceholder from '../components/HealthPlaceholder';
 import {
   createMedication,
@@ -111,6 +112,7 @@ export default function MedicationPage() {
 
   return (
     <HealthPlaceholder title="Medications">
+      <MedicationReminder medications={medications} enabled={isSenior && !loading} />
       <div className="space-y-6">
         {error && (
           <div className="rounded-2xl border border-red-100 bg-red-50 p-4 text-red-700">
