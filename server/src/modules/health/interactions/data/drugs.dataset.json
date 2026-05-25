@@ -1,0 +1,3529 @@
+[
+  {
+    "name": "Abacavir",
+    "genericName": "Abacavir",
+    "category": "Antiviral",
+    "subCategory": "NRTI",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "ziagen"
+    ]
+  },
+  {
+    "name": "Acarbose",
+    "genericName": "Acarbose",
+    "category": "Antidiabetic",
+    "subCategory": "alpha-glucosidase inhibitor",
+    "riskLevel": "LOW",
+    "aliases": [
+      "glucobay"
+    ]
+  },
+  {
+    "name": "Aceclofenac",
+    "genericName": "Aceclofenac",
+    "category": "NSAID",
+    "subCategory": "acetic acid",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "acenac",
+      "zerodol"
+    ]
+  },
+  {
+    "name": "Acetazolamide",
+    "genericName": "Acetazolamide",
+    "category": "Diuretic",
+    "subCategory": "carbonic anhydrase inhibitor",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "diamox"
+    ]
+  },
+  {
+    "name": "Acitretin",
+    "genericName": "Acitretin",
+    "category": "Retinoid",
+    "subCategory": "systemic retinoid",
+    "riskLevel": "HIGH",
+    "aliases": [
+      "soriatane"
+    ]
+  },
+  {
+    "name": "Acyclovir",
+    "genericName": "Acyclovir",
+    "category": "Antiviral",
+    "subCategory": "nucleoside analog",
+    "riskLevel": "LOW",
+    "aliases": [
+      "aciclovir",
+      "zovirax"
+    ]
+  },
+  {
+    "name": "Adalimumab",
+    "genericName": "Adalimumab",
+    "category": "Biologic",
+    "subCategory": "TNF inhibitor",
+    "riskLevel": "HIGH",
+    "aliases": [
+      "humira"
+    ]
+  },
+  {
+    "name": "Adapalene",
+    "genericName": "Adapalene",
+    "category": "Retinoid",
+    "subCategory": "topical retinoid",
+    "riskLevel": "LOW",
+    "aliases": [
+      "differin"
+    ]
+  },
+  {
+    "name": "Albendazole",
+    "genericName": "Albendazole",
+    "category": "Antiparasitic",
+    "subCategory": "benzimidazole",
+    "riskLevel": "LOW",
+    "aliases": [
+      "albenza",
+      "zentel"
+    ]
+  },
+  {
+    "name": "Albuterol",
+    "genericName": "Salbutamol",
+    "category": "Bronchodilator",
+    "subCategory": "beta-2 agonist",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "salbutamol",
+      "ventolin",
+      "asthalin"
+    ]
+  },
+  {
+    "name": "Alcohol",
+    "genericName": "Alcohol",
+    "category": "Alcohol",
+    "subCategory": "substance",
+    "riskLevel": "HIGH",
+    "aliases": [
+      "ethanol",
+      "drinking alcohol",
+      "beer",
+      "wine",
+      "liquor"
+    ]
+  },
+  {
+    "name": "Alendronate",
+    "genericName": "Alendronate",
+    "category": "Bisphosphonate",
+    "subCategory": "bone resorption inhibitor",
+    "riskLevel": "LOW",
+    "aliases": [
+      "fosamax"
+    ]
+  },
+  {
+    "name": "Aliskiren",
+    "genericName": "Aliskiren",
+    "category": "Antihypertensive",
+    "subCategory": "renin inhibitor",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "tekturna"
+    ]
+  },
+  {
+    "name": "Allopurinol",
+    "genericName": "Allopurinol",
+    "category": "Urate_Lowering",
+    "subCategory": "xanthine oxidase inhibitor",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "zyloric"
+    ]
+  },
+  {
+    "name": "Alprazolam",
+    "genericName": "Alprazolam",
+    "category": "Benzodiazepine",
+    "subCategory": "anxiolytic",
+    "riskLevel": "HIGH",
+    "aliases": [
+      "alprazolamum",
+      "xanax"
+    ]
+  },
+  {
+    "name": "Aluminum Hydroxide",
+    "genericName": "Aluminum Hydroxide",
+    "category": "Antacid",
+    "subCategory": "aluminum antacid",
+    "riskLevel": "LOW",
+    "aliases": [
+      "maalox"
+    ]
+  },
+  {
+    "name": "Amikacin",
+    "genericName": "Amikacin",
+    "category": "Antibiotic",
+    "subCategory": "aminoglycoside",
+    "riskLevel": "HIGH",
+    "aliases": [
+      "amikin"
+    ]
+  },
+  {
+    "name": "Aminophylline",
+    "genericName": "Aminophylline",
+    "category": "Bronchodilator",
+    "subCategory": "methylxanthine",
+    "riskLevel": "HIGH",
+    "aliases": [
+      "phyllocontin"
+    ]
+  },
+  {
+    "name": "Amisulpride",
+    "genericName": "Amisulpride",
+    "category": "Antipsychotic",
+    "subCategory": "atypical",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "solian"
+    ]
+  },
+  {
+    "name": "Amitriptyline",
+    "genericName": "Amitriptyline",
+    "category": "Tricyclic_Antidepressant",
+    "subCategory": "TCA",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "tryptanol",
+      "elavil"
+    ]
+  },
+  {
+    "name": "Amlodipine",
+    "genericName": "Amlodipine",
+    "category": "Calcium_Channel_Blocker",
+    "subCategory": "dihydropyridine",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "norvasc",
+      "amlodipin"
+    ]
+  },
+  {
+    "name": "Amoxicillin",
+    "genericName": "Amoxicillin",
+    "category": "Antibiotic",
+    "subCategory": "penicillin",
+    "riskLevel": "LOW",
+    "aliases": [
+      "amoxcilin",
+      "amoxicilin",
+      "amoxycillin",
+      "amoxi",
+      "amoxil"
+    ]
+  },
+  {
+    "name": "Ampicillin",
+    "genericName": "Ampicillin",
+    "category": "Antibiotic",
+    "subCategory": "penicillin",
+    "riskLevel": "LOW",
+    "aliases": [
+      "ampicilin",
+      "ampicillan"
+    ]
+  },
+  {
+    "name": "Apixaban",
+    "genericName": "Apixaban",
+    "category": "Anticoagulant",
+    "subCategory": "factor Xa inhibitor",
+    "riskLevel": "HIGH",
+    "aliases": [
+      "apixiban",
+      "eliquis"
+    ]
+  },
+  {
+    "name": "Aripiprazole",
+    "genericName": "Aripiprazole",
+    "category": "Antipsychotic",
+    "subCategory": "atypical",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "abilify"
+    ]
+  },
+  {
+    "name": "Artemether Lumefantrine",
+    "genericName": "Artemether Lumefantrine",
+    "category": "Antimalarial",
+    "subCategory": "artemisinin combination",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "coartem"
+    ]
+  },
+  {
+    "name": "Ascorbic Acid",
+    "genericName": "Ascorbic Acid",
+    "category": "Supplement",
+    "subCategory": "vitamin C",
+    "riskLevel": "LOW",
+    "aliases": [
+      "vitamin c",
+      "cac-1000"
+    ]
+  },
+  {
+    "name": "Aspirin",
+    "genericName": "Aspirin",
+    "category": "NSAID",
+    "subCategory": "salicylate",
+    "riskLevel": "HIGH",
+    "aliases": [
+      "asprin",
+      "acetylsalicylic acid",
+      "asa"
+    ]
+  },
+  {
+    "name": "Atenolol",
+    "genericName": "Atenolol",
+    "category": "Beta_Blocker",
+    "subCategory": "beta-1 selective",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "tenormin"
+    ]
+  },
+  {
+    "name": "Atorvastatin",
+    "genericName": "Atorvastatin",
+    "category": "Statin",
+    "subCategory": "lipid lowering",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "atorvastatin calcium",
+      "lipitor"
+    ]
+  },
+  {
+    "name": "Azathioprine",
+    "genericName": "Azathioprine",
+    "category": "Immunosuppressant",
+    "subCategory": "antimetabolite",
+    "riskLevel": "HIGH",
+    "aliases": [
+      "imuran"
+    ]
+  },
+  {
+    "name": "Azelastine",
+    "genericName": "Azelastine",
+    "category": "Antihistamine",
+    "subCategory": "nasal antihistamine",
+    "riskLevel": "LOW",
+    "aliases": [
+      "astelin"
+    ]
+  },
+  {
+    "name": "Azithromycin",
+    "genericName": "Azithromycin",
+    "category": "Antibiotic",
+    "subCategory": "macrolide",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "azithromicin",
+      "azithro",
+      "zithromax",
+      "z pak",
+      "z-pak"
+    ]
+  },
+  {
+    "name": "Baclofen",
+    "genericName": "Baclofen",
+    "category": "Muscle_Relaxant",
+    "subCategory": "GABA-B agonist",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "lioresal"
+    ]
+  },
+  {
+    "name": "Beclomethasone",
+    "genericName": "Beclomethasone",
+    "category": "Steroid",
+    "subCategory": "inhaled corticosteroid",
+    "riskLevel": "LOW",
+    "aliases": [
+      "beclate",
+      "qvar"
+    ]
+  },
+  {
+    "name": "Benazepril",
+    "genericName": "Benazepril",
+    "category": "ACE_Inhibitor",
+    "subCategory": "antihypertensive",
+    "riskLevel": "MODERATE",
+    "aliases": []
+  },
+  {
+    "name": "Benzonatate",
+    "genericName": "Benzonatate",
+    "category": "Antitussive",
+    "subCategory": "cough suppressant",
+    "riskLevel": "LOW",
+    "aliases": [
+      "tessalon"
+    ]
+  },
+  {
+    "name": "Benzyl Benzoate",
+    "genericName": "Benzyl Benzoate",
+    "category": "Scabicide",
+    "subCategory": "topical antiparasitic",
+    "riskLevel": "LOW",
+    "aliases": [
+      "bb lotion"
+    ]
+  },
+  {
+    "name": "Betahistine",
+    "genericName": "Betahistine",
+    "category": "Antivertigo",
+    "subCategory": "histamine analog",
+    "riskLevel": "LOW",
+    "aliases": [
+      "serc",
+      "vertin"
+    ]
+  },
+  {
+    "name": "Betamethasone",
+    "genericName": "Betamethasone",
+    "category": "Steroid",
+    "subCategory": "corticosteroid",
+    "riskLevel": "LOW",
+    "aliases": [
+      "betnovate",
+      "celestone"
+    ]
+  },
+  {
+    "name": "Bicalutamide",
+    "genericName": "Bicalutamide",
+    "category": "Antiandrogen",
+    "subCategory": "prostate cancer medicine",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "casodex"
+    ]
+  },
+  {
+    "name": "Bilastine",
+    "genericName": "Bilastine",
+    "category": "Antihistamine",
+    "subCategory": "second generation",
+    "riskLevel": "LOW",
+    "aliases": [
+      "bilaxten"
+    ]
+  },
+  {
+    "name": "Bisacodyl",
+    "genericName": "Bisacodyl",
+    "category": "Laxative",
+    "subCategory": "stimulant",
+    "riskLevel": "LOW",
+    "aliases": [
+      "dulcolax"
+    ]
+  },
+  {
+    "name": "Bismuth Subsalicylate",
+    "genericName": "Bismuth Subsalicylate",
+    "category": "Antidiarrheal",
+    "subCategory": "salicylate GI agent",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "pepto bismol"
+    ]
+  },
+  {
+    "name": "Bisoprolol",
+    "genericName": "Bisoprolol",
+    "category": "Beta_Blocker",
+    "subCategory": "beta-1 selective",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "concor"
+    ]
+  },
+  {
+    "name": "Brimonidine",
+    "genericName": "Brimonidine",
+    "category": "Ophthalmic",
+    "subCategory": "alpha agonist glaucoma",
+    "riskLevel": "LOW",
+    "aliases": [
+      "alphagan"
+    ]
+  },
+  {
+    "name": "Bromazepam",
+    "genericName": "Bromazepam",
+    "category": "Benzodiazepine",
+    "subCategory": "anxiolytic",
+    "riskLevel": "HIGH",
+    "aliases": [
+      "lexotanil"
+    ]
+  },
+  {
+    "name": "Bromhexine",
+    "genericName": "Bromhexine",
+    "category": "Expectorant",
+    "subCategory": "mucolytic",
+    "riskLevel": "LOW",
+    "aliases": [
+      "bisolvon"
+    ]
+  },
+  {
+    "name": "Budesonide",
+    "genericName": "Budesonide",
+    "category": "Steroid",
+    "subCategory": "corticosteroid",
+    "riskLevel": "LOW",
+    "aliases": []
+  },
+  {
+    "name": "Bumetanide",
+    "genericName": "Bumetanide",
+    "category": "Diuretic",
+    "subCategory": "loop diuretic",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "bumex"
+    ]
+  },
+  {
+    "name": "Buprenorphine",
+    "genericName": "Buprenorphine",
+    "category": "Opioid",
+    "subCategory": "partial agonist",
+    "riskLevel": "HIGH",
+    "aliases": [
+      "subutex",
+      "butrans"
+    ]
+  },
+  {
+    "name": "Bupropion",
+    "genericName": "Bupropion",
+    "category": "Antidepressant",
+    "subCategory": "NDRI",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "wellbutrin",
+      "zyban"
+    ]
+  },
+  {
+    "name": "Buspirone",
+    "genericName": "Buspirone",
+    "category": "Anxiolytic",
+    "subCategory": "5-HT1A partial agonist",
+    "riskLevel": "LOW",
+    "aliases": [
+      "buspar"
+    ]
+  },
+  {
+    "name": "Calcium Carbonate",
+    "genericName": "Calcium Carbonate",
+    "category": "Supplement",
+    "subCategory": "calcium antacid",
+    "riskLevel": "LOW",
+    "aliases": [
+      "tums",
+      "calcium"
+    ]
+  },
+  {
+    "name": "Calcium Citrate",
+    "genericName": "Calcium Citrate",
+    "category": "Supplement",
+    "subCategory": "calcium",
+    "riskLevel": "LOW",
+    "aliases": [
+      "citracal"
+    ]
+  },
+  {
+    "name": "Candesartan",
+    "genericName": "Candesartan",
+    "category": "ARB",
+    "subCategory": "antihypertensive",
+    "riskLevel": "MODERATE",
+    "aliases": []
+  },
+  {
+    "name": "Captopril",
+    "genericName": "Captopril",
+    "category": "ACE_Inhibitor",
+    "subCategory": "antihypertensive",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "capoten"
+    ]
+  },
+  {
+    "name": "Carbamazepine",
+    "genericName": "Carbamazepine",
+    "category": "Antiepileptic",
+    "subCategory": "enzyme inducer",
+    "riskLevel": "HIGH",
+    "aliases": [
+      "carbamazepin",
+      "tegretol"
+    ]
+  },
+  {
+    "name": "Carbidopa Levodopa",
+    "genericName": "Carbidopa Levodopa",
+    "category": "Antiparkinson",
+    "subCategory": "dopamine precursor",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "sinemet"
+    ]
+  },
+  {
+    "name": "Carbimazole",
+    "genericName": "Carbimazole",
+    "category": "Thyroid",
+    "subCategory": "antithyroid",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "neo-mercazole"
+    ]
+  },
+  {
+    "name": "Carvedilol",
+    "genericName": "Carvedilol",
+    "category": "Beta_Blocker",
+    "subCategory": "nonselective alpha beta blocker",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "coreg"
+    ]
+  },
+  {
+    "name": "Cefaclor",
+    "genericName": "Cefaclor",
+    "category": "Antibiotic",
+    "subCategory": "cephalosporin",
+    "riskLevel": "LOW",
+    "aliases": [
+      "ceclor"
+    ]
+  },
+  {
+    "name": "Cefadroxil",
+    "genericName": "Cefadroxil",
+    "category": "Antibiotic",
+    "subCategory": "cephalosporin",
+    "riskLevel": "LOW",
+    "aliases": [
+      "duricef"
+    ]
+  },
+  {
+    "name": "Cefdinir",
+    "genericName": "Cefdinir",
+    "category": "Antibiotic",
+    "subCategory": "cephalosporin",
+    "riskLevel": "LOW",
+    "aliases": [
+      "omnicef"
+    ]
+  },
+  {
+    "name": "Cefepime",
+    "genericName": "Cefepime",
+    "category": "Antibiotic",
+    "subCategory": "cephalosporin",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "maxipime"
+    ]
+  },
+  {
+    "name": "Cefixime",
+    "genericName": "Cefixime",
+    "category": "Antibiotic",
+    "subCategory": "cephalosporin",
+    "riskLevel": "LOW",
+    "aliases": [
+      "suprax",
+      "cefixim"
+    ]
+  },
+  {
+    "name": "Cefotaxime",
+    "genericName": "Cefotaxime",
+    "category": "Antibiotic",
+    "subCategory": "cephalosporin",
+    "riskLevel": "LOW",
+    "aliases": [
+      "claforan"
+    ]
+  },
+  {
+    "name": "Cefpodoxime",
+    "genericName": "Cefpodoxime",
+    "category": "Antibiotic",
+    "subCategory": "cephalosporin",
+    "riskLevel": "LOW",
+    "aliases": [
+      "vantin"
+    ]
+  },
+  {
+    "name": "Cefprozil",
+    "genericName": "Cefprozil",
+    "category": "Antibiotic",
+    "subCategory": "cephalosporin",
+    "riskLevel": "LOW",
+    "aliases": [
+      "cefzil"
+    ]
+  },
+  {
+    "name": "Ceftazidime",
+    "genericName": "Ceftazidime",
+    "category": "Antibiotic",
+    "subCategory": "cephalosporin",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "fortum"
+    ]
+  },
+  {
+    "name": "Ceftriaxone",
+    "genericName": "Ceftriaxone",
+    "category": "Antibiotic",
+    "subCategory": "cephalosporin",
+    "riskLevel": "MODERATE",
+    "aliases": []
+  },
+  {
+    "name": "Cefuroxime",
+    "genericName": "Cefuroxime",
+    "category": "Antibiotic",
+    "subCategory": "cephalosporin",
+    "riskLevel": "LOW",
+    "aliases": []
+  },
+  {
+    "name": "Celecoxib",
+    "genericName": "Celecoxib",
+    "category": "NSAID",
+    "subCategory": "COX-2 inhibitor",
+    "riskLevel": "MODERATE",
+    "aliases": []
+  },
+  {
+    "name": "Cephalexin",
+    "genericName": "Cephalexin",
+    "category": "Antibiotic",
+    "subCategory": "cephalosporin",
+    "riskLevel": "LOW",
+    "aliases": []
+  },
+  {
+    "name": "Cetirizine",
+    "genericName": "Cetirizine",
+    "category": "Antihistamine",
+    "subCategory": "second generation",
+    "riskLevel": "LOW",
+    "aliases": [
+      "cetrizine",
+      "zyrtec"
+    ]
+  },
+  {
+    "name": "Chloroquine",
+    "genericName": "Chloroquine",
+    "category": "Antimalarial",
+    "subCategory": "quinoline",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "aralen"
+    ]
+  },
+  {
+    "name": "Chlorpheniramine",
+    "genericName": "Chlorpheniramine",
+    "category": "Antihistamine",
+    "subCategory": "first generation",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "chlorphenamine",
+      "piriton"
+    ]
+  },
+  {
+    "name": "Chlorpromazine",
+    "genericName": "Chlorpromazine",
+    "category": "Antipsychotic",
+    "subCategory": "typical",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "largactil",
+      "thorazine"
+    ]
+  },
+  {
+    "name": "Chlorthalidone",
+    "genericName": "Chlorthalidone",
+    "category": "Diuretic",
+    "subCategory": "thiazide-like",
+    "riskLevel": "MODERATE",
+    "aliases": []
+  },
+  {
+    "name": "Cilostazol",
+    "genericName": "Cilostazol",
+    "category": "Antiplatelet",
+    "subCategory": "PDE3 inhibitor",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "pletal"
+    ]
+  },
+  {
+    "name": "Cinnarizine",
+    "genericName": "Cinnarizine",
+    "category": "Antivertigo",
+    "subCategory": "antihistamine calcium channel blocker",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "stugeron"
+    ]
+  },
+  {
+    "name": "Ciprofloxacin",
+    "genericName": "Ciprofloxacin",
+    "category": "Antibiotic",
+    "subCategory": "fluoroquinolone",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "ciproflaxacin",
+      "cipro"
+    ]
+  },
+  {
+    "name": "Citalopram",
+    "genericName": "Citalopram",
+    "category": "SSRI",
+    "subCategory": "antidepressant",
+    "riskLevel": "MODERATE",
+    "aliases": []
+  },
+  {
+    "name": "Clarithromycin",
+    "genericName": "Clarithromycin",
+    "category": "Antibiotic",
+    "subCategory": "macrolide",
+    "riskLevel": "MODERATE",
+    "aliases": []
+  },
+  {
+    "name": "Clindamycin",
+    "genericName": "Clindamycin",
+    "category": "Antibiotic",
+    "subCategory": "lincosamide",
+    "riskLevel": "LOW",
+    "aliases": []
+  },
+  {
+    "name": "Clobetasol",
+    "genericName": "Clobetasol",
+    "category": "Steroid",
+    "subCategory": "topical corticosteroid",
+    "riskLevel": "LOW",
+    "aliases": [
+      "dermovate"
+    ]
+  },
+  {
+    "name": "Clomipramine",
+    "genericName": "Clomipramine",
+    "category": "Tricyclic_Antidepressant",
+    "subCategory": "TCA",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "anafranil"
+    ]
+  },
+  {
+    "name": "Clonazepam",
+    "genericName": "Clonazepam",
+    "category": "Benzodiazepine",
+    "subCategory": "anxiolytic",
+    "riskLevel": "HIGH",
+    "aliases": []
+  },
+  {
+    "name": "Clopidogrel",
+    "genericName": "Clopidogrel",
+    "category": "Antiplatelet",
+    "subCategory": "P2Y12 inhibitor",
+    "riskLevel": "HIGH",
+    "aliases": [
+      "clopidogel",
+      "plavix"
+    ]
+  },
+  {
+    "name": "Clotrimazole",
+    "genericName": "Clotrimazole",
+    "category": "Antifungal",
+    "subCategory": "azole",
+    "riskLevel": "LOW",
+    "aliases": [
+      "canesten"
+    ]
+  },
+  {
+    "name": "Clotrimazole Betamethasone",
+    "genericName": "Clotrimazole Betamethasone",
+    "category": "Antifungal",
+    "subCategory": "azole steroid combination",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "lotrisone"
+    ]
+  },
+  {
+    "name": "Cloxacillin",
+    "genericName": "Cloxacillin",
+    "category": "Antibiotic",
+    "subCategory": "penicillin",
+    "riskLevel": "LOW",
+    "aliases": [
+      "orbenin"
+    ]
+  },
+  {
+    "name": "Codeine",
+    "genericName": "Codeine",
+    "category": "Opioid",
+    "subCategory": "analgesic",
+    "riskLevel": "HIGH",
+    "aliases": []
+  },
+  {
+    "name": "Colchicine",
+    "genericName": "Colchicine",
+    "category": "Anti_Gout",
+    "subCategory": "microtubule inhibitor",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "colcrys"
+    ]
+  },
+  {
+    "name": "Colestyramine",
+    "genericName": "Cholestyramine",
+    "category": "Lipid_Lowering",
+    "subCategory": "bile acid sequestrant",
+    "riskLevel": "LOW",
+    "aliases": [
+      "questran",
+      "cholestyramine"
+    ]
+  },
+  {
+    "name": "Cyproheptadine",
+    "genericName": "Cyproheptadine",
+    "category": "Antihistamine",
+    "subCategory": "first generation",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "periactin"
+    ]
+  },
+  {
+    "name": "Dabigatran",
+    "genericName": "Dabigatran",
+    "category": "Anticoagulant",
+    "subCategory": "direct thrombin inhibitor",
+    "riskLevel": "HIGH",
+    "aliases": []
+  },
+  {
+    "name": "Dapagliflozin",
+    "genericName": "Dapagliflozin",
+    "category": "Antidiabetic",
+    "subCategory": "SGLT2 inhibitor",
+    "riskLevel": "LOW",
+    "aliases": [
+      "forxiga",
+      "farxiga"
+    ]
+  },
+  {
+    "name": "Desloratadine",
+    "genericName": "Desloratadine",
+    "category": "Antihistamine",
+    "subCategory": "second generation",
+    "riskLevel": "LOW",
+    "aliases": [
+      "aerius"
+    ]
+  },
+  {
+    "name": "Desvenlafaxine",
+    "genericName": "Desvenlafaxine",
+    "category": "SNRI",
+    "subCategory": "antidepressant",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "pristiq"
+    ]
+  },
+  {
+    "name": "Dexamethasone",
+    "genericName": "Dexamethasone",
+    "category": "Steroid",
+    "subCategory": "glucocorticoid",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "dexamethason",
+      "decadron"
+    ]
+  },
+  {
+    "name": "Dexlansoprazole",
+    "genericName": "Dexlansoprazole",
+    "category": "PPI",
+    "subCategory": "acid suppression",
+    "riskLevel": "LOW",
+    "aliases": [
+      "dexilant"
+    ]
+  },
+  {
+    "name": "Dextromethorphan",
+    "genericName": "Dextromethorphan",
+    "category": "Antitussive",
+    "subCategory": "cough suppressant",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "dxm",
+      "benylin dry cough"
+    ]
+  },
+  {
+    "name": "Diazepam",
+    "genericName": "Diazepam",
+    "category": "Benzodiazepine",
+    "subCategory": "anxiolytic",
+    "riskLevel": "HIGH",
+    "aliases": [
+      "diazapam",
+      "valium"
+    ]
+  },
+  {
+    "name": "Diclofenac",
+    "genericName": "Diclofenac",
+    "category": "NSAID",
+    "subCategory": "acetic acid",
+    "riskLevel": "MODERATE",
+    "aliases": []
+  },
+  {
+    "name": "Dicyclomine",
+    "genericName": "Dicyclomine",
+    "category": "Antispasmodic",
+    "subCategory": "anticholinergic",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "bentyl"
+    ]
+  },
+  {
+    "name": "Dienogest",
+    "genericName": "Dienogest",
+    "category": "Hormonal",
+    "subCategory": "progestin",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "visanne"
+    ]
+  },
+  {
+    "name": "Diltiazem",
+    "genericName": "Diltiazem",
+    "category": "Calcium_Channel_Blocker",
+    "subCategory": "non-dihydropyridine",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "cardizem"
+    ]
+  },
+  {
+    "name": "Diosmin Hesperidin",
+    "genericName": "Diosmin Hesperidin",
+    "category": "Vascular_Medicine",
+    "subCategory": "flavonoid",
+    "riskLevel": "LOW",
+    "aliases": [
+      "daflon"
+    ]
+  },
+  {
+    "name": "Diphenhydramine",
+    "genericName": "Diphenhydramine",
+    "category": "Antihistamine",
+    "subCategory": "first generation",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "diphenhydramin",
+      "benadryl"
+    ]
+  },
+  {
+    "name": "Dipyridamole",
+    "genericName": "Dipyridamole",
+    "category": "Antiplatelet",
+    "subCategory": "platelet inhibitor",
+    "riskLevel": "MODERATE",
+    "aliases": []
+  },
+  {
+    "name": "Domperidone",
+    "genericName": "Domperidone",
+    "category": "Antiemetic",
+    "subCategory": "dopamine antagonist",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "motilium"
+    ]
+  },
+  {
+    "name": "Donepezil",
+    "genericName": "Donepezil",
+    "category": "Cholinesterase_Inhibitor",
+    "subCategory": "dementia medicine",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "aricept"
+    ]
+  },
+  {
+    "name": "Doxazosin",
+    "genericName": "Doxazosin",
+    "category": "Antihypertensive",
+    "subCategory": "alpha-1 blocker",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "cardura"
+    ]
+  },
+  {
+    "name": "Doxycycline",
+    "genericName": "Doxycycline",
+    "category": "Antibiotic",
+    "subCategory": "tetracycline",
+    "riskLevel": "LOW",
+    "aliases": [
+      "doxicycline",
+      "doxy"
+    ]
+  },
+  {
+    "name": "Dulaglutide",
+    "genericName": "Dulaglutide",
+    "category": "Antidiabetic",
+    "subCategory": "GLP-1 agonist",
+    "riskLevel": "LOW",
+    "aliases": [
+      "trulicity"
+    ]
+  },
+  {
+    "name": "Duloxetine",
+    "genericName": "Duloxetine",
+    "category": "SNRI",
+    "subCategory": "antidepressant neuropathic pain",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "cymbalta"
+    ]
+  },
+  {
+    "name": "Ebastine",
+    "genericName": "Ebastine",
+    "category": "Antihistamine",
+    "subCategory": "second generation",
+    "riskLevel": "LOW",
+    "aliases": [
+      "kestine"
+    ]
+  },
+  {
+    "name": "Econazole",
+    "genericName": "Econazole",
+    "category": "Antifungal",
+    "subCategory": "azole",
+    "riskLevel": "LOW",
+    "aliases": [
+      "spectazole"
+    ]
+  },
+  {
+    "name": "Edoxaban",
+    "genericName": "Edoxaban",
+    "category": "Anticoagulant",
+    "subCategory": "factor Xa inhibitor",
+    "riskLevel": "HIGH",
+    "aliases": []
+  },
+  {
+    "name": "Empagliflozin",
+    "genericName": "Empagliflozin",
+    "category": "Antidiabetic",
+    "subCategory": "SGLT2 inhibitor",
+    "riskLevel": "LOW",
+    "aliases": []
+  },
+  {
+    "name": "Enalapril",
+    "genericName": "Enalapril",
+    "category": "ACE_Inhibitor",
+    "subCategory": "antihypertensive",
+    "riskLevel": "MODERATE",
+    "aliases": []
+  },
+  {
+    "name": "Enoxaparin",
+    "genericName": "Enoxaparin",
+    "category": "Anticoagulant",
+    "subCategory": "low molecular weight heparin",
+    "riskLevel": "HIGH",
+    "aliases": []
+  },
+  {
+    "name": "Entecavir",
+    "genericName": "Entecavir",
+    "category": "Antiviral",
+    "subCategory": "hepatitis B antiviral",
+    "riskLevel": "LOW",
+    "aliases": [
+      "baraclude"
+    ]
+  },
+  {
+    "name": "Eplerenone",
+    "genericName": "Eplerenone",
+    "category": "Diuretic",
+    "subCategory": "aldosterone antagonist",
+    "riskLevel": "HIGH",
+    "aliases": [
+      "inspra"
+    ]
+  },
+  {
+    "name": "Erythromycin",
+    "genericName": "Erythromycin",
+    "category": "Antibiotic",
+    "subCategory": "macrolide",
+    "riskLevel": "MODERATE",
+    "aliases": []
+  },
+  {
+    "name": "Escitalopram",
+    "genericName": "Escitalopram",
+    "category": "SSRI",
+    "subCategory": "antidepressant",
+    "riskLevel": "MODERATE",
+    "aliases": []
+  },
+  {
+    "name": "Esomeprazole",
+    "genericName": "Esomeprazole",
+    "category": "PPI",
+    "subCategory": "acid suppression",
+    "riskLevel": "LOW",
+    "aliases": []
+  },
+  {
+    "name": "Ethambutol",
+    "genericName": "Ethambutol",
+    "category": "Antitubercular",
+    "subCategory": "mycobacterial agent",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "myambutol"
+    ]
+  },
+  {
+    "name": "Ethanol",
+    "genericName": "Ethanol",
+    "category": "Alcohol",
+    "subCategory": "substance",
+    "riskLevel": "HIGH",
+    "aliases": []
+  },
+  {
+    "name": "Etizolam",
+    "genericName": "Etizolam",
+    "category": "Benzodiazepine",
+    "subCategory": "thienodiazepine anxiolytic",
+    "riskLevel": "HIGH",
+    "aliases": [
+      "etilaam"
+    ]
+  },
+  {
+    "name": "Etodolac",
+    "genericName": "Etodolac",
+    "category": "NSAID",
+    "subCategory": "acetic acid",
+    "riskLevel": "MODERATE",
+    "aliases": []
+  },
+  {
+    "name": "Etoricoxib",
+    "genericName": "Etoricoxib",
+    "category": "NSAID",
+    "subCategory": "COX-2 inhibitor",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "arcoxia",
+      "etorix"
+    ]
+  },
+  {
+    "name": "Ezetimibe",
+    "genericName": "Ezetimibe",
+    "category": "Lipid_Lowering",
+    "subCategory": "cholesterol absorption inhibitor",
+    "riskLevel": "LOW",
+    "aliases": [
+      "zetia",
+      "ezetrol"
+    ]
+  },
+  {
+    "name": "Famotidine",
+    "genericName": "Famotidine",
+    "category": "H2_Blocker",
+    "subCategory": "acid suppression",
+    "riskLevel": "LOW",
+    "aliases": [
+      "pepcid"
+    ]
+  },
+  {
+    "name": "Febuxostat",
+    "genericName": "Febuxostat",
+    "category": "Urate_Lowering",
+    "subCategory": "xanthine oxidase inhibitor",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "uloric",
+      "feburic"
+    ]
+  },
+  {
+    "name": "Felodipine",
+    "genericName": "Felodipine",
+    "category": "Calcium_Channel_Blocker",
+    "subCategory": "dihydropyridine",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "plendil"
+    ]
+  },
+  {
+    "name": "Fenofibrate",
+    "genericName": "Fenofibrate",
+    "category": "Lipid_Lowering",
+    "subCategory": "fibrate",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "tricor"
+    ]
+  },
+  {
+    "name": "Fentanyl",
+    "genericName": "Fentanyl",
+    "category": "Opioid",
+    "subCategory": "analgesic",
+    "riskLevel": "HIGH",
+    "aliases": []
+  },
+  {
+    "name": "Ferrous Sulfate",
+    "genericName": "Ferrous Sulfate",
+    "category": "Supplement",
+    "subCategory": "iron",
+    "riskLevel": "LOW",
+    "aliases": [
+      "iron tablet",
+      "ferrous sulphate"
+    ]
+  },
+  {
+    "name": "Fexofenadine",
+    "genericName": "Fexofenadine",
+    "category": "Antihistamine",
+    "subCategory": "second generation",
+    "riskLevel": "LOW",
+    "aliases": []
+  },
+  {
+    "name": "Finasteride",
+    "genericName": "Finasteride",
+    "category": "BPH_Medicine",
+    "subCategory": "5-alpha reductase inhibitor",
+    "riskLevel": "LOW",
+    "aliases": [
+      "proscar",
+      "propecia"
+    ]
+  },
+  {
+    "name": "Fluconazole",
+    "genericName": "Fluconazole",
+    "category": "Antifungal",
+    "subCategory": "azole",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "fluconazol",
+      "diflucan"
+    ]
+  },
+  {
+    "name": "Fluoxetine",
+    "genericName": "Fluoxetine",
+    "category": "SSRI",
+    "subCategory": "antidepressant",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "fluoxetin",
+      "prozac"
+    ]
+  },
+  {
+    "name": "Flupentixol Melitracen",
+    "genericName": "Flupentixol Melitracen",
+    "category": "Antidepressant",
+    "subCategory": "combination psychotropic",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "deanxit"
+    ]
+  },
+  {
+    "name": "Flurbiprofen",
+    "genericName": "Flurbiprofen",
+    "category": "NSAID",
+    "subCategory": "propionic acid",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "ansaid"
+    ]
+  },
+  {
+    "name": "Fluticasone",
+    "genericName": "Fluticasone",
+    "category": "Steroid",
+    "subCategory": "corticosteroid",
+    "riskLevel": "LOW",
+    "aliases": []
+  },
+  {
+    "name": "Fluvoxamine",
+    "genericName": "Fluvoxamine",
+    "category": "SSRI",
+    "subCategory": "antidepressant",
+    "riskLevel": "MODERATE",
+    "aliases": []
+  },
+  {
+    "name": "Folic Acid",
+    "genericName": "Folic Acid",
+    "category": "Supplement",
+    "subCategory": "vitamin B9",
+    "riskLevel": "LOW",
+    "aliases": [
+      "folate"
+    ]
+  },
+  {
+    "name": "Formoterol",
+    "genericName": "Formoterol",
+    "category": "Bronchodilator",
+    "subCategory": "long-acting beta-2 agonist",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "foradil"
+    ]
+  },
+  {
+    "name": "Furosemide",
+    "genericName": "Furosemide",
+    "category": "Diuretic",
+    "subCategory": "loop diuretic",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "frusemide",
+      "lasix"
+    ]
+  },
+  {
+    "name": "Fusidic Acid",
+    "genericName": "Fusidic Acid",
+    "category": "Antibiotic",
+    "subCategory": "topical antibiotic",
+    "riskLevel": "LOW",
+    "aliases": [
+      "fucidin"
+    ]
+  },
+  {
+    "name": "Gabapentin",
+    "genericName": "Gabapentin",
+    "category": "Antiepileptic",
+    "subCategory": "neuropathic pain agent",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "neurontin",
+      "gabantin"
+    ]
+  },
+  {
+    "name": "Gaviscon",
+    "genericName": "Sodium Alginate Antacid",
+    "category": "Antacid",
+    "subCategory": "alginate antacid",
+    "riskLevel": "LOW",
+    "aliases": [
+      "alginate",
+      "sodium alginate"
+    ]
+  },
+  {
+    "name": "Gemfibrozil",
+    "genericName": "Gemfibrozil",
+    "category": "Lipid_Lowering",
+    "subCategory": "fibrate",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "lopid"
+    ]
+  },
+  {
+    "name": "Gentamicin",
+    "genericName": "Gentamicin",
+    "category": "Antibiotic",
+    "subCategory": "aminoglycoside",
+    "riskLevel": "HIGH",
+    "aliases": [
+      "garamycin"
+    ]
+  },
+  {
+    "name": "Ginkgo Biloba",
+    "genericName": "Ginkgo Biloba",
+    "category": "Herbal",
+    "subCategory": "herbal supplement",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "ginkgo"
+    ]
+  },
+  {
+    "name": "Gliclazide",
+    "genericName": "Gliclazide",
+    "category": "Antidiabetic",
+    "subCategory": "sulfonylurea",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "diamicron"
+    ]
+  },
+  {
+    "name": "Glimepiride",
+    "genericName": "Glimepiride",
+    "category": "Antidiabetic",
+    "subCategory": "sulfonylurea",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "amaryl"
+    ]
+  },
+  {
+    "name": "Glipizide",
+    "genericName": "Glipizide",
+    "category": "Antidiabetic",
+    "subCategory": "sulfonylurea",
+    "riskLevel": "MODERATE",
+    "aliases": []
+  },
+  {
+    "name": "Glucosamine",
+    "genericName": "Glucosamine",
+    "category": "Supplement",
+    "subCategory": "joint supplement",
+    "riskLevel": "LOW",
+    "aliases": [
+      "glucosamine sulfate"
+    ]
+  },
+  {
+    "name": "Glyburide",
+    "genericName": "Glyburide",
+    "category": "Antidiabetic",
+    "subCategory": "sulfonylurea",
+    "riskLevel": "MODERATE",
+    "aliases": []
+  },
+  {
+    "name": "Guaifenesin",
+    "genericName": "Guaifenesin",
+    "category": "Expectorant",
+    "subCategory": "mucolytic",
+    "riskLevel": "LOW",
+    "aliases": [
+      "mucinex"
+    ]
+  },
+  {
+    "name": "Haloperidol",
+    "genericName": "Haloperidol",
+    "category": "Antipsychotic",
+    "subCategory": "typical",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "haldol"
+    ]
+  },
+  {
+    "name": "Heparin",
+    "genericName": "Heparin",
+    "category": "Anticoagulant",
+    "subCategory": "injectable",
+    "riskLevel": "HIGH",
+    "aliases": []
+  },
+  {
+    "name": "Hydralazine",
+    "genericName": "Hydralazine",
+    "category": "Antihypertensive",
+    "subCategory": "vasodilator",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "apresoline"
+    ]
+  },
+  {
+    "name": "Hydrochlorothiazide",
+    "genericName": "Hydrochlorothiazide",
+    "category": "Diuretic",
+    "subCategory": "thiazide",
+    "riskLevel": "MODERATE",
+    "aliases": []
+  },
+  {
+    "name": "Hydrocodone",
+    "genericName": "Hydrocodone",
+    "category": "Opioid",
+    "subCategory": "analgesic",
+    "riskLevel": "HIGH",
+    "aliases": []
+  },
+  {
+    "name": "Hydrocortisone",
+    "genericName": "Hydrocortisone",
+    "category": "Steroid",
+    "subCategory": "glucocorticoid",
+    "riskLevel": "LOW",
+    "aliases": []
+  },
+  {
+    "name": "Hydroxychloroquine",
+    "genericName": "Hydroxychloroquine",
+    "category": "DMARD",
+    "subCategory": "antimalarial DMARD",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "plaquenil"
+    ]
+  },
+  {
+    "name": "Hydroxyurea",
+    "genericName": "Hydroxyurea",
+    "category": "Antimetabolite",
+    "subCategory": "hematology medicine",
+    "riskLevel": "HIGH",
+    "aliases": [
+      "hydrea"
+    ]
+  },
+  {
+    "name": "Hydroxyzine",
+    "genericName": "Hydroxyzine",
+    "category": "Antihistamine",
+    "subCategory": "first generation",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "atarax",
+      "vistaril"
+    ]
+  },
+  {
+    "name": "Hyoscine Butylbromide",
+    "genericName": "Hyoscine Butylbromide",
+    "category": "Antispasmodic",
+    "subCategory": "anticholinergic",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "buscopan"
+    ]
+  },
+  {
+    "name": "Ibuprofen",
+    "genericName": "Ibuprofen",
+    "category": "NSAID",
+    "subCategory": "propionic acid",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "ibuprofin",
+      "ibuprophen",
+      "advil",
+      "motrin"
+    ]
+  },
+  {
+    "name": "Ilaprazole",
+    "genericName": "Ilaprazole",
+    "category": "PPI",
+    "subCategory": "acid suppression",
+    "riskLevel": "LOW",
+    "aliases": [
+      "ilapro"
+    ]
+  },
+  {
+    "name": "Imipramine",
+    "genericName": "Imipramine",
+    "category": "Tricyclic_Antidepressant",
+    "subCategory": "TCA",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "tofranil"
+    ]
+  },
+  {
+    "name": "Indapamide",
+    "genericName": "Indapamide",
+    "category": "Diuretic",
+    "subCategory": "thiazide-like",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "natrilix"
+    ]
+  },
+  {
+    "name": "Indomethacin",
+    "genericName": "Indomethacin",
+    "category": "NSAID",
+    "subCategory": "acetic acid",
+    "riskLevel": "HIGH",
+    "aliases": []
+  },
+  {
+    "name": "Insulin Aspart",
+    "genericName": "Insulin Aspart",
+    "category": "Antidiabetic",
+    "subCategory": "insulin",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "novorapid",
+      "novolog"
+    ]
+  },
+  {
+    "name": "Insulin Detemir",
+    "genericName": "Insulin Detemir",
+    "category": "Antidiabetic",
+    "subCategory": "insulin",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "levemir"
+    ]
+  },
+  {
+    "name": "Insulin Glargine",
+    "genericName": "Insulin Glargine",
+    "category": "Antidiabetic",
+    "subCategory": "insulin",
+    "riskLevel": "MODERATE",
+    "aliases": []
+  },
+  {
+    "name": "Insulin Lispro",
+    "genericName": "Insulin Lispro",
+    "category": "Antidiabetic",
+    "subCategory": "insulin",
+    "riskLevel": "MODERATE",
+    "aliases": []
+  },
+  {
+    "name": "Ipratropium",
+    "genericName": "Ipratropium",
+    "category": "Bronchodilator",
+    "subCategory": "anticholinergic",
+    "riskLevel": "LOW",
+    "aliases": [
+      "atrovent"
+    ]
+  },
+  {
+    "name": "Irbesartan",
+    "genericName": "Irbesartan",
+    "category": "ARB",
+    "subCategory": "antihypertensive",
+    "riskLevel": "MODERATE",
+    "aliases": []
+  },
+  {
+    "name": "Isocarboxazid",
+    "genericName": "Isocarboxazid",
+    "category": "MAOI",
+    "subCategory": "antidepressant",
+    "riskLevel": "HIGH",
+    "aliases": []
+  },
+  {
+    "name": "Isoniazid",
+    "genericName": "Isoniazid",
+    "category": "Antitubercular",
+    "subCategory": "mycobacterial agent",
+    "riskLevel": "HIGH",
+    "aliases": [
+      "inh"
+    ]
+  },
+  {
+    "name": "Isosorbide Mononitrate",
+    "genericName": "Isosorbide Mononitrate",
+    "category": "Nitrate",
+    "subCategory": "antianginal",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "imdur"
+    ]
+  },
+  {
+    "name": "Isotretinoin",
+    "genericName": "Isotretinoin",
+    "category": "Retinoid",
+    "subCategory": "systemic retinoid",
+    "riskLevel": "HIGH",
+    "aliases": [
+      "accutane",
+      "roaccutane"
+    ]
+  },
+  {
+    "name": "Itraconazole",
+    "genericName": "Itraconazole",
+    "category": "Antifungal",
+    "subCategory": "azole",
+    "riskLevel": "HIGH",
+    "aliases": []
+  },
+  {
+    "name": "Ivabradine",
+    "genericName": "Ivabradine",
+    "category": "Antianginal",
+    "subCategory": "funny current inhibitor",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "procoralan"
+    ]
+  },
+  {
+    "name": "Ivermectin",
+    "genericName": "Ivermectin",
+    "category": "Antiparasitic",
+    "subCategory": "macrocyclic lactone",
+    "riskLevel": "LOW",
+    "aliases": [
+      "stromectol"
+    ]
+  },
+  {
+    "name": "Ketoconazole",
+    "genericName": "Ketoconazole",
+    "category": "Antifungal",
+    "subCategory": "azole",
+    "riskLevel": "HIGH",
+    "aliases": []
+  },
+  {
+    "name": "Ketorolac",
+    "genericName": "Ketorolac",
+    "category": "NSAID",
+    "subCategory": "acetic acid",
+    "riskLevel": "HIGH",
+    "aliases": []
+  },
+  {
+    "name": "Ketotifen",
+    "genericName": "Ketotifen",
+    "category": "Antihistamine",
+    "subCategory": "mast cell stabilizer",
+    "riskLevel": "LOW",
+    "aliases": [
+      "zaditen"
+    ]
+  },
+  {
+    "name": "Labetalol",
+    "genericName": "Labetalol",
+    "category": "Beta_Blocker",
+    "subCategory": "alpha beta blocker",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "trandate"
+    ]
+  },
+  {
+    "name": "Lacosamide",
+    "genericName": "Lacosamide",
+    "category": "Antiepileptic",
+    "subCategory": "sodium channel modulator",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "vimpat"
+    ]
+  },
+  {
+    "name": "Lactulose",
+    "genericName": "Lactulose",
+    "category": "Laxative",
+    "subCategory": "osmotic",
+    "riskLevel": "LOW",
+    "aliases": [
+      "duphalac"
+    ]
+  },
+  {
+    "name": "Lamotrigine",
+    "genericName": "Lamotrigine",
+    "category": "Antiepileptic",
+    "subCategory": "broad spectrum",
+    "riskLevel": "MODERATE",
+    "aliases": []
+  },
+  {
+    "name": "Lansoprazole",
+    "genericName": "Lansoprazole",
+    "category": "PPI",
+    "subCategory": "acid suppression",
+    "riskLevel": "LOW",
+    "aliases": []
+  },
+  {
+    "name": "Leflunomide",
+    "genericName": "Leflunomide",
+    "category": "DMARD",
+    "subCategory": "pyrimidine synthesis inhibitor",
+    "riskLevel": "HIGH",
+    "aliases": [
+      "arava"
+    ]
+  },
+  {
+    "name": "Levetiracetam",
+    "genericName": "Levetiracetam",
+    "category": "Antiepileptic",
+    "subCategory": "broad spectrum",
+    "riskLevel": "LOW",
+    "aliases": []
+  },
+  {
+    "name": "Levocetirizine",
+    "genericName": "Levocetirizine",
+    "category": "Antihistamine",
+    "subCategory": "second generation",
+    "riskLevel": "LOW",
+    "aliases": [
+      "xyzal",
+      "levocet"
+    ]
+  },
+  {
+    "name": "Levofloxacin",
+    "genericName": "Levofloxacin",
+    "category": "Antibiotic",
+    "subCategory": "fluoroquinolone",
+    "riskLevel": "MODERATE",
+    "aliases": []
+  },
+  {
+    "name": "Levosulpiride",
+    "genericName": "Levosulpiride",
+    "category": "Prokinetic",
+    "subCategory": "dopamine antagonist",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "levopraid"
+    ]
+  },
+  {
+    "name": "Levothyroxine",
+    "genericName": "Levothyroxine",
+    "category": "Thyroid",
+    "subCategory": "thyroid hormone",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "levothyroxin",
+      "synthroid",
+      "eltroxin"
+    ]
+  },
+  {
+    "name": "Linagliptin",
+    "genericName": "Linagliptin",
+    "category": "Antidiabetic",
+    "subCategory": "DPP-4 inhibitor",
+    "riskLevel": "LOW",
+    "aliases": [
+      "trajenta"
+    ]
+  },
+  {
+    "name": "Linezolid",
+    "genericName": "Linezolid",
+    "category": "Antibiotic",
+    "subCategory": "oxazolidinone",
+    "riskLevel": "HIGH",
+    "aliases": []
+  },
+  {
+    "name": "Liothyronine",
+    "genericName": "Liothyronine",
+    "category": "Thyroid",
+    "subCategory": "thyroid hormone",
+    "riskLevel": "MODERATE",
+    "aliases": []
+  },
+  {
+    "name": "Liraglutide",
+    "genericName": "Liraglutide",
+    "category": "Antidiabetic",
+    "subCategory": "GLP-1 agonist",
+    "riskLevel": "LOW",
+    "aliases": [
+      "victoza",
+      "saxenda"
+    ]
+  },
+  {
+    "name": "Lisinopril",
+    "genericName": "Lisinopril",
+    "category": "ACE_Inhibitor",
+    "subCategory": "antihypertensive",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "lisinoprilum",
+      "zestril",
+      "prinivil"
+    ]
+  },
+  {
+    "name": "Loperamide",
+    "genericName": "Loperamide",
+    "category": "Antidiarrheal",
+    "subCategory": "opioid receptor agonist",
+    "riskLevel": "LOW",
+    "aliases": [
+      "imodium"
+    ]
+  },
+  {
+    "name": "Loratadine",
+    "genericName": "Loratadine",
+    "category": "Antihistamine",
+    "subCategory": "second generation",
+    "riskLevel": "LOW",
+    "aliases": [
+      "loratidine",
+      "claritin"
+    ]
+  },
+  {
+    "name": "Lorazepam",
+    "genericName": "Lorazepam",
+    "category": "Benzodiazepine",
+    "subCategory": "anxiolytic",
+    "riskLevel": "HIGH",
+    "aliases": []
+  },
+  {
+    "name": "Lornoxicam",
+    "genericName": "Lornoxicam",
+    "category": "NSAID",
+    "subCategory": "oxicam",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "xefocam"
+    ]
+  },
+  {
+    "name": "Losartan",
+    "genericName": "Losartan",
+    "category": "ARB",
+    "subCategory": "antihypertensive",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "losartin",
+      "cozaar"
+    ]
+  },
+  {
+    "name": "Lovastatin",
+    "genericName": "Lovastatin",
+    "category": "Statin",
+    "subCategory": "lipid lowering",
+    "riskLevel": "MODERATE",
+    "aliases": []
+  },
+  {
+    "name": "Magnesium Hydroxide",
+    "genericName": "Magnesium Hydroxide",
+    "category": "Laxative",
+    "subCategory": "osmotic antacid",
+    "riskLevel": "LOW",
+    "aliases": [
+      "milk of magnesia"
+    ]
+  },
+  {
+    "name": "Mebendazole",
+    "genericName": "Mebendazole",
+    "category": "Antiparasitic",
+    "subCategory": "benzimidazole",
+    "riskLevel": "LOW",
+    "aliases": [
+      "vermox"
+    ]
+  },
+  {
+    "name": "Meclizine",
+    "genericName": "Meclizine",
+    "category": "Antivertigo",
+    "subCategory": "antihistamine",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "bonine"
+    ]
+  },
+  {
+    "name": "Mefenamic Acid",
+    "genericName": "Mefenamic Acid",
+    "category": "NSAID",
+    "subCategory": "fenamate",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "ponstan",
+      "mefenamic"
+    ]
+  },
+  {
+    "name": "Meloxicam",
+    "genericName": "Meloxicam",
+    "category": "NSAID",
+    "subCategory": "oxicam",
+    "riskLevel": "MODERATE",
+    "aliases": []
+  },
+  {
+    "name": "Memantine",
+    "genericName": "Memantine",
+    "category": "NMDA_Antagonist",
+    "subCategory": "dementia medicine",
+    "riskLevel": "LOW",
+    "aliases": [
+      "namenda"
+    ]
+  },
+  {
+    "name": "Meropenem",
+    "genericName": "Meropenem",
+    "category": "Antibiotic",
+    "subCategory": "carbapenem",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "merrem"
+    ]
+  },
+  {
+    "name": "Mesalazine",
+    "genericName": "Mesalamine",
+    "category": "Aminosalicylate",
+    "subCategory": "IBD medicine",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "mesalamine",
+      "asacol"
+    ]
+  },
+  {
+    "name": "Metformin",
+    "genericName": "Metformin",
+    "category": "Antidiabetic",
+    "subCategory": "biguanide",
+    "riskLevel": "LOW",
+    "aliases": [
+      "metformine",
+      "glucophage"
+    ]
+  },
+  {
+    "name": "Methimazole",
+    "genericName": "Methimazole",
+    "category": "Thyroid",
+    "subCategory": "antithyroid",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "tapazole"
+    ]
+  },
+  {
+    "name": "Methotrexate",
+    "genericName": "Methotrexate",
+    "category": "DMARD",
+    "subCategory": "antimetabolite",
+    "riskLevel": "HIGH",
+    "aliases": [
+      "mtx",
+      "trexall"
+    ]
+  },
+  {
+    "name": "Methyldopa",
+    "genericName": "Methyldopa",
+    "category": "Antihypertensive",
+    "subCategory": "central alpha agonist",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "aldomet"
+    ]
+  },
+  {
+    "name": "Methylprednisolone",
+    "genericName": "Methylprednisolone",
+    "category": "Steroid",
+    "subCategory": "glucocorticoid",
+    "riskLevel": "MODERATE",
+    "aliases": []
+  },
+  {
+    "name": "Metoclopramide",
+    "genericName": "Metoclopramide",
+    "category": "Antiemetic",
+    "subCategory": "dopamine antagonist",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "maxolon",
+      "reglan"
+    ]
+  },
+  {
+    "name": "Metoprolol",
+    "genericName": "Metoprolol",
+    "category": "Beta_Blocker",
+    "subCategory": "beta-1 selective",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "lopressor",
+      "toprol"
+    ]
+  },
+  {
+    "name": "Metronidazole",
+    "genericName": "Metronidazole",
+    "category": "Antibiotic",
+    "subCategory": "nitroimidazole",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "metronidazol",
+      "flagyl"
+    ]
+  },
+  {
+    "name": "Miconazole",
+    "genericName": "Miconazole",
+    "category": "Antifungal",
+    "subCategory": "azole",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "daktarin",
+      "monistat"
+    ]
+  },
+  {
+    "name": "Minocycline",
+    "genericName": "Minocycline",
+    "category": "Antibiotic",
+    "subCategory": "tetracycline",
+    "riskLevel": "LOW",
+    "aliases": []
+  },
+  {
+    "name": "Mirtazapine",
+    "genericName": "Mirtazapine",
+    "category": "Antidepressant",
+    "subCategory": "NaSSA",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "remeron"
+    ]
+  },
+  {
+    "name": "Mometasone",
+    "genericName": "Mometasone",
+    "category": "Steroid",
+    "subCategory": "corticosteroid",
+    "riskLevel": "LOW",
+    "aliases": [
+      "nasonex",
+      "elocon"
+    ]
+  },
+  {
+    "name": "Montelukast",
+    "genericName": "Montelukast",
+    "category": "Leukotriene_Modifier",
+    "subCategory": "asthma allergy",
+    "riskLevel": "LOW",
+    "aliases": [
+      "singulair",
+      "montika"
+    ]
+  },
+  {
+    "name": "Morphine",
+    "genericName": "Morphine",
+    "category": "Opioid",
+    "subCategory": "analgesic",
+    "riskLevel": "HIGH",
+    "aliases": [
+      "morphin"
+    ]
+  },
+  {
+    "name": "Moxifloxacin",
+    "genericName": "Moxifloxacin",
+    "category": "Antibiotic",
+    "subCategory": "fluoroquinolone",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "avelox"
+    ]
+  },
+  {
+    "name": "Nalbuphine",
+    "genericName": "Nalbuphine",
+    "category": "Opioid",
+    "subCategory": "mixed agonist antagonist",
+    "riskLevel": "HIGH",
+    "aliases": [
+      "nubain"
+    ]
+  },
+  {
+    "name": "Naproxen",
+    "genericName": "Naproxen",
+    "category": "NSAID",
+    "subCategory": "propionic acid",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "naproxyn",
+      "aleve"
+    ]
+  },
+  {
+    "name": "Nateglinide",
+    "genericName": "Nateglinide",
+    "category": "Antidiabetic",
+    "subCategory": "meglitinide",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "starlix"
+    ]
+  },
+  {
+    "name": "Nebivolol",
+    "genericName": "Nebivolol",
+    "category": "Beta_Blocker",
+    "subCategory": "beta-1 selective",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "bystolic",
+      "nebilet"
+    ]
+  },
+  {
+    "name": "Nifedipine",
+    "genericName": "Nifedipine",
+    "category": "Calcium_Channel_Blocker",
+    "subCategory": "dihydropyridine",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "adalat",
+      "procardia"
+    ]
+  },
+  {
+    "name": "Nimesulide",
+    "genericName": "Nimesulide",
+    "category": "NSAID",
+    "subCategory": "sulfonanilide",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "nims",
+      "nise"
+    ]
+  },
+  {
+    "name": "Nitazoxanide",
+    "genericName": "Nitazoxanide",
+    "category": "Antiparasitic",
+    "subCategory": "thiazolide",
+    "riskLevel": "LOW",
+    "aliases": [
+      "alinia"
+    ]
+  },
+  {
+    "name": "Nitrofurantoin",
+    "genericName": "Nitrofurantoin",
+    "category": "Antibiotic",
+    "subCategory": "nitrofuran",
+    "riskLevel": "LOW",
+    "aliases": []
+  },
+  {
+    "name": "Nitroglycerin",
+    "genericName": "Nitroglycerin",
+    "category": "Nitrate",
+    "subCategory": "antianginal",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "glyceryl trinitrate",
+      "gtn"
+    ]
+  },
+  {
+    "name": "Nortriptyline",
+    "genericName": "Nortriptyline",
+    "category": "Tricyclic_Antidepressant",
+    "subCategory": "TCA",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "pamelor"
+    ]
+  },
+  {
+    "name": "Nuberol Forte",
+    "genericName": "Paracetamol Orphenadrine",
+    "category": "Analgesic",
+    "subCategory": "combination analgesic muscle relaxant",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "nuberol",
+      "orphenadrine paracetamol"
+    ]
+  },
+  {
+    "name": "Ofloxacin",
+    "genericName": "Ofloxacin",
+    "category": "Antibiotic",
+    "subCategory": "fluoroquinolone",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "oflox",
+      "floxin"
+    ]
+  },
+  {
+    "name": "Olanzapine",
+    "genericName": "Olanzapine",
+    "category": "Antipsychotic",
+    "subCategory": "atypical",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "zyprexa"
+    ]
+  },
+  {
+    "name": "Olmesartan",
+    "genericName": "Olmesartan",
+    "category": "ARB",
+    "subCategory": "antihypertensive",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "benicar"
+    ]
+  },
+  {
+    "name": "Olopatadine",
+    "genericName": "Olopatadine",
+    "category": "Antihistamine",
+    "subCategory": "ophthalmic antihistamine",
+    "riskLevel": "LOW",
+    "aliases": [
+      "patanol"
+    ]
+  },
+  {
+    "name": "Omeprazole",
+    "genericName": "Omeprazole",
+    "category": "PPI",
+    "subCategory": "acid suppression",
+    "riskLevel": "LOW",
+    "aliases": [
+      "omeprazol",
+      "prilosec"
+    ]
+  },
+  {
+    "name": "Ondansetron",
+    "genericName": "Ondansetron",
+    "category": "Antiemetic",
+    "subCategory": "5-HT3 antagonist",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "zofran",
+      "onset"
+    ]
+  },
+  {
+    "name": "Orlistat",
+    "genericName": "Orlistat",
+    "category": "Weight_Loss",
+    "subCategory": "lipase inhibitor",
+    "riskLevel": "LOW",
+    "aliases": [
+      "xenical",
+      "alli"
+    ]
+  },
+  {
+    "name": "Orphenadrine",
+    "genericName": "Orphenadrine",
+    "category": "Muscle_Relaxant",
+    "subCategory": "anticholinergic",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "norflex"
+    ]
+  },
+  {
+    "name": "Oseltamivir",
+    "genericName": "Oseltamivir",
+    "category": "Antiviral",
+    "subCategory": "neuraminidase inhibitor",
+    "riskLevel": "LOW",
+    "aliases": [
+      "tamiflu"
+    ]
+  },
+  {
+    "name": "Oxcarbazepine",
+    "genericName": "Oxcarbazepine",
+    "category": "Antiepileptic",
+    "subCategory": "sodium channel blocker",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "trileptal"
+    ]
+  },
+  {
+    "name": "Oxycodone",
+    "genericName": "Oxycodone",
+    "category": "Opioid",
+    "subCategory": "analgesic",
+    "riskLevel": "HIGH",
+    "aliases": [
+      "oxycodon",
+      "oxycontin"
+    ]
+  },
+  {
+    "name": "Paliperidone",
+    "genericName": "Paliperidone",
+    "category": "Antipsychotic",
+    "subCategory": "atypical",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "invega"
+    ]
+  },
+  {
+    "name": "Panadol",
+    "genericName": "Paracetamol",
+    "category": "Analgesic",
+    "subCategory": "non-opioid analgesic",
+    "riskLevel": "LOW",
+    "aliases": [
+      "paracetamol",
+      "acetaminophen",
+      "calpol"
+    ]
+  },
+  {
+    "name": "Pantoprazole",
+    "genericName": "Pantoprazole",
+    "category": "PPI",
+    "subCategory": "acid suppression",
+    "riskLevel": "LOW",
+    "aliases": [
+      "pantoprazol",
+      "protonix"
+    ]
+  },
+  {
+    "name": "Paracetamol Caffeine",
+    "genericName": "Paracetamol Caffeine",
+    "category": "Analgesic",
+    "subCategory": "combination analgesic",
+    "riskLevel": "LOW",
+    "aliases": [
+      "panadol extra",
+      "calpol plus"
+    ]
+  },
+  {
+    "name": "Paracetamol Codeine",
+    "genericName": "Paracetamol Codeine",
+    "category": "Opioid",
+    "subCategory": "combination analgesic",
+    "riskLevel": "HIGH",
+    "aliases": [
+      "co-codamol",
+      "tylenol 3"
+    ]
+  },
+  {
+    "name": "Paracetamol Orphenadrine",
+    "genericName": "Paracetamol Orphenadrine",
+    "category": "Analgesic",
+    "subCategory": "combination analgesic muscle relaxant",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "nuberol forte",
+      "nuberol"
+    ]
+  },
+  {
+    "name": "Paroxetine",
+    "genericName": "Paroxetine",
+    "category": "SSRI",
+    "subCategory": "antidepressant",
+    "riskLevel": "MODERATE",
+    "aliases": []
+  },
+  {
+    "name": "Penicillin V",
+    "genericName": "Penicillin V",
+    "category": "Antibiotic",
+    "subCategory": "penicillin",
+    "riskLevel": "LOW",
+    "aliases": []
+  },
+  {
+    "name": "Permethrin",
+    "genericName": "Permethrin",
+    "category": "Scabicide",
+    "subCategory": "topical antiparasitic",
+    "riskLevel": "LOW",
+    "aliases": [
+      "elimite"
+    ]
+  },
+  {
+    "name": "Phenelzine",
+    "genericName": "Phenelzine",
+    "category": "MAOI",
+    "subCategory": "antidepressant",
+    "riskLevel": "HIGH",
+    "aliases": []
+  },
+  {
+    "name": "Phenylephrine",
+    "genericName": "Phenylephrine",
+    "category": "Decongestant",
+    "subCategory": "sympathomimetic",
+    "riskLevel": "MODERATE",
+    "aliases": []
+  },
+  {
+    "name": "Phenytoin",
+    "genericName": "Phenytoin",
+    "category": "Antiepileptic",
+    "subCategory": "enzyme inducer",
+    "riskLevel": "HIGH",
+    "aliases": [
+      "fenytoin",
+      "dilantin"
+    ]
+  },
+  {
+    "name": "Pioglitazone",
+    "genericName": "Pioglitazone",
+    "category": "Antidiabetic",
+    "subCategory": "thiazolidinedione",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "actos"
+    ]
+  },
+  {
+    "name": "Piperacillin Tazobactam",
+    "genericName": "Piperacillin Tazobactam",
+    "category": "Antibiotic",
+    "subCategory": "penicillin beta-lactamase inhibitor",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "tazocin",
+      "zosyn"
+    ]
+  },
+  {
+    "name": "Piroxicam",
+    "genericName": "Piroxicam",
+    "category": "NSAID",
+    "subCategory": "oxicam",
+    "riskLevel": "HIGH",
+    "aliases": []
+  },
+  {
+    "name": "Polyethylene Glycol",
+    "genericName": "Polyethylene Glycol",
+    "category": "Laxative",
+    "subCategory": "osmotic",
+    "riskLevel": "LOW",
+    "aliases": [
+      "peg",
+      "miralax"
+    ]
+  },
+  {
+    "name": "Pramipexole",
+    "genericName": "Pramipexole",
+    "category": "Antiparkinson",
+    "subCategory": "dopamine agonist",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "mirapex"
+    ]
+  },
+  {
+    "name": "Prasugrel",
+    "genericName": "Prasugrel",
+    "category": "Antiplatelet",
+    "subCategory": "P2Y12 inhibitor",
+    "riskLevel": "HIGH",
+    "aliases": []
+  },
+  {
+    "name": "Pravastatin",
+    "genericName": "Pravastatin",
+    "category": "Statin",
+    "subCategory": "lipid lowering",
+    "riskLevel": "LOW",
+    "aliases": []
+  },
+  {
+    "name": "Prednisolone",
+    "genericName": "Prednisolone",
+    "category": "Steroid",
+    "subCategory": "glucocorticoid",
+    "riskLevel": "MODERATE",
+    "aliases": []
+  },
+  {
+    "name": "Prednisone",
+    "genericName": "Prednisone",
+    "category": "Steroid",
+    "subCategory": "glucocorticoid",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "prednison"
+    ]
+  },
+  {
+    "name": "Pregabalin",
+    "genericName": "Pregabalin",
+    "category": "Antiepileptic",
+    "subCategory": "neuropathic pain agent",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "lyrica"
+    ]
+  },
+  {
+    "name": "Propranolol",
+    "genericName": "Propranolol",
+    "category": "Beta_Blocker",
+    "subCategory": "nonselective",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "inderal"
+    ]
+  },
+  {
+    "name": "Pseudoephedrine",
+    "genericName": "Pseudoephedrine",
+    "category": "Decongestant",
+    "subCategory": "sympathomimetic",
+    "riskLevel": "MODERATE",
+    "aliases": []
+  },
+  {
+    "name": "Quetiapine",
+    "genericName": "Quetiapine",
+    "category": "Antipsychotic",
+    "subCategory": "atypical",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "seroquel"
+    ]
+  },
+  {
+    "name": "Quinine",
+    "genericName": "Quinine",
+    "category": "Antimalarial",
+    "subCategory": "quinoline",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "quinine sulfate"
+    ]
+  },
+  {
+    "name": "Rabeprazole",
+    "genericName": "Rabeprazole",
+    "category": "PPI",
+    "subCategory": "acid suppression",
+    "riskLevel": "LOW",
+    "aliases": [
+      "aciphex",
+      "pariet"
+    ]
+  },
+  {
+    "name": "Racecadotril",
+    "genericName": "Racecadotril",
+    "category": "Antidiarrheal",
+    "subCategory": "enkephalinase inhibitor",
+    "riskLevel": "LOW",
+    "aliases": [
+      "hidrasec"
+    ]
+  },
+  {
+    "name": "Ramipril",
+    "genericName": "Ramipril",
+    "category": "ACE_Inhibitor",
+    "subCategory": "antihypertensive",
+    "riskLevel": "MODERATE",
+    "aliases": []
+  },
+  {
+    "name": "Ranitidine",
+    "genericName": "Ranitidine",
+    "category": "H2_Blocker",
+    "subCategory": "acid suppression",
+    "riskLevel": "LOW",
+    "aliases": [
+      "zantac"
+    ]
+  },
+  {
+    "name": "Rifampicin",
+    "genericName": "Rifampin",
+    "category": "Antitubercular",
+    "subCategory": "rifamycin",
+    "riskLevel": "HIGH",
+    "aliases": [
+      "rifampin",
+      "rifadin"
+    ]
+  },
+  {
+    "name": "Rifaximin",
+    "genericName": "Rifaximin",
+    "category": "Antibiotic",
+    "subCategory": "rifamycin gut selective",
+    "riskLevel": "LOW",
+    "aliases": [
+      "xifaxan"
+    ]
+  },
+  {
+    "name": "Risperidone",
+    "genericName": "Risperidone",
+    "category": "Antipsychotic",
+    "subCategory": "atypical",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "risperdal"
+    ]
+  },
+  {
+    "name": "Rivaroxaban",
+    "genericName": "Rivaroxaban",
+    "category": "Anticoagulant",
+    "subCategory": "factor Xa inhibitor",
+    "riskLevel": "HIGH",
+    "aliases": [
+      "rivaroxiban",
+      "xarelto"
+    ]
+  },
+  {
+    "name": "Rosuvastatin",
+    "genericName": "Rosuvastatin",
+    "category": "Statin",
+    "subCategory": "lipid lowering",
+    "riskLevel": "MODERATE",
+    "aliases": []
+  },
+  {
+    "name": "Roxithromycin",
+    "genericName": "Roxithromycin",
+    "category": "Antibiotic",
+    "subCategory": "macrolide",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "rulide"
+    ]
+  },
+  {
+    "name": "Sacubitril Valsartan",
+    "genericName": "Sacubitril Valsartan",
+    "category": "ARB",
+    "subCategory": "ARNI heart failure medicine",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "entresto"
+    ]
+  },
+  {
+    "name": "Salmeterol",
+    "genericName": "Salmeterol",
+    "category": "Bronchodilator",
+    "subCategory": "long-acting beta-2 agonist",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "serevent"
+    ]
+  },
+  {
+    "name": "Saxagliptin",
+    "genericName": "Saxagliptin",
+    "category": "Antidiabetic",
+    "subCategory": "DPP-4 inhibitor",
+    "riskLevel": "LOW",
+    "aliases": [
+      "onglyza"
+    ]
+  },
+  {
+    "name": "Selegiline",
+    "genericName": "Selegiline",
+    "category": "MAOI",
+    "subCategory": "antidepressant",
+    "riskLevel": "HIGH",
+    "aliases": []
+  },
+  {
+    "name": "Semaglutide",
+    "genericName": "Semaglutide",
+    "category": "Antidiabetic",
+    "subCategory": "GLP-1 agonist",
+    "riskLevel": "LOW",
+    "aliases": [
+      "ozempic",
+      "rybelsus"
+    ]
+  },
+  {
+    "name": "Senna",
+    "genericName": "Senna",
+    "category": "Laxative",
+    "subCategory": "stimulant",
+    "riskLevel": "LOW",
+    "aliases": [
+      "sennosides",
+      "senokot"
+    ]
+  },
+  {
+    "name": "Serratiopeptidase",
+    "genericName": "Serratiopeptidase",
+    "category": "Anti_Inflammatory",
+    "subCategory": "enzyme anti-inflammatory",
+    "riskLevel": "LOW",
+    "aliases": [
+      "serrapeptase"
+    ]
+  },
+  {
+    "name": "Sertraline",
+    "genericName": "Sertraline",
+    "category": "SSRI",
+    "subCategory": "antidepressant",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "sertralin",
+      "zoloft"
+    ]
+  },
+  {
+    "name": "Sevelamer",
+    "genericName": "Sevelamer",
+    "category": "Phosphate_Binder",
+    "subCategory": "renal medicine",
+    "riskLevel": "LOW",
+    "aliases": [
+      "renvela"
+    ]
+  },
+  {
+    "name": "Sildenafil",
+    "genericName": "Sildenafil",
+    "category": "PDE5_Inhibitor",
+    "subCategory": "erectile dysfunction pulmonary hypertension",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "viagra"
+    ]
+  },
+  {
+    "name": "Silymarin",
+    "genericName": "Silymarin",
+    "category": "Herbal",
+    "subCategory": "liver supplement",
+    "riskLevel": "LOW",
+    "aliases": [
+      "milk thistle"
+    ]
+  },
+  {
+    "name": "Simvastatin",
+    "genericName": "Simvastatin",
+    "category": "Statin",
+    "subCategory": "lipid lowering",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "simvastatinum",
+      "zocor"
+    ]
+  },
+  {
+    "name": "Sitagliptin",
+    "genericName": "Sitagliptin",
+    "category": "Antidiabetic",
+    "subCategory": "DPP-4 inhibitor",
+    "riskLevel": "LOW",
+    "aliases": []
+  },
+  {
+    "name": "Sitagliptin Metformin",
+    "genericName": "Sitagliptin Metformin",
+    "category": "Antidiabetic",
+    "subCategory": "DPP-4 biguanide combination",
+    "riskLevel": "LOW",
+    "aliases": [
+      "janumet"
+    ]
+  },
+  {
+    "name": "Sodium Bicarbonate",
+    "genericName": "Sodium Bicarbonate",
+    "category": "Antacid",
+    "subCategory": "alkalinizing agent",
+    "riskLevel": "LOW",
+    "aliases": [
+      "baking soda antacid"
+    ]
+  },
+  {
+    "name": "Sodium Picosulfate",
+    "genericName": "Sodium Picosulfate",
+    "category": "Laxative",
+    "subCategory": "stimulant",
+    "riskLevel": "LOW",
+    "aliases": [
+      "dulcolax pico"
+    ]
+  },
+  {
+    "name": "Sofosbuvir",
+    "genericName": "Sofosbuvir",
+    "category": "Antiviral",
+    "subCategory": "hepatitis C antiviral",
+    "riskLevel": "LOW",
+    "aliases": [
+      "sovaldi"
+    ]
+  },
+  {
+    "name": "Sofosbuvir Velpatasvir",
+    "genericName": "Sofosbuvir Velpatasvir",
+    "category": "Antiviral",
+    "subCategory": "hepatitis C combination",
+    "riskLevel": "LOW",
+    "aliases": [
+      "epclusa"
+    ]
+  },
+  {
+    "name": "Solifenacin",
+    "genericName": "Solifenacin",
+    "category": "Urinary_Antispasmodic",
+    "subCategory": "antimuscarinic",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "vesicare"
+    ]
+  },
+  {
+    "name": "Spironolactone",
+    "genericName": "Spironolactone",
+    "category": "Diuretic",
+    "subCategory": "potassium-sparing",
+    "riskLevel": "HIGH",
+    "aliases": []
+  },
+  {
+    "name": "Strepsils",
+    "genericName": "Amylmetacresol Dichlorobenzyl Alcohol",
+    "category": "OTC_Throat",
+    "subCategory": "throat lozenge",
+    "riskLevel": "LOW",
+    "aliases": [
+      "strepsil",
+      "lozenges",
+      "throat lozenge"
+    ]
+  },
+  {
+    "name": "Sucralfate",
+    "genericName": "Sucralfate",
+    "category": "Gastroprotective",
+    "subCategory": "mucosal protectant",
+    "riskLevel": "LOW",
+    "aliases": [
+      "carafate"
+    ]
+  },
+  {
+    "name": "Sulfamethoxazole",
+    "genericName": "Sulfamethoxazole",
+    "category": "Antibiotic",
+    "subCategory": "sulfonamide",
+    "riskLevel": "MODERATE",
+    "aliases": []
+  },
+  {
+    "name": "Sulfasalazine",
+    "genericName": "Sulfasalazine",
+    "category": "DMARD",
+    "subCategory": "aminosalicylate",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "azulfidine"
+    ]
+  },
+  {
+    "name": "Tadalafil",
+    "genericName": "Tadalafil",
+    "category": "PDE5_Inhibitor",
+    "subCategory": "erectile dysfunction pulmonary hypertension",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "cialis"
+    ]
+  },
+  {
+    "name": "Tamsulosin",
+    "genericName": "Tamsulosin",
+    "category": "BPH_Medicine",
+    "subCategory": "alpha-1 blocker",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "flomax",
+      "harnal"
+    ]
+  },
+  {
+    "name": "Telmisartan",
+    "genericName": "Telmisartan",
+    "category": "ARB",
+    "subCategory": "antihypertensive",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "micardis",
+      "telma"
+    ]
+  },
+  {
+    "name": "Temazepam",
+    "genericName": "Temazepam",
+    "category": "Benzodiazepine",
+    "subCategory": "hypnotic",
+    "riskLevel": "HIGH",
+    "aliases": []
+  },
+  {
+    "name": "Teneligliptin",
+    "genericName": "Teneligliptin",
+    "category": "Antidiabetic",
+    "subCategory": "DPP-4 inhibitor",
+    "riskLevel": "LOW",
+    "aliases": [
+      "tenelia"
+    ]
+  },
+  {
+    "name": "Tenofovir",
+    "genericName": "Tenofovir",
+    "category": "Antiviral",
+    "subCategory": "NRTI",
+    "riskLevel": "LOW",
+    "aliases": [
+      "viread"
+    ]
+  },
+  {
+    "name": "Terbinafine",
+    "genericName": "Terbinafine",
+    "category": "Antifungal",
+    "subCategory": "allylamine",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "lamisil"
+    ]
+  },
+  {
+    "name": "Terlipressin",
+    "genericName": "Terlipressin",
+    "category": "Vasopressor",
+    "subCategory": "vasopressin analog",
+    "riskLevel": "HIGH",
+    "aliases": [
+      "glypressin"
+    ]
+  },
+  {
+    "name": "Theophylline",
+    "genericName": "Theophylline",
+    "category": "Bronchodilator",
+    "subCategory": "methylxanthine",
+    "riskLevel": "HIGH",
+    "aliases": [
+      "theo-dur"
+    ]
+  },
+  {
+    "name": "Ticagrelor",
+    "genericName": "Ticagrelor",
+    "category": "Antiplatelet",
+    "subCategory": "P2Y12 inhibitor",
+    "riskLevel": "HIGH",
+    "aliases": []
+  },
+  {
+    "name": "Tiotropium",
+    "genericName": "Tiotropium",
+    "category": "Bronchodilator",
+    "subCategory": "long-acting anticholinergic",
+    "riskLevel": "LOW",
+    "aliases": [
+      "spiriva"
+    ]
+  },
+  {
+    "name": "Topiramate",
+    "genericName": "Topiramate",
+    "category": "Antiepileptic",
+    "subCategory": "broad spectrum",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "topamax"
+    ]
+  },
+  {
+    "name": "Torsemide",
+    "genericName": "Torsemide",
+    "category": "Diuretic",
+    "subCategory": "loop diuretic",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "demadex"
+    ]
+  },
+  {
+    "name": "Tramadol",
+    "genericName": "Tramadol",
+    "category": "Opioid",
+    "subCategory": "analgesic",
+    "riskLevel": "HIGH",
+    "aliases": [
+      "tramadol hcl",
+      "ultram"
+    ]
+  },
+  {
+    "name": "Tranylcypromine",
+    "genericName": "Tranylcypromine",
+    "category": "MAOI",
+    "subCategory": "antidepressant",
+    "riskLevel": "HIGH",
+    "aliases": []
+  },
+  {
+    "name": "Triamcinolone",
+    "genericName": "Triamcinolone",
+    "category": "Steroid",
+    "subCategory": "corticosteroid",
+    "riskLevel": "LOW",
+    "aliases": [
+      "kenacort"
+    ]
+  },
+  {
+    "name": "Trimethoprim",
+    "genericName": "Trimethoprim",
+    "category": "Antibiotic",
+    "subCategory": "folate antagonist",
+    "riskLevel": "MODERATE",
+    "aliases": []
+  },
+  {
+    "name": "Ulipristal",
+    "genericName": "Ulipristal",
+    "category": "Hormonal",
+    "subCategory": "emergency contraceptive",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "ella"
+    ]
+  },
+  {
+    "name": "Ursodeoxycholic Acid",
+    "genericName": "Ursodeoxycholic Acid",
+    "category": "Bile_Acid",
+    "subCategory": "gallstone liver medicine",
+    "riskLevel": "LOW",
+    "aliases": [
+      "ursodiol",
+      "urso"
+    ]
+  },
+  {
+    "name": "Valacyclovir",
+    "genericName": "Valacyclovir",
+    "category": "Antiviral",
+    "subCategory": "nucleoside analog",
+    "riskLevel": "LOW",
+    "aliases": [
+      "valtrex"
+    ]
+  },
+  {
+    "name": "Valproate",
+    "genericName": "Valproate",
+    "category": "Antiepileptic",
+    "subCategory": "broad spectrum",
+    "riskLevel": "HIGH",
+    "aliases": []
+  },
+  {
+    "name": "Valsartan",
+    "genericName": "Valsartan",
+    "category": "ARB",
+    "subCategory": "antihypertensive",
+    "riskLevel": "MODERATE",
+    "aliases": []
+  },
+  {
+    "name": "Vancomycin",
+    "genericName": "Vancomycin",
+    "category": "Antibiotic",
+    "subCategory": "glycopeptide",
+    "riskLevel": "HIGH",
+    "aliases": [
+      "vancocin"
+    ]
+  },
+  {
+    "name": "Varenicline",
+    "genericName": "Varenicline",
+    "category": "Smoking_Cessation",
+    "subCategory": "partial nicotinic agonist",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "champix",
+      "chantix"
+    ]
+  },
+  {
+    "name": "Verapamil",
+    "genericName": "Verapamil",
+    "category": "Calcium_Channel_Blocker",
+    "subCategory": "non-dihydropyridine",
+    "riskLevel": "MODERATE",
+    "aliases": [
+      "isoptin",
+      "calan"
+    ]
+  },
+  {
+    "name": "Vildagliptin",
+    "genericName": "Vildagliptin",
+    "category": "Antidiabetic",
+    "subCategory": "DPP-4 inhibitor",
+    "riskLevel": "LOW",
+    "aliases": [
+      "galvus"
+    ]
+  },
+  {
+    "name": "Vildagliptin Metformin",
+    "genericName": "Vildagliptin Metformin",
+    "category": "Antidiabetic",
+    "subCategory": "DPP-4 biguanide combination",
+    "riskLevel": "LOW",
+    "aliases": [
+      "galvus met"
+    ]
+  },
+  {
+    "name": "Vitamin B Complex",
+    "genericName": "Vitamin B Complex",
+    "category": "Supplement",
+    "subCategory": "vitamin B group",
+    "riskLevel": "LOW",
+    "aliases": [
+      "becosules",
+      "neurobion"
+    ]
+  },
+  {
+    "name": "Vitamin C",
+    "genericName": "Ascorbic Acid",
+    "category": "Supplement",
+    "subCategory": "vitamin C",
+    "riskLevel": "LOW",
+    "aliases": [
+      "ascorbic acid",
+      "cac-1000"
+    ]
+  },
+  {
+    "name": "Vitamin D3",
+    "genericName": "Cholecalciferol",
+    "category": "Supplement",
+    "subCategory": "vitamin D",
+    "riskLevel": "LOW",
+    "aliases": [
+      "cholecalciferol",
+      "d3",
+      "cal d"
+    ]
+  },
+  {
+    "name": "Voriconazole",
+    "genericName": "Voriconazole",
+    "category": "Antifungal",
+    "subCategory": "azole",
+    "riskLevel": "HIGH",
+    "aliases": []
+  },
+  {
+    "name": "Warfarin",
+    "genericName": "Warfarin",
+    "category": "Anticoagulant",
+    "subCategory": "vitamin K antagonist",
+    "riskLevel": "HIGH",
+    "aliases": [
+      "warfrin",
+      "coumadin"
+    ]
+  },
+  {
+    "name": "Zafirlukast",
+    "genericName": "Zafirlukast",
+    "category": "Leukotriene_Modifier",
+    "subCategory": "asthma allergy",
+    "riskLevel": "LOW",
+    "aliases": [
+      "accolate"
+    ]
+  },
+  {
+    "name": "Zinc Sulfate",
+    "genericName": "Zinc Sulfate",
+    "category": "Supplement",
+    "subCategory": "mineral",
+    "riskLevel": "LOW",
+    "aliases": [
+      "zinc",
+      "zincate"
+    ]
+  },
+  {
+    "name": "Zolpidem",
+    "genericName": "Zolpidem",
+    "category": "Sedative_Hypnotic",
+    "subCategory": "Z-drug",
+    "riskLevel": "HIGH",
+    "aliases": [
+      "ambien"
+    ]
+  }
+]
