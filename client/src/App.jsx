@@ -14,6 +14,11 @@ import PrivacySettings from './pages/PrivacySettings';
 import ActivityLogs from './pages/ActivityLogs';
 import ChatPage from './features/communication/chat/pages/ChatPage';
 import GroupPage from './features/communication/groups/GroupPage';
+import MedicationPage from './features/health/medications/MedicationPage';
+import HealthVaultPage from './features/health/vault/HealthVaultPage';
+import AppointmentPage from './features/health/appointments/AppointmentPage';
+import TelemetryDashboard from './features/health/telemetry/TelemetryDashboard';
+import DrugInteractionPage from './features/health/interactions/DrugInteractionPage';
 import { disconnectChatSocket } from './features/communication/chat/services/socket';
 import NotificationBell from './features/communication/notifications/NotificationBell';
 
@@ -199,6 +204,51 @@ function App() {
             element={
               <PrivateRoute>
                 <GroupPage />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/health/medications"
+            element={
+              <PrivateRoute>
+                <MedicationPage />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/health/vault"
+            element={
+              <PrivateRoute>
+                <HealthVaultPage />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/health/appointments"
+            element={
+              <PrivateRoute>
+                <AppointmentPage />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/health/telemetry"
+            element={
+              <PrivateRoute>
+                <TelemetryDashboard />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/health/interactions"
+            element={
+              <PrivateRoute>
+                <DrugInteractionPage />
               </PrivateRoute>
             }
           />
