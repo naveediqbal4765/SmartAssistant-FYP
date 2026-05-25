@@ -1,5 +1,5 @@
-import HealthPlaceholder from '../components/HealthPlaceholder';
+import DocumentVault from '../../../pages/DocumentVault';
 
 export default function HealthVaultPage() {
-  return <HealthPlaceholder title="Digital Health Vault" />;
+  return <DocumentVault />;
 }

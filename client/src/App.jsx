@@ -6,7 +6,6 @@ import Dashboard from './pages/Dashboard';
 import TaskRequest from './pages/TaskRequest';
 import Profile from './pages/Profile';
 import ForgotPassword from './pages/ForgotPassword';
-import DocumentVault from './pages/DocumentVault';
 import RequestHelp from './pages/RequestHelp';
 import MyRequests from './pages/MyRequests';
 import SocialLoginHandler from './pages/SocialLoginHandler';
@@ -156,11 +155,7 @@ function App() {
           
           <Route 
             path="/documents" 
-            element={
-              <PrivateRoute>
-                <DocumentVault />
-              </PrivateRoute>
-            } 
+            element={<Navigate to="/health/vault" />}
           />
 
           <Route

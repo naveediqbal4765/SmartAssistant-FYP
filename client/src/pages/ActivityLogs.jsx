@@ -49,8 +49,8 @@ export default function ActivityLogs() {
       case 'profile_update': return 'You updated your profile information';
       case 'contact_added': return `Added emergency contact: ${activity.details}`;
       case 'contact_deleted': return 'Removed an emergency contact';
-      case 'document_uploaded': return `Uploaded: ${activity.details}`;
-      case 'document_deleted': return `Deleted a document`;
+      case 'document_uploaded': return `Digital Health Vault upload: ${activity.details}`;
+      case 'document_deleted': return `Deleted a Digital Health Vault item`;
       case 'privacy_update': return 'Updated your privacy settings';
       default: return activity.details || activity.action;
     }

@@ -51,7 +51,7 @@ export default function DocumentVault() {
       if (err.response?.status === 401) {
         navigate('/login');
       } else {
-        setError('Failed to load documents');
+        setError('Failed to load Digital Health Vault files');
       }
     } finally {
       setLoading(false);
@@ -72,7 +72,7 @@ export default function DocumentVault() {
 
   const handleUpload = async () => {
     if (!newDocument.title) {
-      setError('Please enter a document title');
+      setError('Please enter a vault item title');
       return;
     }
     if (!selectedFile) {
@@ -100,7 +100,7 @@ export default function DocumentVault() {
       });
 
       if (response.data.success) {
-        setSuccess('✅ Document uploaded successfully!');
+        setSuccess('✅ Digital Health Vault item uploaded successfully!');
         setShowUpload(false);
         setNewDocument({ title: '', type: 'other', notes: '' });
         setSelectedFile(null);
@@ -118,18 +118,18 @@ export default function DocumentVault() {
   };
 
   const deleteDocument = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this document?')) return;
+    if (!window.confirm('Are you sure you want to delete this Digital Health Vault item?')) return;
 
     try {
       const token = localStorage.getItem('token');
       await axios.delete(`http://localhost:5000/api/user/documents/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setSuccess('✅ Document deleted');
+      setSuccess('✅ Digital Health Vault item deleted');
       fetchDocuments();
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
-      setError('Failed to delete document');
+      setError('Failed to delete Digital Health Vault item');
       setTimeout(() => setError(''), 3000);
     }
   };
@@ -152,7 +152,7 @@ export default function DocumentVault() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <Loader className="animate-spin h-8 w-8 text-blue-600 mx-auto mb-2" />
-          <p className="text-gray-500">Loading documents...</p>
+          <p className="text-gray-500">Loading Digital Health Vault...</p>
         </div>
       </div>
     );
@@ -175,7 +175,7 @@ export default function DocumentVault() {
                 <FileText size={28} className="text-indigo-600" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-800">Digital Document Vault</h1>
+                <h1 className="text-2xl font-bold text-gray-800">Digital Health Vault</h1>
                 <p className="text-gray-500">Store your medical records & prescriptions securely</p>
               </div>
             </div>
@@ -203,11 +203,11 @@ export default function DocumentVault() {
           {/* Upload Form */}
           {showUpload && (
             <div className="bg-gray-50 rounded-xl p-6 mb-6 border-2 border-dashed border-gray-300">
-              <h3 className="font-semibold text-lg mb-4">Upload New Document</h3>
+              <h3 className="font-semibold text-lg mb-4">Upload New Vault Item</h3>
               <div className="space-y-4">
                 <input
                   type="text"
-                  placeholder="Document Title *"
+                  placeholder="Vault Item Title *"
                   value={newDocument.title}
                   onChange={(e) => setNewDocument({...newDocument, title: e.target.value})}
                   className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -262,7 +262,7 @@ export default function DocumentVault() {
                   ) : (
                     <>
                       <Upload size={20} />
-                      Upload Document
+                      Upload to Digital Health Vault
                     </>
                   )}
                 </button>
@@ -270,11 +270,11 @@ export default function DocumentVault() {
             </div>
           )}
 
-          {/* Documents List */}
+          {/* Digital Health Vault List */}
           {documents.length === 0 ? (
             <div className="text-center py-12">
               <FileText size={48} className="text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500 text-lg">No documents yet</p>
+              <p className="text-gray-500 text-lg">No Digital Health Vault items yet</p>
               <p className="text-gray-400">Click "Upload" to add your medical reports and prescriptions</p>
             </div>
           ) : (
@@ -316,7 +316,7 @@ export default function DocumentVault() {
 
           <div className="mt-6 pt-4 border-t">
             <p className="text-xs text-gray-400 text-center">
-              🔒 Your documents are stored securely. Max file size: 5MB per file.
+              🔒 Your Digital Health Vault files are stored securely. Max file size: 5MB per file.
             </p>
           </div>
         </div>

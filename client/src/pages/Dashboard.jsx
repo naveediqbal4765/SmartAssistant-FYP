@@ -27,11 +27,14 @@ export default function Dashboard({ role, onLogout }) {
       { title: "Request Help", icon: <Heart size={32} />, color: "bg-gradient-to-r from-green-500 to-green-700", action: () => navigate('/request-help') },
       { title: "My Profile", icon: <User size={32} />, color: "bg-gradient-to-r from-blue-500 to-blue-700", action: () => navigate('/profile') },
       { title: "My Requests", icon: <Clipboard size={32} />, color: "bg-gradient-to-r from-purple-500 to-purple-700", action: () => navigate('/my-requests') },
-      { title: "Medication", icon: <Bell size={32} />, color: "bg-gradient-to-r from-orange-500 to-orange-700", action: () => alert("Medication Reminders - Coming Soon") },
+      { title: "Medications", icon: <Bell size={32} />, color: "bg-gradient-to-r from-orange-500 to-orange-700", action: () => navigate('/health/medications') },
       { title: "Emergency SOS", icon: <Phone size={32} />, color: "bg-gradient-to-r from-red-500 to-red-700", action: () => alert("Emergency SOS - Coming Soon") },
-      { title: "My Documents", icon: <FileText size={32} />, color: "bg-gradient-to-r from-indigo-500 to-indigo-700", action: () => navigate('/documents') },
+      { title: "Digital Health Vault", icon: <FileText size={32} />, color: "bg-gradient-to-r from-indigo-500 to-indigo-700", action: () => navigate('/health/vault') },
       { title: "Chat", icon: <MessageCircle size={32} />, color: "bg-gradient-to-r from-emerald-500 to-emerald-700", action: () => navigate('/chat') },
-      { title: "Groups", icon: <Users size={32} />, color: "bg-gradient-to-r from-cyan-500 to-cyan-700", action: () => navigate('/groups') }
+      { title: "Groups", icon: <Users size={32} />, color: "bg-gradient-to-r from-cyan-500 to-cyan-700", action: () => navigate('/groups') },
+      { title: "Appointments", icon: <Calendar size={32} />, color: "bg-gradient-to-r from-teal-500 to-teal-700", action: () => navigate('/health/appointments') },
+      { title: "Health Telemetry", icon: <Activity size={32} />, color: "bg-gradient-to-r from-lime-500 to-lime-700", action: () => navigate('/health/telemetry') },
+      { title: "Drug Interaction Checker", icon: <Heart size={32} />, color: "bg-gradient-to-r from-rose-500 to-rose-700", action: () => navigate('/health/interactions') }
     ];
 
     return (
@@ -136,13 +139,14 @@ export default function Dashboard({ role, onLogout }) {
   if (role === 'caregiver') {
     const caregiverActions = [
       { title: "My Seniors", icon: <Users size={32} />, color: "bg-gradient-to-r from-purple-500 to-purple-700", action: () => alert("My Seniors - Coming Soon") },
-      { title: "Health Reports", icon: <Activity size={32} />, color: "bg-gradient-to-r from-blue-500 to-blue-700", action: () => alert("Health Reports - Coming Soon") },
-      { title: "Medication Schedule", icon: <Calendar size={32} />, color: "bg-gradient-to-r from-teal-500 to-teal-700", action: () => alert("Medication Schedule - Coming Soon") },
+      { title: "Medications (View)", icon: <Bell size={32} />, color: "bg-gradient-to-r from-blue-500 to-blue-700", action: () => navigate('/health/medications') },
+      { title: "Digital Health Vault (View)", icon: <FileText size={32} />, color: "bg-gradient-to-r from-teal-500 to-teal-700", action: () => navigate('/health/vault') },
       { title: "My Profile", icon: <User size={32} />, color: "bg-gradient-to-r from-indigo-500 to-indigo-700", action: () => navigate('/profile') },
       { title: "Emergency Alerts", icon: <Bell size={32} />, color: "bg-gradient-to-r from-red-500 to-red-700", action: () => alert("Emergency Alerts - Coming Soon") },
       { title: "Care Notes", icon: <FileText size={32} />, color: "bg-gradient-to-r from-orange-500 to-orange-700", action: () => alert("Care Notes - Coming Soon") },
       { title: "Chat", icon: <MessageCircle size={32} />, color: "bg-gradient-to-r from-emerald-500 to-emerald-700", action: () => navigate('/chat') },
-      { title: "Groups", icon: <Users size={32} />, color: "bg-gradient-to-r from-cyan-500 to-cyan-700", action: () => navigate('/groups') }
+      { title: "Groups", icon: <Users size={32} />, color: "bg-gradient-to-r from-cyan-500 to-cyan-700", action: () => navigate('/groups') },
+      { title: "Appointments (View)", icon: <Calendar size={32} />, color: "bg-gradient-to-r from-purple-500 to-purple-700", action: () => navigate('/health/appointments') }
     ];
 
     return (

@@ -261,7 +261,7 @@ export default function Profile() {
       'All your data will be deleted:\n' +
       '• Profile information\n' +
       '• Emergency contacts\n' +
-      '• Uploaded documents\n' +
+      '• Digital Health Vault files\n' +
       '• Request history\n' +
       '• Activity logs\n\n' +
       'Are you sure you want to delete your account?'
@@ -598,23 +598,23 @@ export default function Profile() {
               <Activity size={28} className="text-teal-600" />
               <h3 className="text-xl font-semibold">Activity History</h3>
             </div>
-            <p className="text-gray-600 text-sm">View logins, profile updates, documents, and help requests</p>
+            <p className="text-gray-600 text-sm">View logins, profile updates, Digital Health Vault activity, and help requests</p>
           </button>
         </div>
 
-        {/* Digital Document Vault - Background color #BAE4C7 */}
+        {/* Digital Health Vault - Background color #BAE4C7 */}
         <div className="rounded-2xl shadow-xl p-6 sm:p-8 mt-8" style={{ backgroundColor: '#BAE4C7' }}>
           <h2 className="text-2xl sm:text-3xl font-semibold mb-6 flex items-center gap-3">
-            <FileText size={32} className="text-indigo-600" /> Digital Document Vault
+            <FileText size={32} className="text-indigo-600" /> Digital Health Vault
           </h2>
           <p className="text-gray-700 mb-6 text-lg">
-            📄 Store your medical reports, prescriptions, and ID documents securely.
+            📄 Store your medical reports, prescriptions, and ID cards securely.
           </p>
           <button 
-            onClick={() => navigate('/documents')} 
+            onClick={() => navigate('/health/vault')} 
             className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-semibold transition"
           >
-            📄 Go to Document Vault
+            📄 Go to Digital Health Vault
           </button>
         </div>
 
@@ -635,7 +635,7 @@ export default function Profile() {
           <ul className="list-disc list-inside text-gray-600 mb-4 space-y-1">
             <li>Profile information (name, email, phone, address)</li>
             <li>Emergency contacts</li>
-            <li>Uploaded documents and files</li>
+            <li>Digital Health Vault files</li>
             <li>Help request history</li>
             <li>Activity logs</li>
           </ul>
