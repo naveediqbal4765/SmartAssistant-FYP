@@ -4,8 +4,7 @@ const User = require('./user.model');
 const ActivityLog = require('../../shared/models/ActivityLog');
 const { sendOTPEmail, sendResetOTPEmail } = require('../../shared/email/sendEmail');
 const {
-  findSeniorByLinkCode,
-  refreshSeniorCaregiverLinkCode
+  findSeniorByLinkCode
 } = require('../../shared/links/seniorCaregiverLink');
 const {
   normalizeEmail,
@@ -172,20 +171,13 @@ const verifyOTP = async ({ email, otp }) => {
   if (!user.linkedCaregivers) user.linkedCaregivers = [];
   await user.save();
 
-  if (user.role === 'elder') {
-    await refreshSeniorCaregiverLinkCode(user);
-  }
-
   const token = signUserToken(user);
-  const verifyMsg = user.role === 'elder'
-    ? 'Account verified! A caregiver link code was sent to your email.'
-    : 'Account verified successfully!';
 
   return {
     status: 200,
     body: {
       success: true,
-      msg: verifyMsg,
+      msg: 'Account verified successfully!',
       token,
       user: {
         id: user._id,
@@ -230,11 +222,7 @@ const login = async ({ email, password }) => {
   }
 
   const token = signUserToken(user);
-  let loginMsg = 'Login successful';
-  if (user.role === 'elder') {
-    await refreshSeniorCaregiverLinkCode(user);
-    loginMsg = 'Welcome back! A caregiver link code was sent to your email.';
-  }
+  const loginMsg = 'Login successful';
 
   try {
     await ActivityLog.create({
@@ -432,10 +420,6 @@ const resetPassword = async ({ resetToken, newPassword }) => {
 };
 
 const buildOAuthRedirectUrl = async (user) => {
-  if (user.role === 'elder') {
-    await refreshSeniorCaregiverLinkCode(user);
-  }
-
   const token = signUserToken(user);
 
   const userData = encodeURIComponent(JSON.stringify({
