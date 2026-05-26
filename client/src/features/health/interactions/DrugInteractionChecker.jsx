@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { checkInteractions, getInteractionErrorMessage } from './interactionApi';
 import drugsDataset from '../../../../../server/src/modules/health/interactions/data/drugs.dataset.json';
@@ -9,29 +9,57 @@ const severityStyles = {
   HIGH: 'border-red-200 bg-red-50 text-red-700'
 };
 
+const useTagFilters = [
+  { label: 'All', tags: [] },
+  { label: 'Pain & Fever', tags: ['pain', 'fever'] },
+  { label: 'Heart / Cardiovascular', tags: ['heart'] },
+  { label: 'Diabetes', tags: ['diabetes'] },
+  { label: 'Blood Pressure', tags: ['blood pressure'] },
+  { label: 'Inflammation / NSAIDs', tags: ['inflammation'] },
+  { label: 'Joints / Arthritis', tags: ['joints'] },
+  { label: 'Cold & Flu', tags: ['cold', 'fever'] },
+  { label: 'Cough', tags: ['cough'] },
+  { label: 'Throat', tags: ['throat'] },
+  { label: 'Digestion', tags: ['digestion'] },
+  { label: 'Acidity / GI', tags: ['acidity', 'digestion'] },
+  { label: 'Infection / Antibiotics', tags: ['infection'] },
+  { label: 'Allergy / Antihistamine', tags: ['allergy'] },
+  { label: 'Sleep / Neurological', tags: ['sleep'] },
+  { label: 'Daily Use', tags: ['daily use'] }
+];
+
 export default function DrugInteractionChecker() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeFilter, setActiveFilter] = useState(null);
+  const [isMedicineDropdownOpen, setIsMedicineDropdownOpen] = useState(false);
   const [selectedMedicines, setSelectedMedicines] = useState([]);
   const [result, setResult] = useState(null);
   const [checking, setChecking] = useState(false);
   const [error, setError] = useState('');
+  const medicineDropdownRef = useRef(null);
 
   const medicineOptions = useMemo(() => {
     return [...drugsDataset]
       .map((drug) => ({
         name: drug.name,
         genericName: drug.genericName,
-        aliases: Array.isArray(drug.aliases) ? drug.aliases : []
+        aliases: Array.isArray(drug.aliases) ? drug.aliases : [],
+        useTags: Array.isArray(drug.useTags) ? drug.useTags : []
       }))
       .sort((left, right) => left.name.localeCompare(right.name));
   }, []);
 
   const selectedSet = useMemo(() => new Set(selectedMedicines), [selectedMedicines]);
+  const activeUseTags = activeFilter?.tags || [];
 
   const filteredOptions = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
+
     return medicineOptions
       .filter((medicine) => !selectedSet.has(medicine.name))
+      .filter((medicine) => (
+        query || !activeUseTags.length || activeUseTags.some((tag) => medicine.useTags.includes(tag))
+      ))
       .filter((medicine) => {
         if (!query) return true;
 
@@ -42,15 +70,43 @@ export default function DrugInteractionChecker() {
         ].some((value) => String(value || '').toLowerCase().includes(query));
       })
       .slice(0, 12);
-  }, [medicineOptions, searchQuery, selectedSet]);
+  }, [activeUseTags, medicineOptions, searchQuery, selectedSet]);
 
   const medications = selectedMedicines;
+  const shouldShowMedicineDropdown = isMedicineDropdownOpen;
+
+  useEffect(() => {
+    const handleOutsideMouseDown = (event) => {
+      if (
+        medicineDropdownRef.current
+        && !medicineDropdownRef.current.contains(event.target)
+      ) {
+        setIsMedicineDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleOutsideMouseDown);
+    return () => document.removeEventListener('mousedown', handleOutsideMouseDown);
+  }, []);
+
+  const handleUseTagFilterClick = (filter) => {
+    if (!filter.tags.length) {
+      setActiveFilter(null);
+      setIsMedicineDropdownOpen((current) => !current);
+      return;
+    }
+
+    const isSameFilter = activeFilter?.label === filter.label;
+    setActiveFilter(filter);
+    setIsMedicineDropdownOpen((current) => (isSameFilter ? !current : true));
+  };
 
   const handleSelectMedicine = (medicineName) => {
     setSelectedMedicines((current) => (
       current.includes(medicineName) ? current : [...current, medicineName].sort((left, right) => left.localeCompare(right))
     ));
     setSearchQuery('');
+    setIsMedicineDropdownOpen(false);
   };
 
   const handleRemoveMedicine = (medicineName) => {
@@ -94,15 +150,42 @@ export default function DrugInteractionChecker() {
           </p>
         </div>
 
-        <div className="relative">
+        <div ref={medicineDropdownRef} className="relative">
           <label className="mb-2 block text-sm font-semibold text-gray-700">Search medicines</label>
           <input
             value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
+            onChange={(event) => {
+              setSearchQuery(event.target.value);
+              setIsMedicineDropdownOpen(true);
+            }}
+            onFocus={() => setIsMedicineDropdownOpen(true)}
             placeholder="Type to search medicines..."
             className="w-full rounded-xl border border-gray-300 px-4 py-3 focus:border-green-600 focus:outline-none"
           />
-          {searchQuery.trim() && (
+          <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+            {useTagFilters.map((filter) => {
+              const isAllFilter = !filter.tags.length;
+              const isActive = isAllFilter
+                ? !activeFilter
+                : activeFilter?.label === filter.label;
+
+              return (
+                <button
+                  key={filter.label}
+                  type="button"
+                  onClick={() => handleUseTagFilterClick(filter)}
+                  className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
+                    isActive
+                      ? 'border-green-600 bg-green-600 text-white'
+                      : 'border-gray-200 bg-white text-gray-600 hover:border-green-300 hover:bg-green-50'
+                  }`}
+                >
+                  {filter.label}
+                </button>
+              );
+            })}
+          </div>
+          {shouldShowMedicineDropdown && (
             <div className="absolute z-20 mt-2 max-h-72 w-full overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-xl">
               {filteredOptions.length ? (
                 filteredOptions.map((medicine) => (
