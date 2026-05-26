@@ -8,7 +8,7 @@ const getInteractionStatus = async (req, res) => {
 const checkInteractions = async (req, res) => {
   try {
     const medications = Array.isArray(req.body?.medications) ? req.body.medications : [];
-    const result = interactionService.checkInteractions(medications);
+    const result = await interactionService.checkInteractions(medications);
     return res.json({ success: true, ...result });
   } catch (err) {
     console.error('Drug interaction check error:', err);

@@ -1,5 +1,6 @@
 const drugsDataset = require('../data/drugs.dataset.json');
 const { findRuleForCategories } = require('../rules/interaction.rules');
+const { explainInteraction } = require('../llm/llm.service');
 
 const SEVERITY_RANK = {
   LOW: 1,
@@ -50,7 +51,16 @@ const getHighestSeverity = (conflicts) => {
   ), 'LOW');
 };
 
-const checkInteractions = (medications = []) => {
+const getRuleEngineExplanation = (result) => {
+  if (result?.explanation) return result.explanation;
+  if (Array.isArray(result?.explanations) && result.explanations.length) {
+    return result.explanations.join(' ');
+  }
+
+  return 'No category-based interactions detected for the recognized medicines.';
+};
+
+const generateInteractionResult = (medications = []) => {
   const mappedMedications = mapMedicationsToDataset(medications);
   const conflicts = [];
   const seenConflicts = new Set();
@@ -100,22 +110,47 @@ const checkInteractions = (medications = []) => {
     .filter((item) => !item.matched)
     .map((item) => item.inputName);
 
+  const explanations = conflicts.length
+    ? conflicts.map((conflict) => conflict.explanation)
+    : ['No category-based interactions detected for the recognized medicines.'];
+
+  const recognizedMedications = mappedMedications
+    .filter((item) => item.matched)
+    .map((item) => ({
+      inputName: item.inputName,
+      matchedName: item.drug.name,
+      category: item.category,
+      subCategory: item.subCategory,
+      riskLevel: item.riskLevel
+    }));
+
   return {
     severity: getHighestSeverity(conflicts),
     conflicts,
-    explanations: conflicts.length
-      ? conflicts.map((conflict) => conflict.explanation)
-      : ['No category-based interactions detected for the recognized medicines.'],
-    recognizedMedications: mappedMedications
-      .filter((item) => item.matched)
-      .map((item) => ({
-        inputName: item.inputName,
-        matchedName: item.drug.name,
-        category: item.category,
-        subCategory: item.subCategory,
-        riskLevel: item.riskLevel
-      })),
+    explanation: explanations.join(' '),
+    explanations,
+    recognizedMedications,
+    recognizedMedicines: recognizedMedications,
     unknownMedications
+  };
+};
+
+const shouldRequestLlmExplanation = (result) => {
+  return Array.isArray(result?.conflicts)
+    && result.conflicts.length > 0;
+};
+
+const checkInteractions = async (medications = []) => {
+  const engineResult = generateInteractionResult(medications);
+  const llmResult = shouldRequestLlmExplanation(engineResult)
+    ? await explainInteraction(engineResult)
+    : null;
+  const llmExplanation = typeof llmResult === 'string' ? llmResult : llmResult?.explanation;
+
+  return {
+    ...engineResult,
+    explanation: getRuleEngineExplanation(engineResult),
+    llmExplanation: llmExplanation || null
   };
 };
 
@@ -128,5 +163,8 @@ const getInteractionModuleStatus = async () => ({
 module.exports = {
   checkInteractions,
   getInteractionModuleStatus,
+  generateInteractionResult,
+  getRuleEngineExplanation,
+  shouldRequestLlmExplanation,
   mapMedicationsToDataset
 };

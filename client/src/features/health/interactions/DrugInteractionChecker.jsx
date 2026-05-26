@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { checkInteractions, getInteractionErrorMessage } from './interactionApi';
 import drugsDataset from '../../../../../server/src/modules/health/interactions/data/drugs.dataset.json';
 
@@ -8,15 +9,7 @@ const severityStyles = {
   HIGH: 'border-red-200 bg-red-50 text-red-700'
 };
 
-const normalizeMedicationInput = (value) => {
-  return value
-    .split(/[\n,]/)
-    .map((item) => item.trim())
-    .filter(Boolean);
-};
-
 export default function DrugInteractionChecker() {
-  const [manualInput, setManualInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedMedicines, setSelectedMedicines] = useState([]);
   const [result, setResult] = useState(null);
@@ -25,8 +18,12 @@ export default function DrugInteractionChecker() {
 
   const medicineOptions = useMemo(() => {
     return [...drugsDataset]
-      .map((drug) => drug.name)
-      .sort((left, right) => left.localeCompare(right));
+      .map((drug) => ({
+        name: drug.name,
+        genericName: drug.genericName,
+        aliases: Array.isArray(drug.aliases) ? drug.aliases : []
+      }))
+      .sort((left, right) => left.name.localeCompare(right.name));
   }, []);
 
   const selectedSet = useMemo(() => new Set(selectedMedicines), [selectedMedicines]);
@@ -34,13 +31,20 @@ export default function DrugInteractionChecker() {
   const filteredOptions = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
     return medicineOptions
-      .filter((name) => !selectedSet.has(name))
-      .filter((name) => !query || name.toLowerCase().includes(query))
+      .filter((medicine) => !selectedSet.has(medicine.name))
+      .filter((medicine) => {
+        if (!query) return true;
+
+        return [
+          medicine.name,
+          medicine.genericName,
+          ...medicine.aliases
+        ].some((value) => String(value || '').toLowerCase().includes(query));
+      })
       .slice(0, 12);
   }, [medicineOptions, searchQuery, selectedSet]);
 
-  const manualMedications = normalizeMedicationInput(manualInput);
-  const medications = [...selectedMedicines, ...manualMedications];
+  const medications = selectedMedicines;
 
   const handleSelectMedicine = (medicineName) => {
     setSelectedMedicines((current) => (
@@ -56,7 +60,7 @@ export default function DrugInteractionChecker() {
   const handleSubmit = async (event) => {
     event.preventDefault();
     if (!medications.length) {
-      setError('Select or enter at least one medication.');
+      setError('Select at least one medicine from the database.');
       return;
     }
 
@@ -75,6 +79,10 @@ export default function DrugInteractionChecker() {
   };
 
   const severity = result?.severity || 'LOW';
+  const detailedExplanation = result?.llmExplanation
+    || result?.explanation
+    || result?.explanations?.join(' ');
+  const explanationTitle = result?.llmExplanation ? 'AI Explanation' : 'Explanation';
 
   return (
     <div className="space-y-6">
@@ -82,7 +90,7 @@ export default function DrugInteractionChecker() {
         <div className="mb-4">
           <h2 className="text-xl font-bold text-gray-900">Check Drug Interactions</h2>
           <p className="mt-1 text-sm text-gray-500">
-            Select medicines from the controlled dataset. Optional manual input is available for fallback entries.
+            Select medicines from the controlled dataset. Only listed medicines can be checked.
           </p>
         </div>
 
@@ -97,18 +105,25 @@ export default function DrugInteractionChecker() {
           {searchQuery.trim() && (
             <div className="absolute z-20 mt-2 max-h-72 w-full overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-xl">
               {filteredOptions.length ? (
-                filteredOptions.map((medicineName) => (
+                filteredOptions.map((medicine) => (
                   <button
-                    key={medicineName}
+                    key={medicine.name}
                     type="button"
-                    onClick={() => handleSelectMedicine(medicineName)}
+                    onClick={() => handleSelectMedicine(medicine.name)}
                     className="block w-full px-4 py-3 text-left text-sm font-medium text-gray-800 hover:bg-green-50"
                   >
-                    {medicineName}
+                    <span className="block">{medicine.name}</span>
+                    {!!medicine.aliases.length && (
+                      <span className="mt-1 block text-xs font-normal text-gray-500">
+                        Also known as: {medicine.aliases.slice(0, 3).join(', ')}
+                      </span>
+                    )}
                   </button>
                 ))
               ) : (
-                <div className="px-4 py-3 text-sm text-gray-500">No medicines found.</div>
+                <div className="px-4 py-3 text-sm text-gray-500">
+                  Medicine not found in database. Please select from the available list.
+                </div>
               )}
             </div>
           )}
@@ -140,17 +155,6 @@ export default function DrugInteractionChecker() {
               No medicines selected yet.
             </p>
           )}
-        </div>
-
-        <div className="mt-4">
-          <label className="mb-2 block text-sm font-semibold text-gray-700">Manual fallback (optional)</label>
-          <textarea
-            value={manualInput}
-            onChange={(event) => setManualInput(event.target.value)}
-            placeholder="Optional: enter extra medicines separated by commas or new lines"
-            rows={3}
-            className="w-full rounded-xl border border-gray-300 px-4 py-3 focus:border-green-600 focus:outline-none"
-          />
         </div>
 
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
@@ -207,12 +211,20 @@ export default function DrugInteractionChecker() {
           </div>
 
           <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-            <h3 className="mb-3 text-xl font-bold text-gray-900">Explanation</h3>
-            <ul className="list-inside list-disc space-y-2 text-gray-700">
-              {(result.explanations || []).map((explanation, index) => (
-                <li key={`${explanation}-${index}`}>{explanation}</li>
-              ))}
-            </ul>
+            <h3 className="mb-3 text-xl font-bold text-gray-900">{explanationTitle}</h3>
+            <div className="space-y-3 text-sm leading-6 text-gray-700">
+              <ReactMarkdown
+                components={{
+                  p: ({ children }) => <p className="mb-3 last:mb-0">{children}</p>,
+                  strong: ({ children }) => <strong className="font-bold text-gray-900">{children}</strong>,
+                  ul: ({ children }) => <ul className="mb-3 list-disc space-y-1 pl-5 last:mb-0">{children}</ul>,
+                  ol: ({ children }) => <ol className="mb-3 list-decimal space-y-1 pl-5 last:mb-0">{children}</ol>,
+                  li: ({ children }) => <li className="pl-1">{children}</li>
+                }}
+              >
+                {detailedExplanation || 'No category-based interactions detected for the recognized medicines.'}
+              </ReactMarkdown>
+            </div>
           </div>
 
           {!!result.unknownMedications?.length && (
