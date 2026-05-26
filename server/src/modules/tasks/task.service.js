@@ -1,6 +1,29 @@
 const Task = require('./task.model');
 const ActivityLog = require('../../shared/models/ActivityLog');
-const notificationService = require('../communication/notifications/notification.service');
+const { dispatchNotificationSafely } = require('../notifications/notification.dispatcher');
+const emergencyRoutingService = require('../notifications/emergencyRouting.service');
+
+const isValidCoordinatePair = (lat, lng) =>
+  Number.isFinite(Number(lat)) &&
+  Number.isFinite(Number(lng)) &&
+  !(Number(lat) === 0 && Number(lng) === 0);
+
+const getAlertLocation = (taskLocation, user) => {
+  if (isValidCoordinatePair(taskLocation?.coordinates?.lat, taskLocation?.coordinates?.lng)) {
+    return {
+      lat: Number(taskLocation.coordinates.lat),
+      lng: Number(taskLocation.coordinates.lng)
+    };
+  }
+
+  const userCoordinates = user.location?.coordinates || [];
+  const [lng, lat] = userCoordinates;
+  if (isValidCoordinatePair(lat, lng)) {
+    return { lat: Number(lat), lng: Number(lng) };
+  }
+
+  return null;
+};
 
 const createTaskRequest = async (user, payload) => {
   if (user.role !== 'elder') {
@@ -37,7 +60,7 @@ const createTaskRequest = async (user, payload) => {
   }
 
   try {
-    await notificationService.createNotification({
+    await dispatchNotificationSafely({
       userId: user._id,
       type: 'task',
       title: 'Task request created',
@@ -45,6 +68,22 @@ const createTaskRequest = async (user, payload) => {
     });
   } catch (notificationErr) {
     console.error('Task notification failed:', notificationErr.message);
+  }
+
+  try {
+    await emergencyRoutingService.createEmergencyNotification({
+      type: 'TASK',
+      seniorId: user._id,
+      location: getAlertLocation(task.location, user),
+      message: `New help request: ${title}`,
+      metadata: {
+        taskId: task._id,
+        category: task.category,
+        priority: task.priority
+      }
+    });
+  } catch (routingErr) {
+    console.error('Task routing notification failed:', routingErr.message);
   }
 
   return {
@@ -99,7 +138,7 @@ const cancelTask = async (taskId, user) => {
   await task.save();
 
   try {
-    await notificationService.createNotification({
+    await dispatchNotificationSafely({
       userId: user._id,
       type: 'task',
       title: 'Task request cancelled',

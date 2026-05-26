@@ -6,6 +6,7 @@ const auth = require('../../middleware/auth');
 const {
   getProfile,
   updateProfile,
+  updateLocation,
   getPrivacy,
   updatePrivacy,
   getContacts,
@@ -50,6 +51,7 @@ const upload = multer({
 
 router.get('/profile', auth, getProfile);
 router.put('/profile', auth, updateProfile);
+router.put('/location', auth, updateLocation);
 
 router.get('/privacy', auth, getPrivacy);
 router.put('/privacy', auth, updatePrivacy);

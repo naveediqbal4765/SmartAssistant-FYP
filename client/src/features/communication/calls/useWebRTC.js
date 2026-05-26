@@ -6,12 +6,14 @@ import {
   getCallSocket,
   sendIceCandidate
 } from './callSocket';
+import { useOptionalCallState } from './CallStateContext';
 
 const peerConfig = {
   iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
 };
 
-export default function useWebRTC({ onCallEnded } = {}) {
+export default function useWebRTC({ onCallEnded, useGlobalIncomingCall = false } = {}) {
+  const globalCallState = useOptionalCallState();
   const peerRef = useRef(null);
   const localStreamRef = useRef(null);
   const remoteStreamRef = useRef(null);
@@ -28,6 +30,18 @@ export default function useWebRTC({ onCallEnded } = {}) {
   const [muted, setMuted] = useState(false);
   const [cameraOn, setCameraOn] = useState(false);
   const [error, setError] = useState('');
+  const activeIncomingCall = useGlobalIncomingCall && globalCallState
+    ? globalCallState.incomingCall
+    : incomingCall;
+
+  const clearIncomingCall = useCallback(() => {
+    if (useGlobalIncomingCall && globalCallState) {
+      globalCallState.resetCallState();
+      return;
+    }
+
+    setIncomingCall(null);
+  }, [globalCallState, useGlobalIncomingCall]);
 
   const stopTimer = useCallback(() => {
     if (durationTimerRef.current) {
@@ -65,14 +79,14 @@ export default function useWebRTC({ onCallEnded } = {}) {
     callTypeRef.current = 'audio';
     setLocalStream(null);
     setRemoteStream(null);
-    setIncomingCall(null);
+    clearIncomingCall();
     setMuted(false);
     setCameraOn(false);
     setCallType('audio');
     setCallState('idle');
     stopTimer();
     setDurationSeconds(0);
-  }, [stopTimer]);
+  }, [clearIncomingCall, stopTimer]);
 
   const createPeer = useCallback((peerUserId) => {
     const peer = new RTCPeerConnection(peerConfig);
@@ -97,8 +111,68 @@ export default function useWebRTC({ onCallEnded } = {}) {
     return peer;
   }, []);
 
+  const ensureVideoSendCapability = useCallback((peer) => {
+    if (!peer) return null;
+
+    const videoTransceiver = peer.getTransceivers?.().find((transceiver) => (
+      transceiver.receiver?.track?.kind === 'video' ||
+      transceiver.sender?.track?.kind === 'video'
+    ));
+
+    if (videoTransceiver) {
+      if (['inactive', 'recvonly'].includes(videoTransceiver.direction)) {
+        videoTransceiver.direction = 'sendrecv';
+      }
+      return videoTransceiver;
+    }
+
+    return peer.addTransceiver?.('video', { direction: 'sendrecv' }) || null;
+  }, []);
+
+  const attachVideoTrackToPeer = useCallback(async (videoTrack, stream) => {
+    const peer = peerRef.current;
+    if (!peer || !videoTrack) return;
+
+    const videoSender = peer.getSenders().find((sender) => sender.track?.kind === 'video');
+    if (videoSender) {
+      await videoSender.replaceTrack(videoTrack);
+      return;
+    }
+
+    const videoTransceiver = ensureVideoSendCapability(peer);
+    if (videoTransceiver?.sender) {
+      await videoTransceiver.sender.replaceTrack(videoTrack);
+      return;
+    }
+
+    peer.addTrack(videoTrack, stream);
+  }, [ensureVideoSendCapability]);
+
+  const requestVideoTrack = async () => {
+    const videoStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+    return videoStream.getVideoTracks()[0] || null;
+  };
+
   const getLocalStream = async (withVideo = false) => {
-    if (localStreamRef.current) return localStreamRef.current;
+    if (localStreamRef.current) {
+      if (!withVideo || localStreamRef.current.getVideoTracks().length) {
+        return localStreamRef.current;
+      }
+
+      const videoTrack = await requestVideoTrack();
+      if (videoTrack) {
+        const nextStream = new MediaStream([
+          ...localStreamRef.current.getAudioTracks(),
+          videoTrack
+        ]);
+        localStreamRef.current = nextStream;
+        setLocalStream(nextStream);
+        setCameraOn(videoTrack.enabled);
+        await attachVideoTrackToPeer(videoTrack, nextStream);
+      }
+      return localStreamRef.current;
+    }
+
     let stream;
     try {
       stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: withVideo });
@@ -128,6 +202,9 @@ export default function useWebRTC({ onCallEnded } = {}) {
       const stream = await getLocalStream(isVideoCall);
       const peer = createPeer(toUserId);
       addLocalTracks(peer, stream);
+      if (isVideoCall) {
+        ensureVideoSendCapability(peer);
+      }
 
       const offer = await peer.createOffer();
       await peer.setLocalDescription(offer);
@@ -136,41 +213,49 @@ export default function useWebRTC({ onCallEnded } = {}) {
       setError('Could not start call');
       cleanup();
     }
-  }, [callState, cleanup, createPeer]);
+  }, [callState, cleanup, createPeer, ensureVideoSendCapability]);
 
   const acceptIncomingCall = useCallback(async () => {
-    if (!incomingCall) return;
+    if (!activeIncomingCall) return;
 
     try {
       setError('');
       setCallState('connecting');
-      const nextCallType = incomingCall.callType || 'audio';
+      globalCallState?.markCallConnecting();
+      const nextCallType = activeIncomingCall.callType || 'audio';
       const isVideoCall = nextCallType === 'video';
       setCallType(nextCallType);
       callTypeRef.current = nextCallType;
       const stream = await getLocalStream(isVideoCall);
-      const peer = createPeer(incomingCall.fromUserId);
+      const peer = createPeer(activeIncomingCall.fromUserId);
       addLocalTracks(peer, stream);
 
-      await peer.setRemoteDescription(new RTCSessionDescription(incomingCall.offer));
+      await peer.setRemoteDescription(new RTCSessionDescription(activeIncomingCall.offer));
+      if (isVideoCall) {
+        ensureVideoSendCapability(peer);
+      }
       const answer = await peer.createAnswer();
       await peer.setLocalDescription(answer);
-      emitCallAccepted({ toUserId: incomingCall.fromUserId, answer });
-      setIncomingCall(null);
+      emitCallAccepted({ toUserId: activeIncomingCall.fromUserId, answer });
+      if (useGlobalIncomingCall && globalCallState) {
+        globalCallState.markCallInProgress();
+      } else {
+        setIncomingCall(null);
+      }
       setCallState('in-call');
       startTimer();
     } catch (err) {
       setError('Could not accept call');
       cleanup();
     }
-  }, [cleanup, createPeer, incomingCall, startTimer]);
+  }, [activeIncomingCall, cleanup, createPeer, globalCallState, startTimer, useGlobalIncomingCall]);
 
   const rejectIncomingCall = useCallback(() => {
-    if (incomingCall?.fromUserId) {
-      emitEndCall({ toUserId: incomingCall.fromUserId });
+    if (activeIncomingCall?.fromUserId) {
+      emitEndCall({ toUserId: activeIncomingCall.fromUserId });
     }
-    setIncomingCall(null);
-  }, [incomingCall]);
+    clearIncomingCall();
+  }, [activeIncomingCall, clearIncomingCall]);
 
   const endCurrentCall = useCallback(() => {
     const peerUserId = activePeerIdRef.current;
@@ -196,27 +281,36 @@ export default function useWebRTC({ onCallEnded } = {}) {
     setMuted(nextMuted);
   }, [muted]);
 
-  const toggleCamera = useCallback(() => {
+  const toggleCamera = useCallback(async () => {
     const videoTracks = localStreamRef.current?.getVideoTracks() || [];
-    if (!videoTracks.length) return;
+    if (!videoTracks.length) {
+      try {
+        const videoTrack = await requestVideoTrack();
+        if (!videoTrack) return;
+
+        const nextStream = new MediaStream([
+          ...(localStreamRef.current?.getAudioTracks() || []),
+          videoTrack
+        ]);
+        localStreamRef.current = nextStream;
+        setLocalStream(nextStream);
+        await attachVideoTrackToPeer(videoTrack, nextStream);
+        setCameraOn(videoTrack.enabled);
+      } catch (err) {
+        setError('Could not enable camera');
+      }
+      return;
+    }
 
     const nextCameraOn = !cameraOn;
     videoTracks.forEach((track) => {
       track.enabled = nextCameraOn;
     });
     setCameraOn(nextCameraOn);
-  }, [cameraOn]);
+  }, [attachVideoTrackToPeer, cameraOn]);
 
   useEffect(() => {
     const socket = getCallSocket();
-
-    const handleIncomingCall = ({ fromUserId, fromName, offer, callType = 'audio' }) => {
-      if (callState !== 'idle') {
-        emitEndCall({ toUserId: fromUserId });
-        return;
-      }
-      setIncomingCall({ fromUserId, fromName, offer, callType });
-    };
 
     const handleCallAccepted = async ({ fromUserId, answer }) => {
       if (!peerRef.current || activePeerIdRef.current !== fromUserId) return;
@@ -239,23 +333,21 @@ export default function useWebRTC({ onCallEnded } = {}) {
       cleanup();
     };
 
-    socket.on('call-user', handleIncomingCall);
     socket.on('call-accepted', handleCallAccepted);
     socket.on('ice-candidate', handleIceCandidate);
     socket.on('end-call', handleEndCall);
     socket.on('call-error', handleCallError);
 
     return () => {
-      socket.off('call-user', handleIncomingCall);
       socket.off('call-accepted', handleCallAccepted);
       socket.off('ice-candidate', handleIceCandidate);
       socket.off('end-call', handleEndCall);
       socket.off('call-error', handleCallError);
     };
-  }, [callState, cleanup, startTimer]);
+  }, [cleanup, startTimer]);
 
   return {
-    incomingCall,
+    incomingCall: activeIncomingCall,
     localStream,
     remoteStream,
     callState,

@@ -1,21 +1,79 @@
+import { useRef, useState } from 'react';
+
+const SWIPE_THRESHOLD_PX = 48;
+
 const formatTime = (value) => {
   if (!value) return '';
   return new Date(value).toLocaleString();
 };
 
 export default function ConversationItem({ conversation, active, onSelect, onDelete }) {
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [swipeStartX, setSwipeStartX] = useState(null);
+  const swipedRef = useRef(false);
   const participant = conversation.participant || {};
   const lastMessage = conversation.lastMessage || {};
   const preview = lastMessage.message || lastMessage.mediaUrl || 'No messages yet';
+  const canDelete = !String(conversation.id || '').startsWith('new-') && !String(conversation.id || '').startsWith('search-');
+
+  const handlePointerUp = (event) => {
+    if (swipeStartX === null || !canDelete) return;
+
+    const deltaX = event.clientX - swipeStartX;
+    if (deltaX <= -SWIPE_THRESHOLD_PX) {
+      setDeleteOpen(true);
+      swipedRef.current = true;
+    } else if (deltaX >= SWIPE_THRESHOLD_PX / 2) {
+      setDeleteOpen(false);
+    }
+
+    setSwipeStartX(null);
+  };
+
+  const handleSelect = () => {
+    if (swipedRef.current) {
+      swipedRef.current = false;
+      return;
+    }
+
+    if (deleteOpen) {
+      setDeleteOpen(false);
+      return;
+    }
+
+    onSelect?.(conversation);
+  };
+
+  const handleDelete = (event) => {
+    event.stopPropagation();
+    onDelete?.(conversation);
+    setDeleteOpen(false);
+  };
 
   return (
     <div
-      className={`w-full text-left p-4 border-b transition-colors hover:bg-gray-50 ${active ? 'bg-green-50 ring-2 ring-inset ring-green-500' : ''}`}
+      className="relative overflow-hidden border-b last:border-b-0"
     >
+      {canDelete && (
+        <div className="absolute inset-y-0 right-0 flex w-28 items-center justify-center bg-red-600">
+          <button
+            type="button"
+            onClick={handleDelete}
+            className="h-full w-full text-sm font-semibold text-white"
+          >
+            Delete
+          </button>
+        </div>
+      )}
       <button
         type="button"
-        onClick={() => onSelect?.(conversation)}
-        className="w-full text-left"
+        onPointerDown={(event) => setSwipeStartX(event.clientX)}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={() => setSwipeStartX(null)}
+        onClick={handleSelect}
+        className={`relative w-full touch-pan-y p-4 text-left transition-all duration-200 ease-out hover:bg-gray-50 ${
+          deleteOpen ? '-translate-x-28' : 'translate-x-0'
+        } ${active ? 'bg-green-50 ring-2 ring-inset ring-green-500' : 'bg-white'}`}
       >
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -28,15 +86,6 @@ export default function ConversationItem({ conversation, active, onSelect, onDel
           </span>
         </div>
       </button>
-      {!String(conversation.id || '').startsWith('new-') && !String(conversation.id || '').startsWith('search-') && (
-        <button
-          type="button"
-          onClick={() => onDelete?.(conversation)}
-          className="mt-2 text-xs font-semibold text-red-600 hover:text-red-700"
-        >
-          Delete conversation
-        </button>
-      )}
     </div>
   );
 }

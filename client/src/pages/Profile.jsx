@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { ArrowLeft, Save, User, Phone, FileText, Trash2, LogOut, Shield, Activity, Users, Link2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import LocationStatusCard from '../features/location/LocationStatusCard';
+import NearbyVolunteers from '../features/location/NearbyVolunteers';
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -618,6 +620,26 @@ export default function Profile() {
           </div>
         </div>
 
+        {(userRole === 'elder' || userRole === 'volunteer') && (
+          <div className="rounded-2xl shadow-xl p-6 sm:p-8 mt-8" style={{ backgroundColor: '#BAE4C7' }}>
+            <h2 className="text-2xl font-semibold mb-6 flex items-center gap-3">
+              <Activity size={32} className="text-emerald-700" />
+              Location Awareness
+            </h2>
+            <div className="space-y-5">
+              <LocationStatusCard
+                title={userRole === 'elder' ? 'Senior Location Status' : 'Volunteer Location Status'}
+                description={
+                  userRole === 'elder'
+                    ? 'Update your location so emergency alerts can reach nearby volunteers and your linked caregivers.'
+                    : 'Update your location so nearby task and emergency routing can include you accurately.'
+                }
+              />
+              {userRole === 'volunteer' && <NearbyVolunteers />}
+            </div>
+          </div>
+        )}
+
         {(userRole === 'elder' || userRole === 'caregiver') && (
           <div className="rounded-2xl shadow-xl p-6 sm:p-8 mt-8" style={{ backgroundColor: '#BAE4C7' }}>
             <h2 className="text-2xl font-semibold mb-6 flex items-center gap-3">
@@ -627,10 +649,18 @@ export default function Profile() {
 
             {userRole === 'caregiver' && (
               linkedSenior ? (
-                <div className="bg-white rounded-xl p-4 border border-green-200">
-                  <p className="font-semibold text-lg">{linkedSenior.name}</p>
-                  <p className="text-gray-600">{linkedSenior.email}</p>
-                  {linkedSenior.phone && <p className="text-gray-600">📞 {linkedSenior.phone}</p>}
+                <div className="space-y-5">
+                  <div className="bg-white rounded-xl p-4 border border-green-200">
+                    <p className="font-semibold text-lg">{linkedSenior.name}</p>
+                    <p className="text-gray-600">{linkedSenior.email}</p>
+                    {linkedSenior.phone && <p className="text-gray-600">📞 {linkedSenior.phone}</p>}
+                  </div>
+                  <LocationStatusCard
+                    readOnly
+                    title="Senior Location Preview"
+                    description="Senior location is used for emergency routing. Exact coordinates are not exposed in this profile response yet."
+                    location={linkedSenior.location || null}
+                  />
                 </div>
               ) : (
                 <p className="text-gray-600">No senior linked to this account.</p>

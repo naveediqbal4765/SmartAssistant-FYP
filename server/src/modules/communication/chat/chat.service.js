@@ -1,20 +1,32 @@
 const ChatMessage = require('./chat.model');
 const conversationService = require('./conversation.service');
 
+const getActionTypeForMessage = (messageType = 'text') => {
+  if (messageType === 'voice') return 'voice';
+  if (messageType === 'call') return 'call';
+  return 'chat';
+};
+
 const sendMessage = async (data) => {
-  await conversationService.assertCanCommunicate(data.senderId, data.receiverId);
+  const messageType = data.messageType || 'text';
+  await conversationService.assertCanCommunicate(
+    data.senderId,
+    data.receiverId,
+    getActionTypeForMessage(messageType)
+  );
 
   const chatMessage = new ChatMessage({
     senderId: data.senderId,
     receiverId: data.receiverId,
     message: data.message || '',
-    messageType: data.messageType || 'text',
+    messageType,
     mediaUrl: data.mediaUrl || '',
     duration: data.duration || null
   });
 
   await chatMessage.save();
-  await conversationService.upsertConversationForMessage(chatMessage);
+  const conversation = await conversationService.upsertConversationForMessage(chatMessage);
+  chatMessage.$locals.conversation = conversation;
 
   return chatMessage;
 };

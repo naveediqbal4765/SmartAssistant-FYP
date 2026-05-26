@@ -59,6 +59,10 @@ const UserSchema = new mongoose.Schema({
     coordinates: {
       type: [Number],
       default: [0, 0]
+    },
+    lastUpdated: {
+      type: Date,
+      default: null
     }
   },
   

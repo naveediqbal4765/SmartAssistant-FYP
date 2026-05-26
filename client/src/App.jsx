@@ -19,6 +19,8 @@ import AppointmentPage from './features/health/appointments/AppointmentPage';
 import TelemetryDashboard from './features/health/telemetry/TelemetryDashboard';
 import DrugInteractionPage from './features/health/interactions/DrugInteractionPage';
 import { disconnectChatSocket } from './features/communication/chat/services/socket';
+import { CallStateProvider } from './features/communication/calls/CallStateContext';
+import GlobalCallHandler from './features/communication/calls/GlobalCallHandler';
 import NotificationBell from './features/communication/notifications/NotificationBell';
 
 function App() {
@@ -186,6 +188,15 @@ function App() {
           />
 
           <Route
+            path="/chat/:conversationId"
+            element={
+              <PrivateRoute>
+                <ChatPage />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
             path="/groups"
             element={
               <PrivateRoute>
@@ -255,7 +266,12 @@ function App() {
           <Route path="/" element={<Navigate to="/login" />} />
         </Routes>
 
-        {isAuthenticated && <NotificationBell />}
+        {isAuthenticated && (
+          <CallStateProvider>
+            <GlobalCallHandler />
+            <NotificationBell />
+          </CallStateProvider>
+        )}
 
       </div>
     </Router>

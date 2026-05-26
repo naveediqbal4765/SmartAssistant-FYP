@@ -9,8 +9,20 @@ const NotificationSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['chat', 'task', 'system'],
+    enum: ['chat', 'chat_message', 'task', 'system'],
     required: true
+  },
+  conversationId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Conversation'
+  },
+  fromUserId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  toUserId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
   },
   title: {
     type: String,

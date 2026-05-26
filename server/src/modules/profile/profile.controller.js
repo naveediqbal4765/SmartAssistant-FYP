@@ -1,4 +1,5 @@
 const profileService = require('./profile.service');
+const locationService = require('../location/location.service');
 
 // Controllers are intentionally thin; profile rules and data access live in profile.service.
 const getProfile = async (req, res) => {
@@ -17,6 +18,16 @@ const updateProfile = async (req, res) => {
     return res.status(result.status).json(result.body);
   } catch (err) {
     console.error('Profile update error:', err);
+    return res.status(500).json({ success: false, msg: 'Server error' });
+  }
+};
+
+const updateLocation = async (req, res) => {
+  try {
+    const result = await locationService.updateUserLocation(req.user, req.body);
+    return res.status(result.status).json(result.body);
+  } catch (err) {
+    console.error('Location update error:', err);
     return res.status(500).json({ success: false, msg: 'Server error' });
   }
 };
@@ -131,6 +142,7 @@ const deleteAccount = async (req, res) => {
 module.exports = {
   getProfile,
   updateProfile,
+  updateLocation,
   getPrivacy,
   updatePrivacy,
   getContacts,

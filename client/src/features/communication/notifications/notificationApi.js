@@ -19,3 +19,17 @@ export const markNotificationAsRead = async (notificationId) => {
   });
   return response.data.notification;
 };
+
+export const deleteNotificationById = async (notificationId) => {
+  const response = await axios.delete(`${API_BASE_URL}/${notificationId}`, {
+    headers: authHeaders()
+  });
+  return response.data;
+};
+
+export const clearAllNotifications = async () => {
+  const response = await axios.delete(API_BASE_URL, {
+    headers: authHeaders()
+  });
+  return response.data;
+};

@@ -14,10 +14,30 @@ export const fetchConversations = async () => {
   return response.data.conversations || [];
 };
 
+export const fetchConversation = async (conversationId) => {
+  const response = await axios.get(`${API_BASE_URL}/conversations/${conversationId}`, {
+    headers: authHeaders()
+  });
+  return response.data.conversation;
+};
+
 export const createConversation = async (participantId) => {
   const response = await axios.post(
     `${API_BASE_URL}/conversations`,
     { participantId },
+    { headers: authHeaders() }
+  );
+  return response.data.conversation;
+};
+
+export const resolveConversation = async ({
+  conversationId,
+  fromUserId,
+  toUserId
+}) => {
+  const response = await axios.post(
+    `${API_BASE_URL}/conversations/resolve`,
+    { conversationId, fromUserId, toUserId },
     { headers: authHeaders() }
   );
   return response.data.conversation;

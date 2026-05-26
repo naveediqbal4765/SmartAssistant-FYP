@@ -11,6 +11,7 @@ const {
   resolveUploadFilePath,
   unlinkUserRelationships
 } = require('../src/shared/links/userLinks');
+const locationService = require('../src/modules/location/location.service');
 const router = express.Router();
 
 // Configure multer for file uploads
@@ -134,6 +135,16 @@ router.put('/profile', auth, async (req, res) => {
     });
   } catch (err) {
     console.error('Profile update error:', err);
+    res.status(500).json({ success: false, msg: 'Server error' });
+  }
+});
+
+router.put('/location', auth, async (req, res) => {
+  try {
+    const result = await locationService.updateUserLocation(req.user, req.body);
+    res.status(result.status).json(result.body);
+  } catch (err) {
+    console.error('Location update error:', err);
     res.status(500).json({ success: false, msg: 'Server error' });
   }
 });

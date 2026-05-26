@@ -1,6 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { getChatSocket } from '../chat/services/socket';
-import { fetchNotifications, markNotificationAsRead } from './notificationApi';
+import {
+  clearAllNotifications,
+  deleteNotificationById,
+  fetchNotifications,
+  markNotificationAsRead
+} from './notificationApi';
 
 const mergeNotifications = (current, incoming) => {
   const byId = new Map();
@@ -22,6 +27,7 @@ export default function useNotifications() {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const deletedNotificationIdsRef = useRef(new Set());
 
   const unreadCount = useMemo(
     () => notifications.filter((notification) => !notification.isRead).length,
@@ -34,7 +40,9 @@ export default function useNotifications() {
 
     try {
       const data = await fetchNotifications();
-      setNotifications(data);
+      setNotifications(data.filter(
+        (notification) => !deletedNotificationIdsRef.current.has(String(notification._id))
+      ));
     } catch (err) {
       setError(err.response?.data?.msg || 'Failed to load notifications');
     } finally {
@@ -50,6 +58,10 @@ export default function useNotifications() {
     const socket = getChatSocket();
 
     const handleNewNotification = (notification) => {
+      if (deletedNotificationIdsRef.current.has(String(notification?._id))) {
+        return;
+      }
+
       setNotifications((current) => mergeNotifications(current, [notification]));
     };
 
@@ -78,12 +90,57 @@ export default function useNotifications() {
     }
   };
 
+  const deleteNotification = useCallback(async (notificationId) => {
+    const id = String(notificationId);
+    let previousNotifications = [];
+
+    deletedNotificationIdsRef.current.add(id);
+    setError('');
+    setNotifications((current) => {
+      previousNotifications = current;
+      return current.filter((notification) => String(notification._id) !== id);
+    });
+
+    try {
+      await deleteNotificationById(notificationId);
+    } catch (err) {
+      deletedNotificationIdsRef.current.delete(id);
+      setNotifications(previousNotifications);
+      setError(err.response?.data?.msg || 'Failed to delete notification');
+    }
+  }, []);
+
+  const clearNotifications = useCallback(async () => {
+    let previousNotifications = [];
+
+    setError('');
+    setNotifications((current) => {
+      previousNotifications = current;
+      current.forEach((notification) => {
+        deletedNotificationIdsRef.current.add(String(notification._id));
+      });
+      return [];
+    });
+
+    try {
+      await clearAllNotifications();
+    } catch (err) {
+      previousNotifications.forEach((notification) => {
+        deletedNotificationIdsRef.current.delete(String(notification._id));
+      });
+      setNotifications(previousNotifications);
+      setError(err.response?.data?.msg || 'Failed to clear notifications');
+    }
+  }, []);
+
   return {
     notifications,
     unreadCount,
     loading,
     error,
     markRead,
+    deleteNotification,
+    clearNotifications,
     reload: loadNotifications
   };
 }

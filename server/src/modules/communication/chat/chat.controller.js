@@ -29,11 +29,15 @@ const sendMessage = async (req, res) => {
     emitNewMessage(chatMessage);
 
     try {
+      const conversationId = chatMessage.$locals?.conversation?._id;
       await notificationService.createNotification({
         userId: receiverId,
-        type: 'chat',
+        type: 'chat_message',
         title: `New message from ${req.user.name || 'Someone'}`,
-        message: message || 'Sent an attachment'
+        message: message || 'Sent an attachment',
+        conversationId,
+        fromUserId: req.user._id,
+        toUserId: receiverId
       });
     } catch (notificationErr) {
       console.error('Chat notification failed:', notificationErr.message);

@@ -35,10 +35,12 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use('/api/auth', require('./modules/auth/auth.routes'));
 app.use('/api/user', require('./modules/profile/profile.routes'));
+app.use('/api/location', require('./modules/location/location.routes'));
 app.use('/api/tasks', require('./modules/tasks/task.routes'));
 app.use('/api/reminders', require('./modules/reminders/reminder.routes'));
 app.use('/api/health', require('./modules/health/health.routes'));
 app.use('/api/communication', require('./modules/communication/communication.routes'));
+app.use('/api/emergency', require('./modules/emergency/emergency.routes'));
 
 app.get('/', (req, res) => {
   res.json({ message: 'Smart Assistant Backend is Running!' });

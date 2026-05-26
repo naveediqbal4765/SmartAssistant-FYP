@@ -1,21 +1,43 @@
 import { useState } from 'react';
 import { Bell } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { resolveConversation } from '../chat/services/chatApi';
 import NotificationDropdown from './NotificationDropdown';
 import useNotifications from './useNotifications';
 
 export default function NotificationBell() {
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const {
     notifications,
     unreadCount,
     loading,
     error,
-    markRead
+    markRead,
+    deleteNotification,
+    clearNotifications
   } = useNotifications();
 
-  const handleNotificationClick = (notification) => {
+  const handleNotificationClick = async (notification) => {
     if (!notification.isRead) {
       markRead(notification._id);
+    }
+
+    if (notification.type === 'chat_message') {
+      try {
+        const conversation = await resolveConversation({
+          conversationId: notification.conversationId,
+          fromUserId: notification.fromUserId,
+          toUserId: notification.toUserId
+        });
+
+        if (conversation?.id) {
+          setOpen(false);
+          navigate(`/chat/${conversation.id}`);
+        }
+      } catch (err) {
+        console.error('Failed to open chat notification:', err);
+      }
     }
   };
 
@@ -41,6 +63,8 @@ export default function NotificationBell() {
           loading={loading}
           error={error}
           onNotificationClick={handleNotificationClick}
+          onDeleteNotification={deleteNotification}
+          onClearNotifications={clearNotifications}
         />
       )}
     </div>

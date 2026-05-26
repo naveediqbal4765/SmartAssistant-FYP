@@ -17,10 +17,10 @@ const deleteConversation = async (req, res) => {
 
     let chatType = 'private';
     try {
-      await conversationService.hardDeleteConversation(conversationId, req.user._id);
+      await conversationService.hideConversationForUser(conversationId, req.user._id);
     } catch (err) {
       if (err.status !== 404) throw err;
-      await groupService.hardDeleteGroup(conversationId, req.user._id);
+      await groupService.hideGroupForUser(conversationId, req.user._id);
       chatType = 'group';
     }
 

@@ -10,6 +10,22 @@ const getConversations = async (req, res) => {
   }
 };
 
+const getConversationById = async (req, res) => {
+  try {
+    const conversation = await conversationService.getConversationById(
+      req.user._id,
+      req.params.conversationId
+    );
+    return res.json({ success: true, conversation });
+  } catch (err) {
+    console.error('Fetch conversation error:', err);
+    return res.status(err.status || 500).json({
+      success: false,
+      msg: err.status ? err.message : 'Server error'
+    });
+  }
+};
+
 const createConversation = async (req, res) => {
   try {
     const { participantId } = req.body;
@@ -17,6 +33,19 @@ const createConversation = async (req, res) => {
     return res.status(201).json({ success: true, conversation });
   } catch (err) {
     console.error('Create conversation error:', err);
+    return res.status(err.status || 500).json({
+      success: false,
+      msg: err.status ? err.message : 'Server error'
+    });
+  }
+};
+
+const resolveConversation = async (req, res) => {
+  try {
+    const conversation = await conversationService.resolveConversation(req.user._id, req.body);
+    return res.json({ success: true, conversation });
+  } catch (err) {
+    console.error('Resolve conversation error:', err);
     return res.status(err.status || 500).json({
       success: false,
       msg: err.status ? err.message : 'Server error'
@@ -37,4 +66,10 @@ const searchUsers = async (req, res) => {
   }
 };
 
-module.exports = { getConversations, createConversation, searchUsers };
+module.exports = {
+  getConversations,
+  getConversationById,
+  createConversation,
+  resolveConversation,
+  searchUsers
+};

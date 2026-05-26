@@ -21,6 +21,9 @@ const emitNotification = (userId, notification) => {
     type: notification.type,
     title: notification.title,
     message: notification.message,
+    conversationId: notification.conversationId,
+    fromUserId: notification.fromUserId,
+    toUserId: notification.toUserId,
     isRead: notification.isRead,
     createdAt: notification.createdAt
   });

@@ -1,13 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import ChatBox from '../components/ChatBox';
 import ConversationList from '../components/ConversationList';
 import SearchUsers from '../components/SearchUsers';
 import useChatSocket from '../hooks/useChatSocket';
 import { getChatSocket } from '../services/socket';
-import { createConversation, deleteConversation, deleteMessage, fetchConversations, fetchMessages, sendMessage, uploadAudio } from '../services/chatApi';
+import { createConversation, deleteConversation, deleteMessage, fetchConversation, fetchConversations, fetchMessages, resolveConversation, sendMessage, uploadAudio } from '../services/chatApi';
 import CallScreen from '../../calls/CallScreen';
-import IncomingCallModal from '../../calls/IncomingCallModal';
 import useWebRTC from '../../calls/useWebRTC';
 
 const getCurrentUser = () => {
@@ -18,6 +17,7 @@ const getCurrentUser = () => {
   }
 };
 
+const getConversationId = (conversation) => String(conversation?.id || conversation?._id || '');
 const getParticipantId = (conversation) => String(conversation?.participant?._id || '');
 const getUserId = (value) => String(value?._id || value || '');
 const getMessageKey = (message) => String(message?._id || message?.clientId || '');
@@ -71,10 +71,16 @@ const isDeletedForCurrentUser = (message, currentUserId) => {
 
 export default function ChatPage() {
   const navigate = useNavigate();
+  const { conversationId: routeConversationId } = useParams();
   const currentUser = useMemo(() => getCurrentUser(), []);
   const currentUserId = String(currentUser.id || currentUser._id || '');
+  const lastConversationKey = `chat:lastConversation:${currentUserId}`;
   const messageRequestRef = useRef(0);
+  const loadedConversationIdRef = useRef('');
   const [conversations, setConversations] = useState([]);
+  const [selectedConversationId, setSelectedConversationId] = useState(() => (
+    routeConversationId || localStorage.getItem(lastConversationKey) || ''
+  ));
   const [activeConversation, setActiveConversation] = useState(null);
   const [messages, setMessages] = useState([]);
   const [loadingConversations, setLoadingConversations] = useState(true);
@@ -90,12 +96,6 @@ export default function ChatPage() {
       const data = await fetchConversations();
       const visibleConversations = data.filter((conversation) => conversation.participant);
       setConversations((current) => mergeConversations([...current, ...visibleConversations]));
-      setActiveConversation((current) => {
-        if (!current) return current;
-        return visibleConversations.find(
-          (conversation) => getParticipantId(conversation) === getParticipantId(current)
-        ) || current;
-      });
     } catch (err) {
       setError(err.response?.data?.msg || 'Failed to load conversations');
     } finally {
@@ -128,17 +128,95 @@ export default function ChatPage() {
         setLoadingMessages(false);
       }
     }
-  }, []);
+  }, [currentUserId]);
 
   useEffect(() => {
     loadConversations();
   }, [loadConversations]);
 
   useEffect(() => {
-    if (activeConversation) {
-      loadMessages(activeConversation);
+    if (!routeConversationId) return;
+
+    let cancelled = false;
+
+    const loadRouteConversation = async () => {
+      setLoadingMessages(true);
+      setError('');
+
+      try {
+        const conversation = await fetchConversation(routeConversationId);
+        if (cancelled) return;
+
+        const normalizedConversation = normalizeConversation(conversation, conversation.participant);
+        setConversations((current) => mergeConversations([normalizedConversation, ...current]));
+        setSelectedConversationId(getConversationId(normalizedConversation));
+      } catch (err) {
+        if (!cancelled) {
+          setError(err.response?.data?.msg || 'Failed to open conversation');
+        }
+      } finally {
+        if (!cancelled) {
+          setLoadingMessages(false);
+        }
+      }
+    };
+
+    loadRouteConversation();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [routeConversationId]);
+
+  useEffect(() => {
+    if (routeConversationId) return;
+    if (loadingConversations || !conversations.length || selectedConversationId) return;
+
+    const firstConversation = conversations[0];
+    const firstConversationId = getConversationId(firstConversation);
+    if (firstConversationId) {
+      setSelectedConversationId(firstConversationId);
     }
-  }, [activeConversation, loadMessages]);
+  }, [conversations, loadingConversations, routeConversationId, selectedConversationId]);
+
+  useEffect(() => {
+    if (!selectedConversationId) {
+      loadedConversationIdRef.current = '';
+      setActiveConversation(null);
+      setMessages([]);
+      localStorage.removeItem(lastConversationKey);
+      return;
+    }
+
+    const selectedConversation = conversations.find(
+      (conversation) => getConversationId(conversation) === selectedConversationId
+    );
+
+    if (!selectedConversation) {
+      if (!routeConversationId && !loadingConversations && conversations.length) {
+        const fallbackConversationId = getConversationId(conversations[0]);
+        if (fallbackConversationId && fallbackConversationId !== selectedConversationId) {
+          setSelectedConversationId(fallbackConversationId);
+        }
+      }
+      return;
+    }
+
+    setActiveConversation(selectedConversation);
+    localStorage.setItem(lastConversationKey, selectedConversationId);
+
+    if (loadedConversationIdRef.current !== selectedConversationId) {
+      loadedConversationIdRef.current = selectedConversationId;
+      loadMessages(selectedConversation);
+    }
+  }, [
+    conversations,
+    lastConversationKey,
+    loadMessages,
+    loadingConversations,
+    routeConversationId,
+    selectedConversationId
+  ]);
 
   const upsertConversationPreview = useCallback((message) => {
     const senderId = getUserId(message.senderId);
@@ -197,6 +275,41 @@ export default function ChatPage() {
     }
   }, [activeConversation, conversations, currentUserId, loadConversations, upsertConversationPreview]);
 
+  const handleChatNotification = useCallback(async (notification) => {
+    const senderId = getUserId(notification.fromUserId);
+    const receiverId = getUserId(notification.toUserId);
+    const activeParticipantId = getParticipantId(activeConversation);
+
+    loadConversations();
+
+    if (activeConversation && activeParticipantId && (activeParticipantId === senderId || activeParticipantId === receiverId)) {
+      loadedConversationIdRef.current = '';
+      loadMessages(activeConversation);
+      return;
+    }
+
+    const currentUserIsRecipient = receiverId === currentUserId;
+    if (!currentUserIsRecipient) return;
+
+    try {
+      const conversation = await resolveConversation({
+        conversationId: notification.conversationId,
+        fromUserId: notification.fromUserId,
+        toUserId: notification.toUserId
+      });
+      const normalizedConversation = normalizeConversation(conversation, conversation.participant);
+      const normalizedConversationId = getConversationId(normalizedConversation);
+
+      setConversations((current) => mergeConversations([normalizedConversation, ...current]));
+
+      if (!activeConversation && normalizedConversationId) {
+        setSelectedConversationId(normalizedConversationId);
+      }
+    } catch (err) {
+      loadConversations();
+    }
+  }, [activeConversation, currentUserId, loadConversations, loadMessages]);
+
   const handleMessageDeleted = useCallback((payload) => {
     if (payload.chatType !== 'private') return;
     setMessages((current) => current.filter((message) => getMessageKey(message) !== String(payload.messageId)));
@@ -205,6 +318,9 @@ export default function ChatPage() {
   const handleConversationDeleted = useCallback((payload) => {
     if (payload.chatType !== 'private') return;
     setConversations((current) => current.filter((conversation) => String(conversation.id) !== String(payload.conversationId)));
+    setSelectedConversationId((current) => (
+      String(current || '') === String(payload.conversationId) ? '' : current
+    ));
     setActiveConversation((current) => (
       String(current?.id || '') === String(payload.conversationId) ? null : current
     ));
@@ -216,7 +332,11 @@ export default function ChatPage() {
     return () => socket.off('conversation-deleted', handleConversationDeleted);
   }, [handleConversationDeleted]);
 
-  useChatSocket({ onNewMessage: handleNewMessage, onMessageDeleted: handleMessageDeleted });
+  useChatSocket({
+    onNewMessage: handleNewMessage,
+    onMessageDeleted: handleMessageDeleted,
+    onChatNotification: handleChatNotification
+  });
 
   const handleSelectConversation = async (conversation) => {
     const conversationId = String(conversation?.id || '');
@@ -227,14 +347,19 @@ export default function ChatPage() {
         const createdConversation = await createConversation(participantId);
         const normalizedConversation = normalizeConversation(createdConversation, conversation.participant);
         setConversations((current) => mergeConversations([normalizedConversation, ...current]));
-        setActiveConversation(normalizedConversation);
+        const normalizedConversationId = getConversationId(normalizedConversation);
+        setSelectedConversationId(normalizedConversationId);
+        navigate(`/chat/${normalizedConversationId}`);
       } catch (err) {
         setError(err.response?.data?.msg || 'Failed to open conversation');
       }
       return;
     }
 
-    setActiveConversation(conversation);
+    if (conversationId) {
+      setSelectedConversationId(conversationId);
+      navigate(`/chat/${conversationId}`);
+    }
   };
 
   const normalizeConversation = (conversation, participant) => ({
@@ -251,7 +376,9 @@ export default function ChatPage() {
     );
 
     if (existingConversation) {
-      setActiveConversation(existingConversation);
+      const existingConversationId = getConversationId(existingConversation);
+      setSelectedConversationId(existingConversationId);
+      navigate(`/chat/${existingConversationId}`);
       return;
     }
 
@@ -259,7 +386,9 @@ export default function ChatPage() {
       const createdConversation = await createConversation(user._id);
       const normalizedConversation = normalizeConversation(createdConversation, user);
       setConversations((current) => mergeConversations([normalizedConversation, ...current]));
-      setActiveConversation(normalizedConversation);
+      const normalizedConversationId = getConversationId(normalizedConversation);
+      setSelectedConversationId(normalizedConversationId);
+      navigate(`/chat/${normalizedConversationId}`);
     } catch (err) {
       setError(err.response?.data?.msg || 'Failed to open conversation');
     }
@@ -374,11 +503,18 @@ export default function ChatPage() {
   const handleDeleteConversation = async (conversation) => {
     const conversationId = conversation?.id;
     if (!conversationId || String(conversationId).startsWith('new-') || String(conversationId).startsWith('search-')) return;
+    const wasActiveConversation = String(activeConversation?.id || '') === String(conversationId);
 
     setConversations((current) => current.filter((item) => String(item.id) !== String(conversationId)));
+    setSelectedConversationId((current) => (
+      String(current || '') === String(conversationId) ? '' : current
+    ));
     setActiveConversation((current) => (
       String(current?.id || '') === String(conversationId) ? null : current
     ));
+    if (wasActiveConversation) {
+      navigate('/chat');
+    }
 
     try {
       await deleteConversation(conversationId);
@@ -389,7 +525,6 @@ export default function ChatPage() {
   };
 
   const {
-    incomingCall,
     localStream,
     remoteStream,
     callState,
@@ -399,8 +534,6 @@ export default function ChatPage() {
     cameraOn,
     error: callError,
     startCall,
-    acceptIncomingCall,
-    rejectIncomingCall,
     endCurrentCall,
     toggleMute,
     toggleCamera
@@ -468,11 +601,6 @@ export default function ChatPage() {
         </div>
       </div>
 
-      <IncomingCallModal
-        incomingCall={incomingCall}
-        onAccept={acceptIncomingCall}
-        onReject={rejectIncomingCall}
-      />
       <CallScreen
         callState={callState}
         callType={callType}

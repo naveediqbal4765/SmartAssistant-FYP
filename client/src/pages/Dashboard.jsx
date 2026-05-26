@@ -1,10 +1,36 @@
-import { LogOut, User, Bell, Heart, Phone, Clipboard, Activity, Users, Award, Calendar, MessageCircle, FileText } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { LogOut, User, Bell, Heart, Clipboard, Activity, Users, Award, Calendar, MessageCircle, FileText, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import SOSButton from '../components/SOSButton';
+import axios from 'axios';
 import CallReminderPanel from '../components/CallReminderPanel';
+import LocationStatusCard from '../features/location/LocationStatusCard';
+import NearbyVolunteers from '../features/location/NearbyVolunteers';
 
 export default function Dashboard({ role, onLogout }) {
   const navigate = useNavigate();
+  const [linkedSenior, setLinkedSenior] = useState(null);
+
+  const loadDashboardContext = useCallback(async () => {
+    if (role !== 'caregiver') return;
+
+    try {
+      const response = await axios.get('http://localhost:5000/api/user/profile', {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token') || ''}`
+        }
+      });
+
+      if (response.data.success) {
+        setLinkedSenior(response.data.user.linkedSenior || null);
+      }
+    } catch (err) {
+      setLinkedSenior(null);
+    }
+  }, [role]);
+
+  useEffect(() => {
+    loadDashboardContext();
+  }, [loadDashboardContext]);
 
   // Get dynamic greeting based on time
   const getGreeting = () => {
@@ -13,6 +39,21 @@ export default function Dashboard({ role, onLogout }) {
     if (hour < 18) return "Good afternoon";
     return "Good evening";
   };
+
+  const RoleStabilityPanel = ({ title, description, children }) => (
+    <div className="mb-8 rounded-2xl border border-gray-200 bg-white/90 p-6 shadow-lg backdrop-blur-sm">
+      <div className="mb-5 flex items-start gap-3">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
+          <Shield size={24} />
+        </div>
+        <div>
+          <h3 className="text-2xl font-bold text-gray-800">{title}</h3>
+          <p className="mt-1 text-gray-600">{description}</p>
+        </div>
+      </div>
+      {children}
+    </div>
+  );
 
   // Get role display name
   const getRoleDisplay = () => {
@@ -28,7 +69,6 @@ export default function Dashboard({ role, onLogout }) {
       { title: "My Profile", icon: <User size={32} />, color: "bg-gradient-to-r from-blue-500 to-blue-700", action: () => navigate('/profile') },
       { title: "My Requests", icon: <Clipboard size={32} />, color: "bg-gradient-to-r from-purple-500 to-purple-700", action: () => navigate('/my-requests') },
       { title: "Medications", icon: <Bell size={32} />, color: "bg-gradient-to-r from-orange-500 to-orange-700", action: () => navigate('/health/medications') },
-      { title: "Emergency SOS", icon: <Phone size={32} />, color: "bg-gradient-to-r from-red-500 to-red-700", action: () => alert("Emergency SOS - Coming Soon") },
       { title: "Digital Health Vault", icon: <FileText size={32} />, color: "bg-gradient-to-r from-indigo-500 to-indigo-700", action: () => navigate('/health/vault') },
       { title: "Chat", icon: <MessageCircle size={32} />, color: "bg-gradient-to-r from-emerald-500 to-emerald-700", action: () => navigate('/chat') },
       { title: "Groups", icon: <Users size={32} />, color: "bg-gradient-to-r from-cyan-500 to-cyan-700", action: () => navigate('/groups') },
@@ -39,7 +79,6 @@ export default function Dashboard({ role, onLogout }) {
 
     return (
       <div className="min-h-screen" style={{ backgroundColor: '#A9C6B2' }}>
-        <SOSButton />
         <nav className="w-full shadow-md border-b sticky top-0 z-50" style={{ backgroundColor: '#1C382A' }}>
           <div className="max-w-6xl mx-auto px-6 py-5 flex justify-between items-center">
             <div>
@@ -59,6 +98,19 @@ export default function Dashboard({ role, onLogout }) {
           </div>
 
           <CallReminderPanel />
+
+          <RoleStabilityPanel
+            title="Emergency Readiness"
+            description="Keep your location current and monitor nearby volunteer coverage for emergency routing."
+          >
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+              <LocationStatusCard
+                title="Senior Location Status"
+                description="Update your location so emergency alerts can reach nearby volunteers and your linked caregivers."
+              />
+              <NearbyVolunteers />
+            </div>
+          </RoleStabilityPanel>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
             {elderActions.map((action, index) => (
@@ -114,9 +166,23 @@ export default function Dashboard({ role, onLogout }) {
             <p className="text-xl text-gray-700">Ready to make a difference today?</p>
           </div>
 
+          <RoleStabilityPanel
+            title="Volunteer Alert Readiness"
+            description="Keep your own location current so relevant emergency and task alerts can reach you."
+          >
+            <LocationStatusCard
+              title="Volunteer Location Status"
+              description="Your location powers proximity matching for emergency and task notifications."
+            />
+          </RoleStabilityPanel>
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
             {volunteerActions.map((action, index) => (
-              <button key={index} onClick={action.action} className={`${action.color} rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 flex flex-col items-center justify-center h-48 p-6`}>
+              <button
+                key={index}
+                onClick={action.action}
+                className={`${action.color} rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 flex flex-col items-center justify-center h-48 p-6 focus:outline-none focus:ring-4 focus:ring-white/70`}
+              >
                 <div className="mb-5 text-white">{action.icon}</div>
                 <span className="text-xl font-bold text-white text-center">{action.title}</span>
               </button>
@@ -138,12 +204,10 @@ export default function Dashboard({ role, onLogout }) {
   // ========== CAREGIVER DASHBOARD ==========
   if (role === 'caregiver') {
     const caregiverActions = [
-      { title: "My Seniors", icon: <Users size={32} />, color: "bg-gradient-to-r from-purple-500 to-purple-700", action: () => alert("My Seniors - Coming Soon") },
+      { title: "Linked Senior", icon: <Users size={32} />, color: "bg-gradient-to-r from-purple-500 to-purple-700", action: () => navigate('/profile') },
       { title: "Medications (View)", icon: <Bell size={32} />, color: "bg-gradient-to-r from-blue-500 to-blue-700", action: () => navigate('/health/medications') },
       { title: "Digital Health Vault (View)", icon: <FileText size={32} />, color: "bg-gradient-to-r from-teal-500 to-teal-700", action: () => navigate('/health/vault') },
       { title: "My Profile", icon: <User size={32} />, color: "bg-gradient-to-r from-indigo-500 to-indigo-700", action: () => navigate('/profile') },
-      { title: "Emergency Alerts", icon: <Bell size={32} />, color: "bg-gradient-to-r from-red-500 to-red-700", action: () => alert("Emergency Alerts - Coming Soon") },
-      { title: "Care Notes", icon: <FileText size={32} />, color: "bg-gradient-to-r from-orange-500 to-orange-700", action: () => alert("Care Notes - Coming Soon") },
       { title: "Chat", icon: <MessageCircle size={32} />, color: "bg-gradient-to-r from-emerald-500 to-emerald-700", action: () => navigate('/chat') },
       { title: "Groups", icon: <Users size={32} />, color: "bg-gradient-to-r from-cyan-500 to-cyan-700", action: () => navigate('/groups') },
       { title: "Appointments (View)", icon: <Calendar size={32} />, color: "bg-gradient-to-r from-purple-500 to-purple-700", action: () => navigate('/health/appointments') }
@@ -168,6 +232,39 @@ export default function Dashboard({ role, onLogout }) {
             <h2 className="text-4xl font-bold text-gray-800 mb-2">{getGreeting()}! 👋</h2>
             <p className="text-xl text-gray-700">Monitor and care for your loved ones</p>
           </div>
+
+          <RoleStabilityPanel
+            title="Caregiver Alert Center"
+            description="You receive senior emergency and task alerts through the global alert banner. Location controls stay with the senior."
+          >
+            {linkedSenior ? (
+              <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+                <div className="rounded-2xl border border-green-200 bg-white/90 p-5 shadow-sm">
+                  <h4 className="text-lg font-semibold text-gray-900">Linked Senior</h4>
+                  <p className="mt-3 font-semibold text-gray-800">{linkedSenior.name}</p>
+                  <p className="text-sm text-gray-600">{linkedSenior.email}</p>
+                  {linkedSenior.phone && <p className="text-sm text-gray-600">📞 {linkedSenior.phone}</p>}
+                  <button
+                    type="button"
+                    onClick={() => navigate('/profile')}
+                    className="mt-5 rounded-xl bg-green-700 px-5 py-3 font-semibold text-white transition hover:bg-green-800"
+                  >
+                    View Senior Details
+                  </button>
+                </div>
+                <LocationStatusCard
+                  readOnly
+                  title="Senior Location Preview"
+                  description="Emergency routing uses the senior location. Exact coordinates appear only when exposed by profile data."
+                  location={linkedSenior.location || null}
+                />
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-yellow-200 bg-yellow-50 p-5 text-yellow-800">
+                No senior is linked to this caregiver account yet.
+              </div>
+            )}
+          </RoleStabilityPanel>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
             {caregiverActions.map((action, index) => (

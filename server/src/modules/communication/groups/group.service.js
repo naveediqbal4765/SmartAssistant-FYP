@@ -354,21 +354,6 @@ const hideGroupForUser = async (groupId, userId) => {
   return group;
 };
 
-const hardDeleteGroup = async (groupId, userId) => {
-  const group = await getGroupOrThrow(groupId);
-  if (!isGroupAdmin(group, userId)) {
-    throw createServiceError(403, 'Only group admins can delete group conversations');
-  }
-
-  await Promise.all([
-    GroupMessage.deleteMany({ groupId }),
-    GroupJoinRequest.deleteMany({ groupId }),
-    Group.deleteOne({ _id: groupId })
-  ]);
-
-  return group;
-};
-
 const searchAddableUsers = async (groupId, admin, query = '') => {
   const group = await getGroupOrThrow(groupId);
   if (!isGroupAdmin(group, admin._id)) {
@@ -392,7 +377,6 @@ module.exports = {
   directAddMember,
   removeMember,
   hideGroupForUser,
-  hardDeleteGroup,
   searchAddableUsers,
   searchInitialMembers: (user, query) => getDirectlyAddableUsers(user, query, [user._id]),
   validateCaregiverLinkBeforeAdding
