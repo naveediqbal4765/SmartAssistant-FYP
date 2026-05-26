@@ -109,7 +109,7 @@ const UserSchema = new mongoose.Schema({
   // ==========================================
 
   // ========== SENIOR ↔ CAREGIVER LINKING ==========
-  // Active code emailed to senior on login (caregivers use it when registering)
+  // Invitation code generated on senior signup or manual regeneration.
   caregiverLinkCode: {
     code: { type: String, default: null },
     expiresAt: { type: Date, default: null }

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const passport = require('passport');
 const jwt = require('jsonwebtoken');
+const auth = require('../src/shared/jwt/authMiddleware');
 const { 
   register, 
   login, 
@@ -9,15 +10,12 @@ const {
   resendOTP,
   forgotPassword,
   verifyResetOTP,
-  resetPassword
+  resetPassword,
+  getCaregiverLinkCode,
+  regenerateCaregiverLinkCode
 } = require('../controllers/authController');
-const { refreshSeniorCaregiverLinkCode } = require('../src/shared/links/seniorCaregiverLink');
 
 const buildOAuthRedirect = async (user, res) => {
-  if (user.role === 'elder') {
-    await refreshSeniorCaregiverLinkCode(user);
-  }
-
   const token = jwt.sign(
     { userId: user._id, id: user._id, role: user.role },
     process.env.JWT_SECRET || 'smart-senior-secret-2026',
@@ -62,6 +60,9 @@ router.post('/verify-reset-otp', verifyResetOTP);
 
 // Reset Password - Set new password
 router.post('/reset-password', resetPassword);
+
+router.get('/senior/caregiver-link-code', auth, getCaregiverLinkCode);
+router.post('/senior/caregiver-link-code/regenerate', auth, regenerateCaregiverLinkCode);
 
 // ========== GOOGLE OAUTH ROUTES (ADDED) ==========
 
@@ -114,6 +115,8 @@ router.get('/test', (req, res) => {
       'POST /forgot-password',
       'POST /verify-reset-otp',
       'POST /reset-password',
+      'GET /senior/caregiver-link-code',
+      'POST /senior/caregiver-link-code/regenerate',
       'GET /google',
       'GET /google/callback',
       'GET /facebook',

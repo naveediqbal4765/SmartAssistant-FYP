@@ -24,7 +24,9 @@ export default function Profile() {
   const [userRole, setUserRole] = useState('');
   const [linkedSenior, setLinkedSenior] = useState(null);
   const [linkedCaregivers, setLinkedCaregivers] = useState([]);
-  const [caregiverLinkHint, setCaregiverLinkHint] = useState(null);
+  const [caregiverInvitation, setCaregiverInvitation] = useState(null);
+  const [regeneratingCode, setRegeneratingCode] = useState(false);
+  const [removingCaregiverId, setRemovingCaregiverId] = useState(null);
   const [privacySummary, setPrivacySummary] = useState(null);
 
   // Get auth token helper
@@ -74,8 +76,27 @@ export default function Profile() {
         setUserRole(userData.role || '');
         setLinkedSenior(userData.linkedSenior || null);
         setLinkedCaregivers(userData.linkedCaregivers || []);
-        setCaregiverLinkHint(userData.caregiverLinkCode || null);
         setPrivacySummary(userData.privacySettings || null);
+
+        if (userData.role === 'elder') {
+          try {
+            const invitationResponse = await axios.get('http://localhost:5000/api/auth/senior/caregiver-link-code', {
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              }
+            });
+
+            if (invitationResponse.data.success) {
+              setCaregiverInvitation(invitationResponse.data.caregiverLinkCode || null);
+            }
+          } catch (invitationErr) {
+            console.error('Error fetching caregiver invitation code:', invitationErr);
+            setCaregiverInvitation(null);
+          }
+        } else {
+          setCaregiverInvitation(null);
+        }
         
         const updatedUser = { 
           ...JSON.parse(localStorage.getItem('user') || '{}'), 
@@ -249,6 +270,79 @@ export default function Profile() {
     }
   };
 
+  const regenerateCaregiverCode = async () => {
+    setRegeneratingCode(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const token = getAuthToken();
+      if (!token) return;
+
+      const response = await axios.post(
+        'http://localhost:5000/api/auth/senior/caregiver-link-code/regenerate',
+        {},
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data.success) {
+        setCaregiverInvitation(response.data.caregiverLinkCode || null);
+        setSuccess('Caregiver invitation code regenerated successfully.');
+        setTimeout(() => setSuccess(''), 3000);
+      }
+    } catch (err) {
+      console.error('Regenerate caregiver code error:', err);
+      setError(err.response?.data?.msg || 'Failed to regenerate caregiver invitation code');
+      setTimeout(() => setError(''), 3000);
+    } finally {
+      setRegeneratingCode(false);
+    }
+  };
+
+  const removeCaregiver = async (caregiver) => {
+    const caregiverId = caregiver._id || caregiver.id;
+    if (!caregiverId) return;
+
+    if (!window.confirm(`Remove ${caregiver.name || 'this caregiver'} from your caregiver list?`)) {
+      return;
+    }
+
+    setRemovingCaregiverId(caregiverId);
+    setError('');
+    setSuccess('');
+
+    try {
+      const token = getAuthToken();
+      if (!token) return;
+
+      const response = await axios.delete(`http://localhost:5000/api/user/caregiver/${caregiverId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.data.success) {
+        setLinkedCaregivers((current) =>
+          current.filter((c) => (c._id || c.id) !== caregiverId)
+        );
+        setSuccess('Caregiver removed successfully.');
+        setTimeout(() => setSuccess(''), 3000);
+      }
+    } catch (err) {
+      console.error('Remove caregiver error:', err);
+      setError(err.response?.data?.msg || 'Failed to remove caregiver');
+      setTimeout(() => setError(''), 3000);
+    } finally {
+      setRemovingCaregiverId(null);
+    }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -321,6 +415,11 @@ export default function Profile() {
     if (userRole === 'volunteer') return 'Volunteer';
     if (userRole === 'caregiver') return 'Caregiver';
     return 'User';
+  };
+
+  const formatInvitationExpiry = (expiresAt) => {
+    if (!expiresAt) return 'No expiry available';
+    return new Date(expiresAt).toLocaleString();
   };
 
   if (loading) {
@@ -540,27 +639,76 @@ export default function Profile() {
 
             {userRole === 'elder' && (
               <>
-                {caregiverLinkHint && (
-                  <div className="bg-white/80 rounded-xl p-4 mb-4 border border-green-300 flex gap-3">
-                    <Link2 className="text-green-700 shrink-0" size={24} />
+                <div className="bg-white/90 rounded-xl p-5 mb-6 border border-green-300">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                    <div className="flex gap-3">
+                      <Link2 className="text-green-700 shrink-0 mt-1" size={24} />
+                      <div>
+                        <p className="font-semibold text-gray-900">Caregiver Invitation Section</p>
+                        <p className="text-sm text-gray-600 mt-1">
+                          Share this code with your caregiver to allow signup.
+                        </p>
+                      </div>
+                    </div>
+
+                    <span
+                      className={`self-start px-3 py-1 rounded-full text-sm font-semibold ${
+                        caregiverInvitation?.status === 'active'
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-red-100 text-red-700'
+                      }`}
+                    >
+                      {caregiverInvitation?.status === 'active' ? 'Active' : 'Expired'}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-5">
                     <div>
-                      <p className="font-medium text-gray-800">Caregiver link code active</p>
-                      <p className="text-sm text-gray-600">{caregiverLinkHint.hint}</p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        Expires: {new Date(caregiverLinkHint.expiresAt).toLocaleString()}
+                      <p className="text-sm font-medium text-gray-600">Current Code</p>
+                      <p className="mt-1 text-3xl font-bold tracking-widest text-gray-900">
+                        {caregiverInvitation?.code || '------'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Expiry Date</p>
+                      <p className="mt-2 text-gray-800">
+                        {formatInvitationExpiry(caregiverInvitation?.expiresAt)}
                       </p>
                     </div>
                   </div>
-                )}
+
+                  <button
+                    type="button"
+                    onClick={regenerateCaregiverCode}
+                    disabled={regeneratingCode}
+                    className="mt-5 bg-green-700 hover:bg-green-800 disabled:opacity-50 text-white px-5 py-3 rounded-xl font-semibold transition"
+                  >
+                    {regeneratingCode ? 'Regenerating...' : 'Regenerate Code'}
+                  </button>
+                </div>
+
                 {linkedCaregivers.length === 0 ? (
-                  <p className="text-gray-600">No caregivers linked yet. Share your email link code when they sign up.</p>
+                  <p className="text-gray-600">No caregivers linked yet. Share your caregiver invitation code when they sign up.</p>
                 ) : (
                   <div className="space-y-3">
                     {linkedCaregivers.map((c) => (
                       <div key={c._id || c.id} className="bg-white rounded-xl p-4 border border-gray-200">
-                        <p className="font-semibold">{c.name}</p>
-                        <p className="text-gray-600 text-sm">{c.email}</p>
-                        {c.phone && <p className="text-gray-600 text-sm">📞 {c.phone}</p>}
+                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                          <div>
+                            <p className="font-semibold">{c.name}</p>
+                            <p className="text-gray-600 text-sm">{c.email}</p>
+                            {c.phone && <p className="text-gray-600 text-sm">📞 {c.phone}</p>}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeCaregiver(c)}
+                            disabled={removingCaregiverId === (c._id || c.id)}
+                            className="self-start flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-sm font-semibold transition"
+                          >
+                            <Trash2 size={16} />
+                            {removingCaregiverId === (c._id || c.id) ? 'Removing...' : 'Remove'}
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>

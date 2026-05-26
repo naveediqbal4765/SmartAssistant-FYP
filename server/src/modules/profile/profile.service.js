@@ -45,12 +45,6 @@ const getProfile = async (user) => {
     }
   }
 
-  const caregiverLinkActive =
-    user.role === 'elder' &&
-    user.caregiverLinkCode?.code &&
-    user.caregiverLinkCode?.expiresAt &&
-    new Date(user.caregiverLinkCode.expiresAt) > new Date();
-
   return {
     status: 200,
     body: {
@@ -66,12 +60,6 @@ const getProfile = async (user) => {
         linkedSeniorId: user.linkedSeniorId || null,
         linkedSenior,
         linkedCaregivers,
-        caregiverLinkCode: caregiverLinkActive
-          ? {
-              expiresAt: user.caregiverLinkCode.expiresAt,
-              hint: 'Check your email for the 6-digit code (refreshed each login).'
-            }
-          : null,
         privacySettings: user.privacySettings || defaultPrivacySettings
       }
     }
@@ -170,6 +158,52 @@ const deleteContact = async (user, contactId) => {
   await logActivity(user._id, 'contact_deleted', 'Removed an emergency contact');
 
   return { status: 200, body: { success: true, msg: 'Contact deleted' } };
+};
+
+const unlinkCaregiver = async (user, caregiverId) => {
+  if (!user || user.role !== 'elder') {
+    return { status: 403, body: { success: false, msg: 'Only seniors can remove caregivers' } };
+  }
+
+  if (!/^[0-9a-fA-F]{24}$/.test(String(caregiverId || ''))) {
+    return { status: 400, body: { success: false, msg: 'Invalid caregiver id' } };
+  }
+
+  const linkedCaregiverIds = user.linkedCaregivers || [];
+  const isLinked = linkedCaregiverIds.some(
+    (id) => id.toString() === caregiverId
+  );
+
+  if (!isLinked) {
+    return { status: 404, body: { success: false, msg: 'Caregiver is not linked to this senior' } };
+  }
+
+  const caregiver = await User.findOne({ _id: caregiverId, role: 'caregiver' });
+  if (!caregiver) {
+    return { status: 404, body: { success: false, msg: 'Caregiver not found' } };
+  }
+
+  user.linkedCaregivers = linkedCaregiverIds.filter(
+    (id) => id.toString() !== caregiverId
+  );
+
+  if (caregiver.linkedSeniorId?.toString() === user._id.toString()) {
+    caregiver.linkedSeniorId = null;
+  }
+
+  await caregiver.save();
+  await user.save();
+
+  await logActivity(user._id, 'caregiver_unlinked', `Removed caregiver ${caregiver.email}`);
+
+  return {
+    status: 200,
+    body: {
+      success: true,
+      msg: 'Caregiver removed successfully',
+      caregiverId
+    }
+  };
 };
 
 const getActivities = async (user, query) => {
@@ -275,6 +309,7 @@ module.exports = {
   getContacts,
   addContact,
   deleteContact,
+  unlinkCaregiver,
   getActivities,
   getDocuments,
   uploadDocument,

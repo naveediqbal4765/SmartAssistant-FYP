@@ -4,7 +4,8 @@ const User = require('./user.model');
 const ActivityLog = require('../../shared/models/ActivityLog');
 const { sendOTPEmail, sendResetOTPEmail } = require('../../shared/email/sendEmail');
 const {
-  findSeniorByLinkCode
+  findSeniorByLinkCode,
+  refreshSeniorCaregiverLinkCode
 } = require('../../shared/links/seniorCaregiverLink');
 const {
   normalizeEmail,
@@ -54,7 +55,7 @@ const register = async (payload) => {
         status: 400,
         body: {
           success: false,
-          msg: 'Senior link code is required. Ask your senior to log in and share the 6-digit code from their email.'
+          msg: 'Senior link code is required. Ask your senior to share their caregiver invitation code.'
         }
       };
     }
@@ -65,7 +66,7 @@ const register = async (payload) => {
         status: 400,
         body: {
           success: false,
-          msg: 'Invalid or expired senior link code. Ask your senior to log in again for a new code.'
+          msg: 'Invalid or expired senior link code. Ask your senior to generate a new caregiver invitation code.'
         }
       };
     }
@@ -106,6 +107,10 @@ const register = async (payload) => {
   });
 
   await user.save();
+
+  if (role === 'elder') {
+    await refreshSeniorCaregiverLinkCode(user);
+  }
 
   if (role === 'caregiver' && linkedSenior) {
     linkedSenior.linkedCaregivers = linkedSenior.linkedCaregivers || [];
@@ -419,6 +424,52 @@ const resetPassword = async ({ resetToken, newPassword }) => {
   };
 };
 
+const buildCaregiverLinkCodeResponse = (caregiverLinkCode) => {
+  const expiresAt = caregiverLinkCode?.expiresAt || null;
+  const isActive = Boolean(
+    caregiverLinkCode?.code &&
+    expiresAt &&
+    new Date(expiresAt) > new Date()
+  );
+
+  return {
+    code: caregiverLinkCode?.code || null,
+    expiresAt,
+    status: isActive ? 'active' : 'expired'
+  };
+};
+
+const getCaregiverLinkCode = async (user) => {
+  if (!user || user.role !== 'elder') {
+    return { status: 403, body: { success: false, msg: 'Only seniors can view caregiver invitation codes' } };
+  }
+
+  return {
+    status: 200,
+    body: {
+      success: true,
+      caregiverLinkCode: buildCaregiverLinkCodeResponse(user.caregiverLinkCode)
+    }
+  };
+};
+
+const regenerateCaregiverLinkCode = async (user) => {
+  if (!user || user.role !== 'elder') {
+    return { status: 403, body: { success: false, msg: 'Only seniors can generate caregiver invitation codes' } };
+  }
+
+  await refreshSeniorCaregiverLinkCode(user);
+
+  return {
+    status: 200,
+    body: {
+      success: true,
+      msg: 'Caregiver invitation code generated successfully',
+      caregiverLinkCode: buildCaregiverLinkCodeResponse(user.caregiverLinkCode)
+    }
+  };
+};
+
 const buildOAuthRedirectUrl = async (user) => {
   const token = signUserToken(user);
 
@@ -444,5 +495,7 @@ module.exports = {
   forgotPassword,
   verifyResetOTP,
   resetPassword,
+  getCaregiverLinkCode,
+  regenerateCaregiverLinkCode,
   buildOAuthRedirectUrl
 };

@@ -11,6 +11,7 @@ const {
   getContacts,
   addContact,
   deleteContact,
+  unlinkCaregiver,
   getActivities,
   getDocuments,
   uploadDocument,
@@ -56,6 +57,8 @@ router.put('/privacy', auth, updatePrivacy);
 router.get('/contacts', auth, getContacts);
 router.post('/contacts', auth, addContact);
 router.delete('/contacts/:id', auth, deleteContact);
+
+router.delete('/caregiver/:caregiverId', auth, unlinkCaregiver);
 
 router.get('/activities', auth, getActivities);
 

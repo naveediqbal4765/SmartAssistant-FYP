@@ -76,12 +76,6 @@ router.get('/profile', auth, async (req, res) => {
       }
     }
 
-    const caregiverLinkActive =
-      req.user.role === 'elder' &&
-      req.user.caregiverLinkCode?.code &&
-      req.user.caregiverLinkCode?.expiresAt &&
-      new Date(req.user.caregiverLinkCode.expiresAt) > new Date();
-
     res.json({ 
       success: true, 
       user: {
@@ -95,12 +89,6 @@ router.get('/profile', auth, async (req, res) => {
         linkedSeniorId: req.user.linkedSeniorId || null,
         linkedSenior,
         linkedCaregivers,
-        caregiverLinkCode: caregiverLinkActive
-          ? {
-              expiresAt: req.user.caregiverLinkCode.expiresAt,
-              hint: 'Check your email for the 6-digit code (refreshed each login).'
-            }
-          : null,
         privacySettings: req.user.privacySettings || {
           showPhone: true,
           showAddress: false,
@@ -248,6 +236,55 @@ router.delete('/contacts/:id', auth, async (req, res) => {
     res.json({ success: true, msg: 'Contact deleted' });
   } catch (err) {
     console.error('Delete contact error:', err);
+    res.status(500).json({ success: false, msg: 'Server error' });
+  }
+});
+
+router.delete('/caregiver/:caregiverId', auth, async (req, res) => {
+  try {
+    if (req.user.role !== 'elder') {
+      return res.status(403).json({ success: false, msg: 'Only seniors can remove caregivers' });
+    }
+
+    const caregiverId = req.params.caregiverId;
+    if (!/^[0-9a-fA-F]{24}$/.test(String(caregiverId || ''))) {
+      return res.status(400).json({ success: false, msg: 'Invalid caregiver id' });
+    }
+
+    const linkedCaregiverIds = req.user.linkedCaregivers || [];
+    const isLinked = linkedCaregiverIds.some(
+      (id) => id.toString() === caregiverId
+    );
+
+    if (!isLinked) {
+      return res.status(404).json({ success: false, msg: 'Caregiver is not linked to this senior' });
+    }
+
+    const caregiver = await User.findOne({ _id: caregiverId, role: 'caregiver' });
+    if (!caregiver) {
+      return res.status(404).json({ success: false, msg: 'Caregiver not found' });
+    }
+
+    req.user.linkedCaregivers = linkedCaregiverIds.filter(
+      (id) => id.toString() !== caregiverId
+    );
+
+    if (caregiver.linkedSeniorId?.toString() === req.user._id.toString()) {
+      caregiver.linkedSeniorId = null;
+    }
+
+    await caregiver.save();
+    await req.user.save();
+
+    await logActivity(req.user._id, 'caregiver_unlinked', `Removed caregiver ${caregiver.email}`);
+
+    res.json({
+      success: true,
+      msg: 'Caregiver removed successfully',
+      caregiverId
+    });
+  } catch (err) {
+    console.error('Unlink caregiver error:', err);
     res.status(500).json({ success: false, msg: 'Server error' });
   }
 });

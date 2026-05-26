@@ -46,14 +46,14 @@ const register = async (req, res) => {
       if (!seniorLinkCode) {
         return res.status(400).json({
           success: false,
-          msg: "Senior link code is required. Ask your senior to log in and share the 6-digit code from their email."
+          msg: "Senior link code is required. Ask your senior to share their caregiver invitation code."
         });
       }
       linkedSenior = await findSeniorByLinkCode(seniorLinkCode);
       if (!linkedSenior) {
         return res.status(400).json({
           success: false,
-          msg: "Invalid or expired senior link code. Ask your senior to log in again for a new code."
+          msg: "Invalid or expired senior link code. Ask your senior to generate a new caregiver invitation code."
         });
       }
     }
@@ -97,6 +97,10 @@ const register = async (req, res) => {
     });
 
     await user.save();
+
+    if (role === 'elder') {
+      await refreshSeniorCaregiverLinkCode(user);
+    }
 
     if (role === 'caregiver' && linkedSenior) {
       linkedSenior.linkedCaregivers = linkedSenior.linkedCaregivers || [];
@@ -187,10 +191,6 @@ const verifyOTP = async (req, res) => {
     if (!user.linkedCaregivers) user.linkedCaregivers = [];
     await user.save();
 
-    if (user.role === 'elder') {
-      await refreshSeniorCaregiverLinkCode(user);
-    }
-
     // Include BOTH 'id' and 'userId' for compatibility
     const token = jwt.sign(
       { userId: user._id, id: user._id, role: user.role },
@@ -198,13 +198,9 @@ const verifyOTP = async (req, res) => {
       { expiresIn: '7d' }
     );
 
-    const verifyMsg = user.role === 'elder'
-      ? 'Account verified! A caregiver link code was sent to your email.'
-      : 'Account verified successfully!';
-
     return res.json({
       success: true,
-      msg: verifyMsg,
+      msg: 'Account verified successfully!',
       token,
       user: {
         id: user._id,
@@ -271,12 +267,6 @@ const login = async (req, res) => {
       { expiresIn: '7d' }
     );
 
-    let loginMsg = 'Login successful';
-    if (user.role === 'elder') {
-      await refreshSeniorCaregiverLinkCode(user);
-      loginMsg = 'Welcome back! A caregiver link code was sent to your email.';
-    }
-
     try {
       await ActivityLog.create({
         userId: user._id,
@@ -294,7 +284,7 @@ const login = async (req, res) => {
 
     res.json({
       success: true,
-      msg: loginMsg,
+      msg: 'Login successful',
       token,
       user: {
         id: user._id,
@@ -577,6 +567,68 @@ const resetPassword = async (req, res) => {
   }
 };
 
+const buildCaregiverLinkCodeResponse = (caregiverLinkCode) => {
+  const expiresAt = caregiverLinkCode?.expiresAt || null;
+  const isActive = Boolean(
+    caregiverLinkCode?.code &&
+    expiresAt &&
+    new Date(expiresAt) > new Date()
+  );
+
+  return {
+    code: caregiverLinkCode?.code || null,
+    expiresAt,
+    status: isActive ? 'active' : 'expired'
+  };
+};
+
+const getCaregiverLinkCode = async (req, res) => {
+  try {
+    if (!req.user || req.user.role !== 'elder') {
+      return res.status(403).json({
+        success: false,
+        msg: 'Only seniors can view caregiver invitation codes'
+      });
+    }
+
+    return res.json({
+      success: true,
+      caregiverLinkCode: buildCaregiverLinkCodeResponse(req.user.caregiverLinkCode)
+    });
+  } catch (err) {
+    console.error('Get Caregiver Link Code Error:', err);
+    return res.status(500).json({
+      success: false,
+      msg: 'Server error'
+    });
+  }
+};
+
+const regenerateCaregiverLinkCode = async (req, res) => {
+  try {
+    if (!req.user || req.user.role !== 'elder') {
+      return res.status(403).json({
+        success: false,
+        msg: 'Only seniors can generate caregiver invitation codes'
+      });
+    }
+
+    await refreshSeniorCaregiverLinkCode(req.user);
+
+    return res.json({
+      success: true,
+      msg: 'Caregiver invitation code generated successfully',
+      caregiverLinkCode: buildCaregiverLinkCodeResponse(req.user.caregiverLinkCode)
+    });
+  } catch (err) {
+    console.error('Regenerate Caregiver Link Code Error:', err);
+    return res.status(500).json({
+      success: false,
+      msg: 'Server error'
+    });
+  }
+};
+
 // Export all functions
 module.exports = { 
   register, 
@@ -585,5 +637,7 @@ module.exports = {
   resendOTP,
   forgotPassword,
   verifyResetOTP,
-  resetPassword
+  resetPassword,
+  getCaregiverLinkCode,
+  regenerateCaregiverLinkCode
 };

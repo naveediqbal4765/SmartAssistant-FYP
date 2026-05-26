@@ -1,5 +1,6 @@
 const express = require('express');
 const passport = require('passport');
+const auth = require('../../shared/jwt/authMiddleware');
 const {
   register,
   login,
@@ -8,6 +9,8 @@ const {
   forgotPassword,
   verifyResetOTP,
   resetPassword,
+  getCaregiverLinkCode,
+  regenerateCaregiverLinkCode,
   handleOAuthCallback
 } = require('./auth.controller');
 
@@ -21,6 +24,9 @@ router.post('/resend-otp', resendOTP);
 router.post('/forgot-password', forgotPassword);
 router.post('/verify-reset-otp', verifyResetOTP);
 router.post('/reset-password', resetPassword);
+
+router.get('/senior/caregiver-link-code', auth, getCaregiverLinkCode);
+router.post('/senior/caregiver-link-code/regenerate', auth, regenerateCaregiverLinkCode);
 
 // Passport route behavior is preserved while callbacks delegate redirect assembly to auth.service.
 router.get('/google',
@@ -53,6 +59,8 @@ router.get('/test', (req, res) => {
       'POST /forgot-password',
       'POST /verify-reset-otp',
       'POST /reset-password',
+      'GET /senior/caregiver-link-code',
+      'POST /senior/caregiver-link-code/regenerate',
       'GET /google',
       'GET /google/callback',
       'GET /facebook',

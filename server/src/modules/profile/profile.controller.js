@@ -68,6 +68,16 @@ const deleteContact = async (req, res) => {
   }
 };
 
+const unlinkCaregiver = async (req, res) => {
+  try {
+    const result = await profileService.unlinkCaregiver(req.user, req.params.caregiverId);
+    return res.status(result.status).json(result.body);
+  } catch (err) {
+    console.error('Unlink caregiver error:', err);
+    return res.status(500).json({ success: false, msg: 'Server error' });
+  }
+};
+
 const getActivities = async (req, res) => {
   try {
     const result = await profileService.getActivities(req.user, req.query);
@@ -126,6 +136,7 @@ module.exports = {
   getContacts,
   addContact,
   deleteContact,
+  unlinkCaregiver,
   getActivities,
   getDocuments,
   uploadDocument,

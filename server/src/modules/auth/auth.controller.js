@@ -92,6 +92,32 @@ const resetPassword = async (req, res) => {
   }
 };
 
+const getCaregiverLinkCode = async (req, res) => {
+  try {
+    const result = await authService.getCaregiverLinkCode(req.user);
+    return res.status(result.status).json(result.body);
+  } catch (err) {
+    console.error('Get Caregiver Link Code Error:', err);
+    return res.status(500).json({
+      success: false,
+      msg: 'Server error'
+    });
+  }
+};
+
+const regenerateCaregiverLinkCode = async (req, res) => {
+  try {
+    const result = await authService.regenerateCaregiverLinkCode(req.user);
+    return res.status(result.status).json(result.body);
+  } catch (err) {
+    console.error('Regenerate Caregiver Link Code Error:', err);
+    return res.status(500).json({
+      success: false,
+      msg: 'Server error'
+    });
+  }
+};
+
 const handleOAuthCallback = async (req, res) => {
   try {
     const redirectUrl = await authService.buildOAuthRedirectUrl(req.user);
@@ -109,5 +135,7 @@ module.exports = {
   forgotPassword,
   verifyResetOTP,
   resetPassword,
+  getCaregiverLinkCode,
+  regenerateCaregiverLinkCode,
   handleOAuthCallback
 };

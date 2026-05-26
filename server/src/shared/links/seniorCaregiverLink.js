@@ -36,7 +36,7 @@ const refreshSeniorCaregiverLinkCode = async (user) => {
   console.log('╠════════════════════════════════════════╣');
   console.log(`║  Senior: ${user.email}`);
   console.log(`║  Code:   ${code}`);
-  console.log('║  Expires in 7 days (refreshed on login) ║');
+  console.log('║  Expires in 7 days                     ║');
   console.log('╚════════════════════════════════════════╝\n');
 
   try {
@@ -54,7 +54,7 @@ const linkCaregiverToSenior = async (caregiver, seniorLinkCode) => {
   if (!senior) {
     return {
       ok: false,
-      msg: 'Invalid or expired senior link code. Ask your senior to log in again to receive a new code by email.'
+      msg: 'Invalid or expired senior link code. Ask your senior to generate a new caregiver invitation code.'
     };
   }
 
