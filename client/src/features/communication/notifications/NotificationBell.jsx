@@ -1,15 +1,20 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Bell } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { resolveConversation } from '../chat/services/chatApi';
+import { markNotificationAsConsumed } from './notificationConsumption';
 import NotificationDropdown from './NotificationDropdown';
+import ReminderNotificationPopup from './ReminderNotificationPopup';
 import useNotifications from './useNotifications';
+import { overlayLayers } from '../../../components/ui/overlayLayers';
 
-export default function NotificationBell() {
+export default function NotificationBell({ className = `fixed right-8 top-6 ${overlayLayers.dropdown}` }) {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  const containerRef = useRef(null);
   const {
     notifications,
+    reminderPopups,
     unreadCount,
     loading,
     error,
@@ -18,9 +23,36 @@ export default function NotificationBell() {
     clearNotifications
   } = useNotifications();
 
+  useEffect(() => {
+    if (!open) return undefined;
+
+    const handlePointerDown = (event) => {
+      if (!containerRef.current?.contains(event.target)) {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener('pointerdown', handlePointerDown);
+    return () => document.removeEventListener('pointerdown', handlePointerDown);
+  }, [open]);
+
   const handleNotificationClick = async (notification) => {
     if (!notification.isRead) {
       markRead(notification._id);
+    }
+
+    if (notification.type === 'group_message' && notification.groupId) {
+      markNotificationAsConsumed({
+        groupId: notification.groupId,
+        messageId: notification.messageId,
+        entityType: 'group_message',
+        entityId: notification.messageId
+      }).catch(() => {});
+      setOpen(false);
+      navigate(`/groups/${notification.groupId}`, {
+        state: { messageId: notification.messageId }
+      });
+      return;
     }
 
     if (notification.type === 'chat_message') {
@@ -32,8 +64,16 @@ export default function NotificationBell() {
         });
 
         if (conversation?.id) {
+          markNotificationAsConsumed({
+            conversationId: conversation.id,
+            messageId: notification.messageId,
+            entityType: 'chat_message',
+            entityId: notification.messageId
+          }).catch(() => {});
           setOpen(false);
-          navigate(`/chat/${conversation.id}`);
+          navigate(`/chat/${conversation.id}`, {
+            state: { messageId: notification.messageId }
+          });
         }
       } catch (err) {
         console.error('Failed to open chat notification:', err);
@@ -42,14 +82,14 @@ export default function NotificationBell() {
   };
 
   return (
-    <div className="fixed right-8 top-6 z-[60]">
+    <div ref={containerRef} className={className}>
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
-        className="relative flex h-12 w-12 items-center justify-center rounded-full bg-white text-gray-800 shadow-lg transition hover:bg-gray-100"
+        className="motion-interactive relative flex h-12 w-12 items-center justify-center rounded-full bg-white text-gray-900 shadow-lg hover:bg-gray-100"
         aria-label="Notifications"
       >
-        <Bell size={24} />
+        <Bell size={24} className="text-brand-primary" />
         {unreadCount > 0 && (
           <span className="absolute -right-1 -top-1 flex h-6 min-w-6 items-center justify-center rounded-full bg-red-600 px-1 text-xs font-bold text-white">
             {unreadCount > 99 ? '99+' : unreadCount}
@@ -67,6 +107,7 @@ export default function NotificationBell() {
           onClearNotifications={clearNotifications}
         />
       )}
+      <ReminderNotificationPopup notifications={reminderPopups} onDismiss={markRead} />
     </div>
   );
 }

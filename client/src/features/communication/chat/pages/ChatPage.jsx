@@ -1,13 +1,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import ChatBox from '../components/ChatBox';
 import ConversationList from '../components/ConversationList';
 import SearchUsers from '../components/SearchUsers';
 import useChatSocket from '../hooks/useChatSocket';
 import { getChatSocket } from '../services/socket';
-import { createConversation, deleteConversation, deleteMessage, fetchConversation, fetchConversations, fetchMessages, resolveConversation, sendMessage, uploadAudio } from '../services/chatApi';
+import { createConversation, deleteConversation, deleteMessage, fetchConversation, fetchConversations, fetchMessages, reactToMessage as reactToTextMessage, reactToVoiceNote, resolveConversation, sendMessage, uploadAudio } from '../services/chatApi';
+import { buildReplyTarget } from '../utils/replyPreview';
 import CallScreen from '../../calls/CallScreen';
 import useWebRTC from '../../calls/useWebRTC';
+import { markNotificationAsConsumed } from '../../notifications/notificationConsumption';
+import FeaturePage from '../../../../components/ui/FeaturePage';
+import StatusAlert from '../../../../components/ui/StatusAlert';
 
 const getCurrentUser = () => {
   try {
@@ -22,6 +26,7 @@ const getParticipantId = (conversation) => String(conversation?.participant?._id
 const getUserId = (value) => String(value?._id || value || '');
 const getMessageKey = (message) => String(message?._id || message?.clientId || '');
 const getConversationTime = (conversation) => new Date(conversation?.lastMessageAt || conversation?.updatedAt || 0).getTime();
+const getReactionUserId = (reaction) => String(reaction?.userId?._id || reaction?.userId || '');
 
 const sortConversations = (items) => {
   return [...items].sort((a, b) => getConversationTime(b) - getConversationTime(a));
@@ -69,11 +74,41 @@ const isDeletedForCurrentUser = (message, currentUserId) => {
   return (message.deletedFor || []).some((id) => String(id?._id || id) === String(currentUserId));
 };
 
+const getNextReactions = (reactions = [], userId, reactionType) => {
+  const existingReaction = reactions.find((reaction) => getReactionUserId(reaction) === String(userId));
+
+  if (existingReaction?.type === reactionType) {
+    return reactions.filter((reaction) => getReactionUserId(reaction) !== String(userId));
+  }
+
+  const nextReaction = {
+    userId,
+    type: reactionType,
+    createdAt: new Date().toISOString()
+  };
+
+  if (existingReaction) {
+    return reactions.map((reaction) => (
+      getReactionUserId(reaction) === String(userId) ? nextReaction : reaction
+    ));
+  }
+
+  return [...reactions, nextReaction];
+};
+
+const getItemTypeForMessage = (message) => {
+  if (message?.messageType === 'text') return 'message';
+  if (message?.messageType === 'voice') return 'voiceNote';
+  return '';
+};
+
 export default function ChatPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { conversationId: routeConversationId } = useParams();
   const currentUser = useMemo(() => getCurrentUser(), []);
   const currentUserId = String(currentUser.id || currentUser._id || '');
+  const targetMessageId = location.state?.messageId || '';
   const lastConversationKey = `chat:lastConversation:${currentUserId}`;
   const messageRequestRef = useRef(0);
   const loadedConversationIdRef = useRef('');
@@ -87,6 +122,7 @@ export default function ChatPage() {
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [pendingSends, setPendingSends] = useState(0);
   const [error, setError] = useState('');
+  const [replyTo, setReplyTo] = useState(null);
 
   const loadConversations = useCallback(async () => {
     setLoadingConversations(true);
@@ -204,6 +240,7 @@ export default function ChatPage() {
 
     setActiveConversation(selectedConversation);
     localStorage.setItem(lastConversationKey, selectedConversationId);
+    markNotificationAsConsumed({ conversationId: selectedConversationId }).catch(() => {});
 
     if (loadedConversationIdRef.current !== selectedConversationId) {
       loadedConversationIdRef.current = selectedConversationId;
@@ -217,6 +254,10 @@ export default function ChatPage() {
     routeConversationId,
     selectedConversationId
   ]);
+
+  useEffect(() => {
+    setReplyTo(null);
+  }, [selectedConversationId]);
 
   const upsertConversationPreview = useCallback((message) => {
     const senderId = getUserId(message.senderId);
@@ -326,6 +367,22 @@ export default function ChatPage() {
     ));
   }, []);
 
+  const handleItemReactionUpdated = useCallback((payload) => {
+    if (!['message', 'voiceNote'].includes(payload?.itemType)) return;
+
+    setMessages((current) => current.map((message) => {
+      const itemType = getItemTypeForMessage(message);
+      if (itemType !== payload.itemType || getMessageKey(message) !== String(payload.itemId)) {
+        return message;
+      }
+
+      return {
+        ...message,
+        reactions: payload.reactions || []
+      };
+    }));
+  }, []);
+
   useEffect(() => {
     const socket = getChatSocket();
     socket.on('conversation-deleted', handleConversationDeleted);
@@ -335,7 +392,8 @@ export default function ChatPage() {
   useChatSocket({
     onNewMessage: handleNewMessage,
     onMessageDeleted: handleMessageDeleted,
-    onChatNotification: handleChatNotification
+    onChatNotification: handleChatNotification,
+    onItemReactionUpdated: handleItemReactionUpdated
   });
 
   const handleSelectConversation = async (conversation) => {
@@ -398,6 +456,7 @@ export default function ChatPage() {
     const receiverId = activeConversation?.participant?._id;
     if (!receiverId) return;
 
+    const replySnapshot = replyTo;
     const clientId = `temp-${Date.now()}-${Math.random().toString(36).slice(2)}`;
     const optimisticMessage = {
       _id: clientId,
@@ -408,16 +467,24 @@ export default function ChatPage() {
       messageType: 'text',
       mediaUrl: '',
       createdAt: new Date().toISOString(),
-      status: 'sending'
+      status: 'sending',
+      repliedToMessageId: replySnapshot?.messageId,
+      repliedToPreview: replySnapshot?.preview,
+      repliedToSender: replySnapshot?.senderName
     };
 
     setMessages((current) => mergeMessages(current, [optimisticMessage]));
+    setReplyTo(null);
     upsertConversationPreview(optimisticMessage);
     setPendingSends((count) => count + 1);
     setError('');
 
     try {
-      const savedMessage = await sendMessage({ receiverId, message: text });
+      const savedMessage = await sendMessage({
+        receiverId,
+        message: text,
+        repliedToMessageId: replySnapshot?.messageId || ''
+      });
       setMessages((current) => mergeMessages(
         current.filter((message) => message.clientId !== clientId),
         [savedMessage]
@@ -440,6 +507,8 @@ export default function ChatPage() {
 
     setPendingSends((count) => count + 1);
     setError('');
+    const replySnapshot = replyTo;
+    setReplyTo(null);
 
     try {
       const audio = await uploadAudio(audioBlob);
@@ -448,7 +517,8 @@ export default function ChatPage() {
         message: 'Voice note',
         messageType: 'voice',
         mediaUrl: audio.mediaUrl,
-        duration
+        duration,
+        repliedToMessageId: replySnapshot?.messageId || ''
       });
 
       setMessages((current) => mergeMessages(current, [savedMessage]));
@@ -485,19 +555,52 @@ export default function ChatPage() {
     }
   }, [loadConversations, upsertConversationPreview]);
 
-  const handleDeleteMessage = async (message) => {
+  const handleDeleteMessage = async (message, deleteType = 'forEveryone') => {
     const messageId = message?._id;
     if (!messageId) return;
 
     setMessages((current) => current.filter((item) => getMessageKey(item) !== String(messageId)));
 
     try {
-      await deleteMessage(messageId);
+      await deleteMessage(messageId, deleteType);
       loadConversations();
     } catch (err) {
       setError(err.response?.data?.msg || 'Failed to delete message');
       loadMessages(activeConversation);
     }
+  };
+
+  const handleReactToMessage = async (message, reactionType) => {
+    const messageId = getMessageKey(message);
+    const itemType = getItemTypeForMessage(message);
+    if (!messageId || message.status || !itemType) return;
+
+    const previousReactions = message.reactions || [];
+    const optimisticReactions = getNextReactions(previousReactions, currentUserId, reactionType);
+
+    setMessages((current) => current.map((item) => (
+      getMessageKey(item) === messageId ? { ...item, reactions: optimisticReactions } : item
+    )));
+    setError('');
+
+    try {
+      const result = itemType === 'voiceNote'
+        ? await reactToVoiceNote(messageId, reactionType)
+        : await reactToTextMessage(messageId, reactionType);
+
+      setMessages((current) => current.map((item) => (
+        getMessageKey(item) === messageId ? { ...item, reactions: result.reactions || optimisticReactions } : item
+      )));
+    } catch (err) {
+      setError(err.response?.data?.msg || 'Failed to update reaction');
+      setMessages((current) => current.map((item) => (
+        getMessageKey(item) === messageId ? { ...item, reactions: previousReactions } : item
+      )));
+    }
+  };
+
+  const handleReplyToMessage = (message) => {
+    setReplyTo(buildReplyTarget(message, currentUserId, activeConversation?.participant?.name));
   };
 
   const handleDeleteConversation = async (conversation) => {
@@ -553,24 +656,14 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Chat</h1>
-            <p className="text-gray-600">Secure conversations with your connected contacts.</p>
-          </div>
-          <div className="flex gap-3">
-            <button onClick={() => navigate('/groups')} className="rounded-xl bg-green-600 px-4 py-2 font-medium text-white">
-              Groups
-            </button>
-            <button onClick={() => navigate('/dashboard')} className="rounded-xl bg-gray-200 px-4 py-2 font-medium">
-              Back to Dashboard
-            </button>
-          </div>
-        </div>
-
-        {error && <div className="mb-4 rounded-lg bg-red-100 p-3 text-red-700">{error}</div>}
+    <>
+      <FeaturePage
+        title="Chat"
+        description="Secure conversations with your connected contacts."
+        backLabel="Back to Dashboard"
+        onBack={() => navigate('/dashboard')}
+      >
+        <StatusAlert variant="error">{error}</StatusAlert>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[360px_1fr]">
           <div>
@@ -594,12 +687,17 @@ export default function ChatPage() {
             onSendMessage={handleSendMessage}
             onSendVoice={handleSendVoice}
             onDeleteMessage={handleDeleteMessage}
+            onReactToMessage={handleReactToMessage}
+            onReplyToMessage={handleReplyToMessage}
+            replyTo={replyTo}
+            onCancelReply={() => setReplyTo(null)}
+            targetMessageId={targetMessageId}
             callDisabled={!activeParticipantId || callState !== 'idle'}
             onStartAudioCall={handleStartAudioCall}
             onStartVideoCall={handleStartVideoCall}
           />
         </div>
-      </div>
+      </FeaturePage>
 
       <CallScreen
         callState={callState}
@@ -614,6 +712,6 @@ export default function ChatPage() {
         onToggleCamera={toggleCamera}
         onEnd={endCurrentCall}
       />
-    </div>
+    </>
   );
 }

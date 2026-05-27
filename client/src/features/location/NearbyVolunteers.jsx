@@ -5,14 +5,14 @@ import { RefreshCw, Users } from 'lucide-react';
 const VolunteerGroup = ({ title, badge, volunteers, emptyText }) => (
   <div className="rounded-xl border border-gray-200 bg-white/80 p-4">
     <div className="flex flex-wrap items-center gap-2">
-      <p className="font-semibold text-gray-800">{title}</p>
+      <p className="font-semibold text-gray-900">{title}</p>
       <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-bold text-blue-700">
         {badge}
       </span>
     </div>
     <div className="mt-3 space-y-3">
       {volunteers.length === 0 ? (
-        <p className="text-sm text-gray-600">{emptyText}</p>
+        <p className="text-sm text-gray-700">{emptyText}</p>
       ) : (
         volunteers.map((volunteer) => (
           <div key={volunteer._id} className="rounded-lg bg-blue-50 p-3">
@@ -76,7 +76,7 @@ export default function NearbyVolunteers() {
           </div>
           <div>
             <h3 className="text-lg font-semibold text-gray-900">Nearby Volunteer Routing</h3>
-            <p className="mt-1 text-sm text-gray-600">
+            <p className="mt-1 text-sm text-gray-700">
               Volunteers are grouped by the same 0-5 km priority zone and 5-10 km fallback zone used by backend routing.
             </p>
           </div>

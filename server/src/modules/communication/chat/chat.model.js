@@ -30,8 +30,39 @@ const ChatMessageSchema = new mongoose.Schema({
     type: Number,
     default: null
   },
+  repliedToMessageId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'ChatMessage'
+  },
+  repliedToPreview: {
+    type: String,
+    default: ''
+  },
+  repliedToSender: {
+    type: String,
+    default: ''
+  },
   deletedFor: {
     type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    default: []
+  },
+  reactions: {
+    type: [{
+      userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+      },
+      type: {
+        type: String,
+        enum: ['like', 'heart', 'haha', 'sad'],
+        required: true
+      },
+      createdAt: {
+        type: Date,
+        default: Date.now
+      }
+    }],
     default: []
   },
   createdAt: {

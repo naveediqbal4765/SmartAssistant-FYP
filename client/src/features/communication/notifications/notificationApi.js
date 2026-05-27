@@ -20,6 +20,13 @@ export const markNotificationAsRead = async (notificationId) => {
   return response.data.notification;
 };
 
+export const markNotificationsConsumed = async (context) => {
+  const response = await axios.patch(`${API_BASE_URL}/consume`, context, {
+    headers: authHeaders()
+  });
+  return response.data;
+};
+
 export const deleteNotificationById = async (notificationId) => {
   const response = await axios.delete(`${API_BASE_URL}/${notificationId}`, {
     headers: authHeaders()

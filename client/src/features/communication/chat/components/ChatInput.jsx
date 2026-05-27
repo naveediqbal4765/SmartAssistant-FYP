@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Mic } from 'lucide-react';
+import ReplyPreview from './ReplyPreview';
 import VoiceRecorder from './VoiceRecorder';
 
-export default function ChatInput({ disabled, sending, onSend, onSendVoice }) {
+export default function ChatInput({ disabled, sending, onSend, onSendVoice, replyTo, onCancelReply }) {
   const [text, setText] = useState('');
   const [showRecorder, setShowRecorder] = useState(false);
 
@@ -17,6 +18,8 @@ export default function ChatInput({ disabled, sending, onSend, onSendVoice }) {
 
   return (
     <div className="border-t bg-white p-4">
+      <ReplyPreview replyTo={replyTo} onCancel={onCancelReply} />
+
       {showRecorder && (
         <div className="mb-3">
           <VoiceRecorder disabled={disabled || sending} onSendVoice={onSendVoice} />

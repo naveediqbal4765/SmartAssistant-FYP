@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { overlayLayers } from '../../../components/ui/overlayLayers';
 import { searchAddableUsers } from './groupApi';
 
 export default function AddMemberModal({ open, group, onClose, onAddMember }) {
@@ -25,8 +26,14 @@ export default function AddMemberModal({ open, group, onClose, onAddMember }) {
   if (!open || !group) return null;
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 px-4">
-      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+    <div
+      className={`motion-modal-backdrop fixed inset-0 ${overlayLayers.nestedModal} flex items-center justify-center bg-black/40 px-4`}
+      onPointerDown={onClose}
+    >
+      <div
+        className="motion-modal-in relative w-full max-w-md rounded-2xl bg-white p-6 shadow-xl shadow-gray-900/15"
+        onPointerDown={(event) => event.stopPropagation()}
+      >
         <h2 className="text-2xl font-bold">Add Member</h2>
         <input
           value={query}
@@ -34,7 +41,7 @@ export default function AddMemberModal({ open, group, onClose, onAddMember }) {
           placeholder="Search users..."
           className="mt-4 w-full rounded-xl border px-4 py-3"
         />
-        <div className="mt-4 max-h-80 overflow-y-auto">
+        <div className="relative mt-4 max-h-80 overflow-y-auto rounded-xl bg-white">
           {loading && <div className="p-3 text-gray-500">Searching...</div>}
           {!loading && !users.length && <div className="p-3 text-gray-500">No addable users found.</div>}
           {users.map((user) => (

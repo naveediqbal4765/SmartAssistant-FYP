@@ -9,12 +9,16 @@ const {
   getMessages,
   getMyGroups,
   getRequests,
+  exitGroup,
+  muteGroup,
   rejectRequest,
+  reactToMessage,
   removeMember,
   requestToJoin,
   searchAddableUsers,
   searchInitialMembers,
-  sendMessage
+  sendMessage,
+  updateGroup
 } = require('./group.controller');
 
 const router = express.Router();
@@ -25,10 +29,14 @@ router.get('/discover', auth, discoverGroups);
 router.get('/create/search-users', auth, searchInitialMembers);
 router.post('/add-member', auth, addMember);
 router.delete('/message/:id', auth, deleteMessage);
+router.post('/message/:id/reaction', auth, reactToMessage);
 router.patch('/requests/:requestId/approve', auth, approveRequest);
 router.patch('/requests/:requestId/reject', auth, rejectRequest);
 router.get('/:groupId/messages', auth, getMessages);
 router.post('/:groupId/messages', auth, sendMessage);
+router.patch('/:groupId', auth, updateGroup);
+router.post('/:groupId/exit', auth, exitGroup);
+router.patch('/:groupId/mute', auth, muteGroup);
 router.post('/:groupId/join-request', auth, requestToJoin);
 router.get('/:groupId/requests', auth, getRequests);
 router.get('/:groupId/search-users', auth, searchAddableUsers);

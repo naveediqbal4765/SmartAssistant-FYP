@@ -1,7 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { FileText, Upload, Trash2, Eye, ArrowLeft, Plus, X, Loader } from 'lucide-react';
+import { FileText, Upload, Trash2, Eye, Plus, X, Loader } from 'lucide-react';
+import Button from '../components/ui/Button';
+import EmptyState from '../components/ui/EmptyState';
+import FeatureCard from '../components/ui/FeatureCard';
+import FeaturePage from '../components/ui/FeaturePage';
+import LoadingState from '../components/ui/LoadingState';
+import StatusAlert from '../components/ui/StatusAlert';
 
 export default function DocumentVault() {
   const navigate = useNavigate();
@@ -148,57 +154,38 @@ export default function DocumentVault() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <Loader className="animate-spin h-8 w-8 text-blue-600 mx-auto mb-2" />
-          <p className="text-gray-500">Loading Digital Health Vault...</p>
-        </div>
-      </div>
-    );
+    return <LoadingState label="Loading Digital Health Vault..." />;
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
-      <div className="max-w-4xl mx-auto px-6 py-10">
-        <button 
-          onClick={() => navigate('/profile')}
-          className="flex items-center gap-2 text-blue-600 mb-6 hover:underline"
-        >
-          <ArrowLeft size={24} /> Back to Profile
-        </button>
-
-        <div className="bg-white rounded-2xl shadow-xl p-8">
-          <div className="flex justify-between items-center mb-6">
+    <FeaturePage
+      title="Digital Health Vault"
+      description="Store your medical records and prescriptions securely."
+      backLabel="Back to Profile"
+      onBack={() => navigate('/profile')}
+      maxWidth="max-w-4xl"
+      actions={(
+        <Button onClick={() => setShowUpload(!showUpload)}>
+          {showUpload ? <X size={20} /> : <Plus size={20} />}
+          {showUpload ? 'Cancel' : 'Upload'}
+        </Button>
+      )}
+    >
+        <FeatureCard>
+          <div className="mb-6 flex items-center gap-3">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center">
                 <FileText size={28} className="text-indigo-600" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-800">Digital Health Vault</h1>
+                <h1 className="text-2xl font-bold text-gray-900">Digital Health Vault</h1>
                 <p className="text-gray-500">Store your medical records & prescriptions securely</p>
               </div>
             </div>
-            <button
-              onClick={() => setShowUpload(!showUpload)}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl flex items-center gap-2 transition"
-            >
-              {showUpload ? <X size={20} /> : <Plus size={20} />}
-              {showUpload ? 'Cancel' : 'Upload'}
-            </button>
           </div>
 
-          {error && (
-            <div className="bg-red-100 text-red-700 p-3 rounded-lg mb-4 text-center">
-              {error}
-            </div>
-          )}
-
-          {success && (
-            <div className="bg-green-100 text-green-700 p-3 rounded-lg mb-4 text-center">
-              {success}
-            </div>
-          )}
+          <StatusAlert variant="error">{error}</StatusAlert>
+          <StatusAlert variant="success">{success}</StatusAlert>
 
           {/* Upload Form */}
           {showUpload && (
@@ -249,10 +236,10 @@ export default function DocumentVault() {
                   <p className="text-xs text-gray-400 mt-2">Max 5MB. Allowed: PDF, JPG, PNG, DOC</p>
                 </div>
                 
-                <button
+                <Button
                   onClick={handleUpload}
                   disabled={uploading}
-                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg font-semibold disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="w-full"
                 >
                   {uploading ? (
                     <>
@@ -265,18 +252,17 @@ export default function DocumentVault() {
                       Upload to Digital Health Vault
                     </>
                   )}
-                </button>
+                </Button>
               </div>
             </div>
           )}
 
           {/* Digital Health Vault List */}
           {documents.length === 0 ? (
-            <div className="text-center py-12">
-              <FileText size={48} className="text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500 text-lg">No Digital Health Vault items yet</p>
-              <p className="text-gray-400">Click "Upload" to add your medical reports and prescriptions</p>
-            </div>
+            <EmptyState
+              title="No Digital Health Vault items yet"
+              description='Click "Upload" to add your medical reports and prescriptions.'
+            />
           ) : (
             <div className="space-y-3">
               {documents.map((doc) => (
@@ -284,7 +270,7 @@ export default function DocumentVault() {
                   <div className="flex items-center gap-3 flex-1">
                     <FileText size={28} className="text-indigo-500" />
                     <div className="flex-1">
-                      <p className="font-semibold text-gray-800">{doc.title}</p>
+                      <p className="font-semibold text-gray-900">{doc.title}</p>
                       <div className="flex gap-3 text-sm text-gray-500">
                         <span>{getTypeLabel(doc.type)}</span>
                         <span>•</span>
@@ -319,8 +305,7 @@ export default function DocumentVault() {
               🔒 Your Digital Health Vault files are stored securely. Max file size: 5MB per file.
             </p>
           </div>
-        </div>
-      </div>
-    </div>
+        </FeatureCard>
+    </FeaturePage>
   );
 }

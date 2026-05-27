@@ -162,6 +162,8 @@ const acceptEmergency = async (req, res) => {
       title: 'Emergency accepted',
       message: acceptedMessage,
       emergencyId,
+      entityType: 'emergency',
+      entityId: emergencyId,
       alertType: 'EMERGENCY_ACCEPTED',
       acceptedVolunteer: volunteer,
       metadata: {

@@ -1,7 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Mic } from 'lucide-react';
+import MessageBubble from '../chat/components/MessageBubble';
+import ReplyPreview from '../chat/components/ReplyPreview';
 import VoiceRecorder from '../chat/components/VoiceRecorder';
-import GroupRequestsPanel from './GroupRequestsPanel';
+import { buildReplyTarget } from '../chat/utils/replyPreview';
+import Button from '../../../components/ui/Button';
+import { ChatSkeleton } from '../../../components/ui/Skeleton';
 
 const isAdmin = (group, userId) => {
   return group?.members?.some((member) => {
@@ -14,21 +18,82 @@ export default function GroupChat({
   group,
   currentUserId,
   messages,
-  requests,
   onSendMessage,
   onSendVoice,
   onDeleteMessage,
-  onApproveRequest,
-  onRejectRequest,
-  onOpenAddMember
+  onReactToMessage,
+  targetMessageId,
+  onOpenSettings
 }) {
   const [text, setText] = useState('');
   const [showRecorder, setShowRecorder] = useState(false);
+  const [replyTo, setReplyTo] = useState(null);
+  const [highlightedMessageId, setHighlightedMessageId] = useState('');
+  const [hasNewMessages, setHasNewMessages] = useState(false);
+  const messagesEndRef = useRef(null);
+  const scrollContainerRef = useRef(null);
+  const messageRefs = useRef({});
+  const highlightTimerRef = useRef(null);
+  const nearBottomRef = useRef(true);
+  const previousMessageCountRef = useRef(0);
+
+  const scrollToBottom = (behavior = 'smooth') => {
+    messagesEndRef.current?.scrollIntoView({ behavior, block: 'end' });
+    nearBottomRef.current = true;
+    setHasNewMessages(false);
+  };
+
+  const handleScroll = () => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+    const nearBottom = distanceFromBottom < 140;
+    nearBottomRef.current = nearBottom;
+    if (nearBottom) setHasNewMessages(false);
+  };
+
+  useEffect(() => {
+    if (!targetMessageId) return;
+    messageRefs.current[String(targetMessageId)]?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center'
+    });
+  }, [messages, targetMessageId]);
+
+  useEffect(() => {
+    nearBottomRef.current = true;
+    previousMessageCountRef.current = 0;
+    setHasNewMessages(false);
+    if (!targetMessageId) {
+      window.setTimeout(() => scrollToBottom('auto'), 80);
+    }
+  }, [group?._id]);
+
+  useEffect(() => {
+    const previousCount = previousMessageCountRef.current;
+    const currentCount = messages.length;
+    previousMessageCountRef.current = currentCount;
+
+    if (!currentCount) {
+      setHasNewMessages(false);
+      return;
+    }
+
+    const initialLoad = previousCount === 0;
+    const messageAdded = currentCount > previousCount;
+
+    if ((initialLoad && !targetMessageId) || nearBottomRef.current) {
+      window.setTimeout(() => scrollToBottom(initialLoad ? 'auto' : 'smooth'), 60);
+    } else if (messageAdded) {
+      setHasNewMessages(true);
+    }
+  }, [messages.length, targetMessageId]);
 
   if (!group) {
     return (
-      <div className="flex h-[70vh] items-center justify-center rounded-xl bg-white text-gray-500 shadow">
-        Select a group to start chatting.
+      <div className="h-[70vh] rounded-xl bg-white shadow-lg shadow-gray-900/10">
+        <ChatSkeleton />
       </div>
     );
   }
@@ -38,82 +103,92 @@ export default function GroupChat({
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!text.trim()) return;
-    onSendMessage(text.trim());
+    onSendMessage(text.trim(), replyTo);
     setText('');
+    setReplyTo(null);
+  };
+
+  const handleReply = (message) => {
+    setReplyTo(buildReplyTarget(message, currentUserId, message.senderName || message.senderId?.name));
+  };
+
+  const handleJumpToMessage = (messageId) => {
+    if (!messageId) return;
+    messageRefs.current[String(messageId)]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setHighlightedMessageId(String(messageId));
+    if (highlightTimerRef.current) window.clearTimeout(highlightTimerRef.current);
+    highlightTimerRef.current = window.setTimeout(() => setHighlightedMessageId(''), 1600);
   };
 
   return (
-    <div className="flex h-[70vh] flex-col rounded-xl bg-white shadow">
-      <div className="border-b p-4">
+    <div className="motion-panel-in flex h-[70vh] flex-col rounded-xl bg-white shadow-xl shadow-gray-900/10">
+      <div className="relative z-10 border-b bg-white p-4">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className="text-xl font-bold">{group.name}</h2>
             <p className="text-sm text-gray-500">{group.description}</p>
             <p className="text-sm text-gray-500">{group.members?.length || 0} members</p>
           </div>
-          {admin && (
-            <button onClick={onOpenAddMember} className="rounded-xl bg-green-600 px-4 py-2 font-semibold text-white">
-              Add Member
-            </button>
-          )}
+          <Button variant={admin ? 'primary' : 'secondary'} onClick={onOpenSettings}>
+            {admin ? 'Group Settings' : 'View Members'}
+          </Button>
         </div>
-        {admin && (
-          <div className="mt-4">
-            <GroupRequestsPanel
-              requests={requests}
-              onApprove={onApproveRequest}
-              onReject={onRejectRequest}
-            />
-          </div>
-        )}
       </div>
 
-      <div className="flex-1 space-y-3 overflow-y-auto bg-gray-50 p-4">
+      <div
+        ref={scrollContainerRef}
+        onScroll={handleScroll}
+        className="relative flex-1 space-y-3 overflow-y-auto bg-gray-50 px-4 pb-16 pt-16"
+      >
         {!messages.length && <div className="text-gray-500">No group messages yet.</div>}
         {messages.map((message) => {
           const mine = String(message.senderId?._id || message.senderId) === String(currentUserId);
-          const canDelete = mine || admin;
-          const mediaSrc = message.mediaUrl?.startsWith('http') || message.mediaUrl?.startsWith('blob:')
-            ? message.mediaUrl
-            : `http://localhost:5000${message.mediaUrl}`;
-          const sentAt = new Date(message.createdAt).toLocaleTimeString([], {
-            hour: '2-digit',
-            minute: '2-digit'
-          });
           return (
-            <div key={message._id} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[75%] rounded-2xl px-4 py-2 ${mine ? 'bg-green-600 text-white' : 'bg-gray-100'}`}>
-                <div className="mb-1 flex items-center justify-between gap-3 text-xs font-semibold opacity-80">
-                  <span>{message.senderName || message.senderId?.name || 'Member'}</span>
-                  <span>{sentAt}</span>
-                </div>
-                {message.messageType === 'voice' && message.mediaUrl ? (
-                  <div>
-                    <p className="mb-2 text-sm font-semibold">Voice note</p>
-                    <audio controls src={mediaSrc} className="max-w-full" />
-                  </div>
-                ) : (
-                  <p>{message.message}</p>
-                )}
-                {canDelete && (
-                  <button
-                    type="button"
-                    onClick={() => onDeleteMessage?.(message)}
-                    className={`mt-1 text-xs font-semibold underline ${mine ? 'text-green-100 hover:text-white' : 'text-gray-500 hover:text-gray-700'}`}
-                  >
-                    Delete
-                  </button>
-                )}
-              </div>
+            <div
+              key={message._id}
+              ref={(node) => {
+                if (node) messageRefs.current[String(message._id)] = node;
+              }}
+            >
+              <MessageBubble
+                message={message}
+                currentUserId={currentUserId}
+                onDelete={onDeleteMessage}
+                onReact={onReactToMessage}
+                onReply={handleReply}
+                onJumpToMessage={handleJumpToMessage}
+                highlighted={highlightedMessageId === String(message._id)}
+                allowDeleteForMe
+                allowDeleteForEveryone={mine || admin}
+                showDisabledDeleteForEveryone={false}
+                senderLabel={mine ? '' : (message.senderName || message.senderId?.name || 'Member')}
+              />
             </div>
           );
         })}
+        <div ref={messagesEndRef} />
+        {hasNewMessages && (
+          <button
+            type="button"
+            onClick={() => scrollToBottom()}
+            className="sticky bottom-3 left-1/2 z-40 mx-auto block -translate-x-1/2 rounded-full bg-brand-primary px-4 py-2 text-sm font-semibold text-white shadow-lg transition hover:bg-brand-secondary"
+          >
+            New Messages ↓
+          </button>
+        )}
       </div>
 
       <div className="border-t p-4">
+        <ReplyPreview replyTo={replyTo} onCancel={() => setReplyTo(null)} />
         {showRecorder && (
           <div className="mb-3">
-            <VoiceRecorder disabled={!group} onSendVoice={onSendVoice} />
+            <VoiceRecorder
+              disabled={!group}
+              onSendVoice={(audioBlob, duration) => {
+                onSendVoice(audioBlob, duration, replyTo);
+                setReplyTo(null);
+              }}
+            />
           </div>
         )}
         <form onSubmit={handleSubmit} className="flex gap-3">
@@ -136,9 +211,9 @@ export default function GroupChat({
             placeholder="Message group..."
             className="flex-1 rounded-xl border px-4 py-3"
           />
-          <button disabled={!text.trim()} className="rounded-xl bg-green-600 px-5 py-3 font-semibold text-white disabled:opacity-50">
+          <Button type="submit" disabled={!text.trim()}>
             Send
-          </button>
+          </Button>
         </form>
       </div>
     </div>

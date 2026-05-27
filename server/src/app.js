@@ -40,6 +40,8 @@ app.use('/api/tasks', require('./modules/tasks/task.routes'));
 app.use('/api/reminders', require('./modules/reminders/reminder.routes'));
 app.use('/api/health', require('./modules/health/health.routes'));
 app.use('/api/communication', require('./modules/communication/communication.routes'));
+app.use('/api/messages', require('./modules/communication/chat/messageReaction.routes'));
+app.use('/api/voice-notes', require('./modules/communication/chat/voiceNoteReaction.routes'));
 app.use('/api/emergency', require('./modules/emergency/emergency.routes'));
 
 app.get('/', (req, res) => {

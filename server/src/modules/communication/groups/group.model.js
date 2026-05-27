@@ -5,6 +5,7 @@ const GroupSchema = new mongoose.Schema({
   description: { type: String, default: '', trim: true },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
   hiddenFor: { type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }], default: [] },
+  mutedFor: { type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }], default: [] },
   members: [{
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     role: { type: String, enum: ['admin', 'member'], default: 'member' }
@@ -27,7 +28,18 @@ const GroupMessageSchema = new mongoose.Schema({
   message: { type: String, default: '' },
   messageType: { type: String, enum: ['text', 'voice'], default: 'text' },
   mediaUrl: { type: String, default: '' },
+  repliedToMessageId: { type: mongoose.Schema.Types.ObjectId, ref: 'GroupMessage' },
+  repliedToPreview: { type: String, default: '' },
+  repliedToSender: { type: String, default: '' },
   deletedFor: { type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }], default: [] },
+  reactions: {
+    type: [{
+      userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+      type: { type: String, enum: ['like', 'heart', 'haha', 'sad'], required: true },
+      createdAt: { type: Date, default: Date.now }
+    }],
+    default: []
+  },
   createdAt: { type: Date, default: Date.now, index: true }
 });
 

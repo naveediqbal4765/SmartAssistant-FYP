@@ -25,12 +25,11 @@ export default function CallReminderPanel() {
   const [targetUserName, setTargetUserName] = useState('');
   const [scheduledTime, setScheduledTime] = useState('');
   const [error, setError] = useState('');
-  const [shownReminderIds, setShownReminderIds] = useState(() => new Set());
 
   const upcomingReminders = useMemo(() => {
     return reminders
-      .filter((reminder) => new Date(reminder.scheduledTime).getTime() >= Date.now() - 60 * 60 * 1000)
-      .sort((a, b) => new Date(a.scheduledTime) - new Date(b.scheduledTime));
+      .filter((reminder) => reminder.status === 'active')
+      .sort((a, b) => new Date(a.scheduledAt || a.scheduledTime) - new Date(b.scheduledAt || b.scheduledTime));
   }, [reminders]);
 
   const loadReminders = async () => {
@@ -46,22 +45,6 @@ export default function CallReminderPanel() {
     loadReminders();
   }, []);
 
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      const now = Date.now();
-      reminders.forEach((reminder) => {
-        const reminderId = String(reminder._id);
-        if (shownReminderIds.has(reminderId)) return;
-        if (new Date(reminder.scheduledTime).getTime() > now) return;
-
-        alert(`Call reminder: ${reminder.title}\nCall: ${reminder.targetUserName}`);
-        setShownReminderIds((current) => new Set([...current, reminderId]));
-      });
-    }, 30000);
-
-    return () => clearInterval(intervalId);
-  }, [reminders, shownReminderIds]);
-
   const handleCreate = async (e) => {
     e.preventDefault();
     setError('');
@@ -69,7 +52,7 @@ export default function CallReminderPanel() {
     try {
       const response = await axios.post(
         API_BASE_URL,
-        { title, targetUserName, scheduledTime },
+        { title, reminderText: title, targetUserName, scheduledAt: scheduledTime, scheduledTime },
         { headers: authHeaders() }
       );
       setReminders((current) => [...current, response.data.reminder]);
@@ -100,8 +83,8 @@ export default function CallReminderPanel() {
             <Bell size={22} />
           </div>
           <div>
-            <h3 className="text-2xl font-bold text-gray-800">Call Reminders</h3>
-            <p className="text-sm text-gray-600">Simple alerts for future calls.</p>
+            <h3 className="text-2xl font-bold text-gray-900">Call Reminders</h3>
+            <p className="text-sm text-gray-700">Simple alerts for future calls.</p>
           </div>
         </div>
         <button
@@ -148,14 +131,14 @@ export default function CallReminderPanel() {
 
       <div className="mt-5 space-y-3">
         {!upcomingReminders.length && (
-          <p className="text-gray-600">No upcoming call reminders.</p>
+          <p className="text-gray-700">No upcoming call reminders.</p>
         )}
         {upcomingReminders.map((reminder) => (
           <div key={reminder._id} className="flex items-center justify-between gap-3 rounded-xl bg-gray-50 p-4">
             <div>
-              <p className="font-semibold text-gray-800">{reminder.title}</p>
-              <p className="text-sm text-gray-600">
-                Call {reminder.targetUserName} at {formatTime(reminder.scheduledTime)}
+              <p className="font-semibold text-gray-900">{reminder.title}</p>
+              <p className="text-sm text-gray-700">
+                Call {reminder.targetUserName} at {formatTime(reminder.scheduledAt || reminder.scheduledTime)}
               </p>
             </div>
             <button

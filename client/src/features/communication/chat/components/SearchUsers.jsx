@@ -61,7 +61,7 @@ export default function SearchUsers({ onSelectUser }) {
       />
 
       {query.trim() && (
-        <div className="absolute left-0 right-0 top-full z-20 mt-2 overflow-hidden rounded-xl border bg-white shadow-lg">
+        <div className="absolute left-0 right-0 top-full z-20 mt-2 overflow-hidden rounded-xl border bg-white shadow-lg shadow-gray-900/10">
           {loading && <div className="p-3 text-gray-500">Searching users...</div>}
           {error && <div className="p-3 text-red-600">{error}</div>}
           {!loading && !error && !results.length && (

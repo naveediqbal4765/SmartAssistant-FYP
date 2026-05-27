@@ -20,7 +20,7 @@ export default function IoTDashboard() {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-2xl font-bold text-gray-900">Live IoT Telemetry</h2>
-            <p className="mt-1 text-gray-600">
+            <p className="mt-1 text-gray-700">
               Swap-safe vitals stream using the unified vitals source abstraction.
             </p>
           </div>
@@ -31,10 +31,10 @@ export default function IoTDashboard() {
           </div>
         </div>
 
-        <div className="mt-4 grid grid-cols-1 gap-3 text-sm text-gray-600 sm:grid-cols-3">
-          <p><span className="font-semibold text-gray-800">Device:</span> {vitalsSnapshot?.deviceId || 'N/A'}</p>
-          <p><span className="font-semibold text-gray-800">Senior:</span> {vitalsSnapshot?.seniorId || 'N/A'}</p>
-          <p><span className="font-semibold text-gray-800">Updated:</span> {formatTimestamp(vitalsSnapshot?.timestamp)}</p>
+        <div className="mt-4 grid grid-cols-1 gap-3 text-sm text-gray-700 sm:grid-cols-3">
+          <p><span className="font-semibold text-gray-900">Device:</span> {vitalsSnapshot?.deviceId || 'N/A'}</p>
+          <p><span className="font-semibold text-gray-900">Senior:</span> {vitalsSnapshot?.seniorId || 'N/A'}</p>
+          <p><span className="font-semibold text-gray-900">Updated:</span> {formatTimestamp(vitalsSnapshot?.timestamp)}</p>
         </div>
       </div>
 

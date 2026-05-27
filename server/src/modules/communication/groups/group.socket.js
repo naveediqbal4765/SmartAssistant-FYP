@@ -1,6 +1,47 @@
 const groupService = require('./group.service');
+const { GroupMessage } = require('./group.model');
+const notificationService = require('../notifications/notification.service');
+const { userRoom } = require('../sockets/socket.manager');
 
 const groupRoom = (groupId) => `group:${groupId}`;
+
+const toId = (value) => String(value?._id || value || '');
+
+const buildMessagePreview = (message) => {
+  const preview = message.messageType === 'voice'
+    ? 'Voice note'
+    : (message.message || 'Sent an attachment');
+  return preview.length > 80 ? `${preview.slice(0, 77)}...` : preview;
+};
+
+const notifyGroupMembers = async ({ group, message, sender }) => {
+  const mutedIds = new Set((group.mutedFor || []).map(toId));
+  const originalMessage = message.repliedToMessageId
+    ? await GroupMessage.findById(message.repliedToMessageId).select('senderId')
+    : null;
+  const senderName = sender.name || message.senderName || 'Member';
+
+  await Promise.all((group.members || [])
+    .filter((member) => toId(member.userId) !== toId(sender._id))
+    .filter((member) => !mutedIds.has(toId(member.userId)))
+    .map((member) => notificationService.createNotification({
+      userId: toId(member.userId),
+      type: 'group_message',
+      title: originalMessage
+        ? (
+          toId(originalMessage.senderId) === toId(member.userId)
+            ? `${senderName} replied to you in ${group.name}`
+            : `${senderName} replied in ${group.name}`
+        )
+        : `${senderName} in ${group.name}`,
+      message: buildMessagePreview(message),
+      groupId: group._id,
+      messageId: message._id,
+      entityType: 'group_message',
+      entityId: message._id,
+      fromUserId: sender._id
+    })));
+};
 
 const registerGroupSocketHandlers = (io, socket) => {
   socket.on('create-group', async (payload = {}, callback) => {
@@ -26,7 +67,15 @@ const registerGroupSocketHandlers = (io, socket) => {
   socket.on('group-message', async (payload = {}, callback) => {
     try {
       const message = await groupService.sendMessage(payload.groupId, socket.user, payload);
-      io.to(groupRoom(payload.groupId)).emit('group-message', message);
+      const group = message.$locals?.group;
+      if (group) {
+        (group.members || []).forEach((member) => {
+          io.to(userRoom(toId(member.userId))).emit('group-message', message);
+        });
+        notifyGroupMembers({ group, message, sender: socket.user }).catch((notificationErr) => {
+          console.error('Group notification failed:', notificationErr.message);
+        });
+      }
       callback?.({ success: true, message });
     } catch (err) {
       callback?.({ success: false, msg: err.message || 'Failed to send group message' });

@@ -55,20 +55,40 @@ export const sendMessage = async ({
   message,
   messageType = 'text',
   mediaUrl = '',
-  duration = null
+  duration = null,
+  repliedToMessageId = ''
 }) => {
   const response = await axios.post(
     `${API_BASE_URL}/message`,
-    { receiverId, message, messageType, mediaUrl, duration },
+    { receiverId, message, messageType, mediaUrl, duration, repliedToMessageId },
     { headers: authHeaders() }
   );
   return response.data.message;
 };
 
-export const deleteMessage = async (messageId) => {
+export const deleteMessage = async (messageId, deleteType = 'forEveryone') => {
   const response = await axios.delete(`${API_BASE_URL}/message/${messageId}`, {
-    headers: authHeaders()
+    headers: authHeaders(),
+    data: { deleteType }
   });
+  return response.data;
+};
+
+export const reactToMessage = async (messageId, reactionType) => {
+  const response = await axios.post(
+    `http://localhost:5000/api/messages/${messageId}/reaction`,
+    { reactionType },
+    { headers: authHeaders() }
+  );
+  return response.data;
+};
+
+export const reactToVoiceNote = async (voiceNoteId, reactionType) => {
+  const response = await axios.post(
+    `http://localhost:5000/api/voice-notes/${voiceNoteId}/reaction`,
+    { reactionType },
+    { headers: authHeaders() }
+  );
   return response.data;
 };
 

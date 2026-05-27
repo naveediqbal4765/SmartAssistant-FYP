@@ -64,7 +64,10 @@ const createTaskRequest = async (user, payload) => {
       userId: user._id,
       type: 'task',
       title: 'Task request created',
-      message: `Your help request "${title}" was submitted.`
+      message: `Your help request "${title}" was submitted.`,
+      taskId: task._id,
+      entityType: 'task',
+      entityId: task._id
     });
   } catch (notificationErr) {
     console.error('Task notification failed:', notificationErr.message);
@@ -142,7 +145,10 @@ const cancelTask = async (taskId, user) => {
       userId: user._id,
       type: 'task',
       title: 'Task request cancelled',
-      message: `Your help request "${task.title}" was cancelled.`
+      message: `Your help request "${task.title}" was cancelled.`,
+      taskId: task._id,
+      entityType: 'task',
+      entityId: task._id
     });
   } catch (notificationErr) {
     console.error('Task cancellation notification failed:', notificationErr.message);

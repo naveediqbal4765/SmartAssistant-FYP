@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { useState, useEffect, useLayoutEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -21,11 +21,26 @@ import DrugInteractionPage from './features/health/interactions/DrugInteractionP
 import { disconnectChatSocket } from './features/communication/chat/services/socket';
 import { CallStateProvider } from './features/communication/calls/CallStateContext';
 import GlobalCallHandler from './features/communication/calls/GlobalCallHandler';
-import NotificationBell from './features/communication/notifications/NotificationBell';
+import AppShell from './components/layout/AppShell';
+
+function ScrollToTopOnRouteChange() {
+  const location = useLocation();
+
+  useLayoutEffect(() => {
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
+
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, [location.pathname, location.search]);
+
+  return null;
+}
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userRole, setUserRole] = useState(null);
+  const [logoutTransitioning, setLogoutTransitioning] = useState(false);
 
   // Check authentication function
   const checkAuth = () => {
@@ -70,17 +85,26 @@ function App() {
 
   const handleLogin = (user) => {
     console.log('📝 User logged in:', user?.email);
+    sessionStorage.setItem('navigation:authEntry', 'true');
+    setLogoutTransitioning(false);
     setIsAuthenticated(true);
     setUserRole(user?.role);
   };
 
   const handleLogout = () => {
+    if (logoutTransitioning) return;
+
     console.log('🚪 User logged out');
-    disconnectChatSocket();
-    setIsAuthenticated(false);
-    setUserRole(null);
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    setLogoutTransitioning(true);
+
+    setTimeout(() => {
+      disconnectChatSocket();
+      setIsAuthenticated(false);
+      setUserRole(null);
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      setLogoutTransitioning(false);
+    }, 240);
   };
 
   // Protected Route wrapper component
@@ -92,11 +116,16 @@ function App() {
       console.log('🔒 Protected route - redirecting to login');
       return <Navigate to="/login" />;
     }
-    return children;
+    return (
+      <AppShell role={userRole} onLogout={handleLogout} exiting={logoutTransitioning}>
+        {children}
+      </AppShell>
+    );
   };
 
   return (
     <Router>
+      <ScrollToTopOnRouteChange />
       <div className="min-h-screen bg-slate-50">
         <Routes>
           {/* Public Routes */}
@@ -114,7 +143,7 @@ function App() {
             path="/dashboard" 
             element={
               <PrivateRoute>
-                <Dashboard role={userRole} onLogout={handleLogout} />
+                <Dashboard role={userRole} />
               </PrivateRoute>
             } 
           />
@@ -269,7 +298,6 @@ function App() {
         {isAuthenticated && (
           <CallStateProvider>
             <GlobalCallHandler />
-            <NotificationBell />
           </CallStateProvider>
         )}
 

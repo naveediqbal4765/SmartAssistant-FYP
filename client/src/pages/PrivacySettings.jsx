@@ -1,13 +1,18 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Shield, ArrowLeft, Save, Lock } from 'lucide-react';
+import { Shield, Save, Lock } from 'lucide-react';
+import Button from '../components/ui/Button';
+import FeatureCard from '../components/ui/FeatureCard';
+import FeaturePage from '../components/ui/FeaturePage';
+import LoadingState from '../components/ui/LoadingState';
+import StatusAlert from '../components/ui/StatusAlert';
 
 function PrivacyToggle({ label, description, field, value, onChange }) {
   return (
     <div className="flex items-center justify-between py-4 border-b border-gray-100">
       <div className="flex-1">
-        <h3 className="font-semibold text-gray-800">{label}</h3>
+        <h3 className="font-semibold text-gray-900">{label}</h3>
         <p className="text-sm text-gray-500">{description}</p>
       </div>
       <button
@@ -84,45 +89,30 @@ export default function PrivacySettings() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl">Loading...</div>
-      </div>
-    );
+    return <LoadingState label="Loading privacy settings..." />;
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
-      <div className="max-w-2xl mx-auto px-6 py-10">
-        <button 
-          onClick={() => navigate('/profile')}
-          className="flex items-center gap-2 text-blue-600 mb-6 hover:underline"
-        >
-          <ArrowLeft size={24} /> Back to Profile
-        </button>
-
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+    <FeaturePage
+      title="Privacy Controls"
+      description="Control who can see your information."
+      backLabel="Back to Profile"
+      onBack={() => navigate('/profile')}
+      maxWidth="max-w-2xl"
+    >
+        <FeatureCard>
           <div className="flex items-center gap-3 mb-6">
             <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
               <Shield size={28} className="text-purple-600" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-800">Privacy Controls</h1>
+              <h1 className="text-2xl font-bold text-gray-900">Privacy Controls</h1>
               <p className="text-gray-500">Control who can see your information</p>
             </div>
           </div>
 
-          {error && (
-            <div className="bg-red-100 text-red-700 p-3 rounded-lg mb-4 text-center">
-              {error}
-            </div>
-          )}
-
-          {success && (
-            <div className="bg-green-100 text-green-700 p-3 rounded-lg mb-4 text-center">
-              {success}
-            </div>
-          )}
+          <StatusAlert variant="error">{error}</StatusAlert>
+          <StatusAlert variant="success">{success}</StatusAlert>
 
           <div className="space-y-2">
             <PrivacyToggle
@@ -177,16 +167,15 @@ export default function PrivacySettings() {
               </p>
             </div>
 
-            <button
+            <Button
               onClick={saveSettings}
               disabled={saving}
-              className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-50"
+              className="w-full"
             >
               <Save size={20} /> {saving ? 'Saving...' : 'Save Privacy Settings'}
-            </button>
+            </Button>
           </div>
-        </div>
-      </div>
-    </div>
+        </FeatureCard>
+    </FeaturePage>
   );
 }

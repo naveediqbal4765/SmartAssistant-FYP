@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { checkInteractions, getInteractionErrorMessage } from './interactionApi';
 import drugsDataset from '../../../../../server/src/modules/health/interactions/data/drugs.dataset.json';
+import { overlayLayers } from '../../../components/ui/overlayLayers';
 
 const severityStyles = {
   LOW: 'border-green-200 bg-green-50 text-green-700',
@@ -177,7 +178,7 @@ export default function DrugInteractionChecker() {
                   className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
                     isActive
                       ? 'border-green-600 bg-green-600 text-white'
-                      : 'border-gray-200 bg-white text-gray-600 hover:border-green-300 hover:bg-green-50'
+                      : 'border-gray-200 bg-white text-gray-700 hover:border-green-300 hover:bg-green-50'
                   }`}
                 >
                   {filter.label}
@@ -186,14 +187,14 @@ export default function DrugInteractionChecker() {
             })}
           </div>
           {shouldShowMedicineDropdown && (
-            <div className="absolute z-20 mt-2 max-h-72 w-full overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-xl">
+            <div className={`absolute ${overlayLayers.dropdown} mt-2 max-h-72 w-full overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-xl`}>
               {filteredOptions.length ? (
                 filteredOptions.map((medicine) => (
                   <button
                     key={medicine.name}
                     type="button"
                     onClick={() => handleSelectMedicine(medicine.name)}
-                    className="block w-full px-4 py-3 text-left text-sm font-medium text-gray-800 hover:bg-green-50"
+                    className="block w-full px-4 py-3 text-left text-sm font-medium text-gray-900 hover:bg-green-50"
                   >
                     <span className="block">{medicine.name}</span>
                     {!!medicine.aliases.length && (
@@ -277,7 +278,7 @@ export default function DrugInteractionChecker() {
                       <span className={`rounded-full px-3 py-1 text-xs font-bold ${severityStyles[conflict.severity] || severityStyles.LOW}`}>
                         {conflict.severity}
                       </span>
-                      <span className="text-sm font-semibold text-gray-600">
+                      <span className="text-sm font-semibold text-gray-700">
                         {conflict.categories?.join(' + ')}
                       </span>
                     </div>
@@ -289,7 +290,7 @@ export default function DrugInteractionChecker() {
                 ))}
               </div>
             ) : (
-              <p className="text-gray-600">No category-based conflicts detected.</p>
+              <p className="text-gray-700">No category-based conflicts detected.</p>
             )}
           </div>
 
@@ -326,7 +327,7 @@ export default function DrugInteractionChecker() {
                 {result.recognizedMedications.map((medicine) => (
                   <div key={`${medicine.inputName}-${medicine.category}`} className="rounded-xl bg-gray-50 p-3 text-sm">
                     <p className="font-semibold text-gray-900">{medicine.inputName}</p>
-                    <p className="text-gray-600">Category: {medicine.category}</p>
+                    <p className="text-gray-700">Category: {medicine.category}</p>
                     {medicine.subCategory && <p className="text-gray-500">Subcategory: {medicine.subCategory}</p>}
                   </div>
                 ))}

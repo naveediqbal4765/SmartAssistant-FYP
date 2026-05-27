@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { getChatSocket } from '../chat/services/socket';
+import { playNotificationSound, playReminderSound } from '../audio/audioFeedback';
 import {
   clearAllNotifications,
   deleteNotificationById,
   fetchNotifications,
   markNotificationAsRead
 } from './notificationApi';
+import { NOTIFICATION_CONSUMED_EVENT } from './notificationConsumption';
 
 const mergeNotifications = (current, incoming) => {
   const byId = new Map();
@@ -23,8 +25,25 @@ const mergeNotifications = (current, incoming) => {
   );
 };
 
+const contextMatchesNotification = (notification, context = {}) => {
+  const fields = ['conversationId', 'groupId', 'messageId', 'taskId', 'callSessionId', 'emergencyId', 'entityId'];
+  return fields.some((field) => (
+    context[field] && String(notification?.[field] || '') === String(context[field])
+  )) || (
+    context.entityType &&
+    context.entityId &&
+    notification?.entityType === context.entityType &&
+    String(notification?.entityId || '') === String(context.entityId)
+  );
+};
+
+const isReminderNotification = (notification) => (
+  notification?.type === 'system' && notification?.entityType === 'call_reminder'
+);
+
 export default function useNotifications() {
   const [notifications, setNotifications] = useState([]);
+  const [reminderPopups, setReminderPopups] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const deletedNotificationIdsRef = useRef(new Set());
@@ -40,9 +59,13 @@ export default function useNotifications() {
 
     try {
       const data = await fetchNotifications();
-      setNotifications(data.filter(
+      const visibleNotifications = data.filter(
         (notification) => !deletedNotificationIdsRef.current.has(String(notification._id))
-      ));
+      );
+      setNotifications(visibleNotifications);
+      setReminderPopups(visibleNotifications.filter((notification) => (
+        isReminderNotification(notification) && !notification.isRead
+      )));
     } catch (err) {
       setError(err.response?.data?.msg || 'Failed to load notifications');
     } finally {
@@ -63,6 +86,12 @@ export default function useNotifications() {
       }
 
       setNotifications((current) => mergeNotifications(current, [notification]));
+      if (isReminderNotification(notification)) {
+        setReminderPopups((current) => mergeNotifications(current, [notification]));
+        playReminderSound();
+        return;
+      }
+      playNotificationSound();
     };
 
     socket.on('newNotification', handleNewNotification);
@@ -72,7 +101,26 @@ export default function useNotifications() {
     };
   }, []);
 
+  useEffect(() => {
+    const handleConsumed = (event) => {
+      const notificationIds = new Set((event.detail?.notificationIds || []).map(String));
+      const context = event.detail?.context || {};
+
+      setNotifications((current) => current.map((notification) => (
+        notificationIds.has(String(notification._id)) || contextMatchesNotification(notification, context)
+          ? { ...notification, isRead: true }
+          : notification
+      )));
+    };
+
+    window.addEventListener(NOTIFICATION_CONSUMED_EVENT, handleConsumed);
+    return () => {
+      window.removeEventListener(NOTIFICATION_CONSUMED_EVENT, handleConsumed);
+    };
+  }, []);
+
   const markRead = async (notificationId) => {
+    setReminderPopups((current) => current.filter((notification) => notification._id !== notificationId));
     setNotifications((current) =>
       current.map((notification) =>
         notification._id === notificationId
@@ -135,6 +183,7 @@ export default function useNotifications() {
 
   return {
     notifications,
+    reminderPopups,
     unreadCount,
     loading,
     error,

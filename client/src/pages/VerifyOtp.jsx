@@ -122,18 +122,18 @@ const VerifyOtp = ({ email, onVerificationSuccess, onBackToLogin }) => {
 
   if (redirecting) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-6">
+      <div className="min-h-screen bg-brand-surface flex items-center justify-center p-6">
         <div className="bg-white p-8 rounded-2xl shadow-lg text-center max-w-md">
           <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mx-auto mb-4"></div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Verification Successful!</h2>
-          <p className="text-gray-600">Redirecting to dashboard...</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Verification Successful!</h2>
+          <p className="text-gray-700">Redirecting to dashboard...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-brand-surface flex items-center justify-center p-4">
       <div className="bg-white p-6 rounded-2xl shadow-lg w-full max-w-md">
         <div className="text-center mb-6">
           <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -141,8 +141,8 @@ const VerifyOtp = ({ email, onVerificationSuccess, onBackToLogin }) => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
             </svg>
           </div>
-          <h2 className="text-xl font-bold text-gray-800">Verify Your Email</h2>
-          <p className="text-gray-600 text-sm mt-2">
+          <h2 className="text-xl font-bold text-gray-900">Verify Your Email</h2>
+          <p className="text-gray-700 text-sm mt-2">
             Enter the 6-digit verification code sent to
           </p>
           <p className="font-semibold text-blue-600 text-md mt-1 break-all">{email}</p>
@@ -172,15 +172,13 @@ const VerifyOtp = ({ email, onVerificationSuccess, onBackToLogin }) => {
               value={digit}
               onChange={(e) => handleOtpChange(index, e.target.value)}
               onKeyDown={(e) => handleKeyDown(index, e)}
+              className="border-2 border-brand-primary bg-white text-center font-mono font-bold text-brand-primary focus:outline-none"
               style={{
                 width: '60px',
                 height: '60px',
                 textAlign: 'center',
                 fontSize: '32px',
                 fontWeight: 'bold',
-                color: '#000000',
-                backgroundColor: '#ffffff',
-                border: '2px solid #2563eb',
                 borderRadius: '12px',
                 outline: 'none',
                 fontFamily: 'monospace',

@@ -25,6 +25,7 @@ export default function ConversationItem({ conversation, active, onSelect, onDel
       swipedRef.current = true;
     } else if (deltaX >= SWIPE_THRESHOLD_PX / 2) {
       setDeleteOpen(false);
+      swipedRef.current = false;
     }
 
     setSwipeStartX(null);
@@ -71,7 +72,7 @@ export default function ConversationItem({ conversation, active, onSelect, onDel
         onPointerUp={handlePointerUp}
         onPointerCancel={() => setSwipeStartX(null)}
         onClick={handleSelect}
-        className={`relative w-full touch-pan-y p-4 text-left transition-all duration-200 ease-out hover:bg-gray-50 ${
+        className={`motion-interactive relative w-full touch-pan-y p-4 text-left hover:bg-gray-50 ${
           deleteOpen ? '-translate-x-28' : 'translate-x-0'
         } ${active ? 'bg-green-50 ring-2 ring-inset ring-green-500' : 'bg-white'}`}
       >

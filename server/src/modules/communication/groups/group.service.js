@@ -3,6 +3,7 @@ const { Group, GroupJoinRequest, GroupMessage } = require('./group.model');
 const User = require('../../../shared/models/User');
 
 const MIN_GROUP_MEMBERS = 3;
+const VALID_REACTION_TYPES = new Set(['like', 'heart', 'haha', 'sad']);
 
 const toId = (value) => String(value?._id || value || '');
 
@@ -47,20 +48,24 @@ const populateGroup = (query) => {
     .populate('members.userId', 'name email role linkedSeniorId linkedCaregivers');
 };
 
-const formatGroup = async (group) => {
+const formatGroup = async (group, options = {}) => {
   const latestMessage = await GroupMessage.findOne({ groupId: group._id })
     .sort({ createdAt: -1 })
     .populate('senderId', 'name role');
+  const pendingRequest = options.pendingRequestsByGroupId?.get(toId(group._id));
 
   return {
     _id: group._id,
     name: group.name,
     description: group.description,
     createdBy: group.createdBy,
+    mutedFor: group.mutedFor || [],
     members: group.members,
     createdAt: group.createdAt,
     updatedAt: group.updatedAt,
-    lastMessage: latestMessage
+    lastMessage: latestMessage,
+    joinRequestStatus: pendingRequest ? pendingRequest.status : undefined,
+    joinRequestId: pendingRequest ? pendingRequest._id : undefined
   };
 };
 
@@ -156,8 +161,15 @@ const discoverGroups = async (user) => {
   const groups = await populateGroup(
     Group.find({ 'members.userId': { $ne: user._id } }).sort({ updatedAt: -1 }).limit(50)
   );
+  const pendingRequests = await GroupJoinRequest.find({
+    userId: user._id,
+    status: 'pending'
+  }).select('groupId status');
+  const pendingRequestsByGroupId = new Map(
+    pendingRequests.map((request) => [toId(request.groupId), request])
+  );
 
-  return Promise.all(groups.map(formatGroup));
+  return Promise.all(groups.map((group) => formatGroup(group, { pendingRequestsByGroupId })));
 };
 
 const getMessages = async (groupId, user) => {
@@ -169,7 +181,31 @@ const getMessages = async (groupId, user) => {
   return GroupMessage.find({ groupId })
     .where('deletedFor').ne(user._id)
     .sort({ createdAt: 1 })
-    .populate('senderId', 'name email role');
+    .populate('senderId', 'name email role')
+    .populate('reactions.userId', 'name email role');
+};
+
+const buildGroupReplyPreview = async ({ groupId, userId, replyToMessageId }) => {
+  if (!replyToMessageId) return {};
+  assertObjectId(replyToMessageId, 'replyToMessageId');
+
+  const original = await GroupMessage.findById(replyToMessageId);
+  if (!original || toId(original.groupId) !== toId(groupId)) return {};
+
+  const group = await getGroupOrThrow(groupId);
+  if (!isGroupMember(group, userId)) {
+    throw createServiceError(403, 'Only group members can reply to group messages');
+  }
+
+  const preview = original.messageType === 'voice'
+    ? '🎤 Voice Message'
+    : (original.message || 'Attachment');
+
+  return {
+    repliedToMessageId: original._id,
+    repliedToPreview: preview.length > 120 ? `${preview.slice(0, 117)}...` : preview,
+    repliedToSender: original.senderName || 'Member'
+  };
 };
 
 const sendMessage = async (groupId, user, payload) => {
@@ -185,22 +221,66 @@ const sendMessage = async (groupId, user, payload) => {
   const sender = await User.findById(user._id).select('name');
   if (!sender) throw createServiceError(401, 'Unauthorized request');
 
+  const replyFields = await buildGroupReplyPreview({
+    groupId,
+    userId: user._id,
+    replyToMessageId: payload.repliedToMessageId
+  });
+
   const message = await GroupMessage.create({
     groupId,
     senderId: user._id,
     senderName: sender.name || 'Member',
     message: payload.message || '',
     messageType: payload.messageType || 'text',
-    mediaUrl: payload.mediaUrl || ''
+    mediaUrl: payload.mediaUrl || '',
+    ...replyFields
   });
 
   group.updatedAt = new Date();
   await group.save();
 
-  return GroupMessage.findById(message._id).populate('senderId', 'name email role');
+  const populatedMessage = await GroupMessage.findById(message._id)
+    .populate('senderId', 'name email role')
+    .populate('reactions.userId', 'name email role');
+  populatedMessage.$locals.group = group;
+  return populatedMessage;
 };
 
-const deleteMessageForUser = async (messageId, user) => {
+const updateGroupDetails = async (groupId, user, payload = {}) => {
+  const group = await getGroupOrThrow(groupId);
+  if (!isGroupAdmin(group, user._id)) {
+    throw createServiceError(403, 'Only group admins can update group settings');
+  }
+
+  if (payload.name !== undefined) {
+    const name = payload.name.trim();
+    if (!name) {
+      throw createServiceError(400, 'Group name is required');
+    }
+    group.name = name;
+  }
+
+  if (payload.description !== undefined) {
+    group.description = payload.description.trim();
+  }
+
+  group.updatedAt = new Date();
+  await group.save();
+
+  return populateGroup(Group.findById(group._id));
+};
+
+const getGroupForAdmin = async (groupId, user) => {
+  const group = await getGroupOrThrow(groupId);
+  if (!isGroupAdmin(group, user._id)) {
+    throw createServiceError(403, 'Only group admins can view group settings');
+  }
+
+  return populateGroup(Group.findById(group._id));
+};
+
+const deleteMessageForUser = async (messageId, user, deleteType = 'forEveryone') => {
   assertObjectId(messageId, 'messageId');
 
   const message = await GroupMessage.findById(messageId);
@@ -211,6 +291,19 @@ const deleteMessageForUser = async (messageId, user) => {
     throw createServiceError(403, 'Only group members can delete group messages');
   }
 
+  if (deleteType === 'forMe') {
+    if (!(message.deletedFor || []).some((id) => toId(id) === toId(user._id))) {
+      message.deletedFor.push(user._id);
+      await message.save();
+    }
+
+    return { message, group, deleteType: 'forMe' };
+  }
+
+  if (deleteType !== 'forEveryone') {
+    throw createServiceError(400, 'Invalid delete type');
+  }
+
   const ownsMessage = toId(message.senderId) === toId(user._id);
   if (!ownsMessage && !isGroupAdmin(group, user._id)) {
     throw createServiceError(403, 'Only message sender or group admin can delete this message');
@@ -218,7 +311,45 @@ const deleteMessageForUser = async (messageId, user) => {
 
   await GroupMessage.deleteOne({ _id: messageId });
 
-  return message;
+  return { message, group, deleteType: 'forEveryone' };
+};
+
+const applyGroupMessageReaction = async ({ messageId, userId, reactionType }) => {
+  assertObjectId(messageId, 'messageId');
+
+  if (!VALID_REACTION_TYPES.has(reactionType)) {
+    throw createServiceError(400, 'Invalid reaction type');
+  }
+
+  const message = await GroupMessage.findById(messageId);
+  if (!message) throw createServiceError(404, 'Message not found');
+
+  const group = await getGroupOrThrow(message.groupId);
+  if (!isGroupMember(group, userId)) {
+    throw createServiceError(403, 'Only group members can react to group messages');
+  }
+
+  const reactions = message.reactions || [];
+  const existingIndex = reactions.findIndex((reaction) => toId(reaction.userId) === toId(userId));
+
+  if (existingIndex >= 0 && reactions[existingIndex].type === reactionType) {
+    reactions.splice(existingIndex, 1);
+  } else if (existingIndex >= 0) {
+    reactions[existingIndex].type = reactionType;
+    reactions[existingIndex].createdAt = new Date();
+  } else {
+    reactions.push({ userId, type: reactionType, createdAt: new Date() });
+  }
+
+  message.reactions = reactions;
+  await message.save();
+
+  return {
+    message: await GroupMessage.findById(message._id)
+      .populate('senderId', 'name email role')
+      .populate('reactions.userId', 'name email role'),
+    group
+  };
 };
 
 const requestToJoin = async (groupId, user) => {
@@ -236,9 +367,16 @@ const requestToJoin = async (groupId, user) => {
     userId: user._id,
     status: 'pending'
   });
-  if (existing) return existing;
+  if (existing) {
+    const populatedExisting = await existing.populate('userId', 'name email role');
+    populatedExisting.$locals.group = group;
+    return populatedExisting;
+  }
 
-  return GroupJoinRequest.create({ groupId, userId: user._id });
+  const request = await GroupJoinRequest.create({ groupId, userId: user._id });
+  const populatedRequest = await request.populate('userId', 'name email role');
+  populatedRequest.$locals.group = group;
+  return populatedRequest;
 };
 
 const getRequests = async (groupId, user) => {
@@ -270,6 +408,8 @@ const updateRequest = async (requestId, user, status) => {
 
   if (status === 'approved' && !isGroupMember(group, request.userId)) {
     group.members.push({ userId: request.userId, role: 'member' });
+    group.hiddenFor = (group.hiddenFor || []).filter((id) => toId(id) !== toId(request.userId));
+    group.mutedFor = (group.mutedFor || []).filter((id) => toId(id) !== toId(request.userId));
     group.updatedAt = new Date();
     await group.save();
   }
@@ -306,6 +446,8 @@ const directAddMember = async (groupId, userId, admin) => {
   }
 
   group.members.push({ userId: targetUser._id, role: 'member' });
+  group.hiddenFor = (group.hiddenFor || []).filter((id) => toId(id) !== toId(targetUser._id));
+  group.mutedFor = (group.mutedFor || []).filter((id) => toId(id) !== toId(targetUser._id));
   group.updatedAt = new Date();
   await group.save();
 
@@ -315,6 +457,10 @@ const directAddMember = async (groupId, userId, admin) => {
 const removeMember = async (groupId, userId, admin) => {
   const group = await getGroupOrThrow(groupId);
   assertObjectId(userId, 'userId');
+
+  if (toId(userId) === toId(admin._id)) {
+    throw createServiceError(400, 'Use Exit Group to leave your own group');
+  }
 
   if (!isGroupAdmin(group, admin._id)) {
     throw createServiceError(403, 'Only group admins can remove members');
@@ -333,10 +479,50 @@ const removeMember = async (groupId, userId, admin) => {
   }
 
   group.members = group.members.filter((member) => toId(member.userId) !== toId(userId));
+  group.hiddenFor = [...new Set([...(group.hiddenFor || []).map(toId), toId(userId)])];
+  group.mutedFor = (group.mutedFor || []).filter((id) => toId(id) !== toId(userId));
   group.updatedAt = new Date();
   await group.save();
 
   return populateGroup(Group.findById(group._id));
+};
+
+const exitGroup = async (groupId, userId) => {
+  const group = await getGroupOrThrow(groupId);
+  if (!isGroupMember(group, userId)) {
+    throw createServiceError(403, 'Only group members can exit this group');
+  }
+
+  const exitingMember = group.members.find((member) => toId(member.userId) === toId(userId));
+  group.members = group.members.filter((member) => toId(member.userId) !== toId(userId));
+  group.hiddenFor = [...new Set([...(group.hiddenFor || []).map(toId), toId(userId)])];
+  group.mutedFor = (group.mutedFor || []).filter((id) => toId(id) !== toId(userId));
+
+  if (exitingMember?.role === 'admin' && group.members.length && !group.members.some((member) => member.role === 'admin')) {
+    group.members[0].role = 'admin';
+  }
+
+  group.updatedAt = new Date();
+  await group.save();
+
+  return group;
+};
+
+const setGroupMutedForUser = async (groupId, userId, muted = true) => {
+  const group = await getGroupOrThrow(groupId);
+  if (!isGroupMember(group, userId)) {
+    throw createServiceError(403, 'Only group members can mute this group');
+  }
+
+  await Group.updateOne(
+    { _id: groupId },
+    muted
+      ? { $addToSet: { mutedFor: userId } }
+      : { $pull: { mutedFor: userId } },
+    { runValidators: false }
+  );
+
+  return populateGroup(Group.findById(groupId));
 };
 
 const hideGroupForUser = async (groupId, userId) => {
@@ -370,12 +556,17 @@ module.exports = {
   discoverGroups,
   getMessages,
   sendMessage,
+  updateGroupDetails,
+  getGroupForAdmin,
   deleteMessageForUser,
+  applyGroupMessageReaction,
   requestToJoin,
   getRequests,
   updateRequest,
   directAddMember,
   removeMember,
+  exitGroup,
+  setGroupMutedForUser,
   hideGroupForUser,
   searchAddableUsers,
   searchInitialMembers: (user, query) => getDirectlyAddableUsers(user, query, [user._id]),

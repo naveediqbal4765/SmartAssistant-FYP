@@ -1,16 +1,21 @@
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import FeatureCard from '../../../components/ui/FeatureCard';
+import FeaturePage from '../../../components/ui/FeaturePage';
 
 export default function HealthPlaceholder({ title, children }) {
+  const navigate = useNavigate();
+
   return (
-    <div className="min-h-screen bg-slate-50 px-6 py-10">
-      <div className="mx-auto max-w-4xl rounded-2xl bg-white p-8 shadow">
-        <Link to="/dashboard" className="text-sm font-semibold text-green-700">
-          Back to Dashboard
-        </Link>
-        <h1 className="mt-4 text-3xl font-bold text-gray-900">{title}</h1>
-        <p className="mt-3 text-lg text-gray-600">Feature under development</p>
+    <FeaturePage
+      title={title}
+      description="Feature under development"
+      backLabel="Back to Dashboard"
+      onBack={() => navigate('/dashboard')}
+      maxWidth="max-w-4xl"
+    >
+      <FeatureCard>
         {children && <div className="mt-6">{children}</div>}
-      </div>
-    </div>
+      </FeatureCard>
+    </FeaturePage>
   );
 }

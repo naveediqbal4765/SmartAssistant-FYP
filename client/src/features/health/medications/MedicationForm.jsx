@@ -111,7 +111,7 @@ export default function MedicationForm({
               type="button"
               onClick={onCancelEdit}
               disabled={submitting}
-              className="rounded-xl bg-gray-200 px-5 py-3 font-semibold text-gray-800 disabled:opacity-50"
+              className="rounded-xl bg-gray-200 px-5 py-3 font-semibold text-gray-900 disabled:opacity-50"
             >
               Cancel
             </button>

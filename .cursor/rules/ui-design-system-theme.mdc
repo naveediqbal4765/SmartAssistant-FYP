@@ -1,0 +1,16 @@
+---
+description: Enforce the locked frontend design system and theme source of truth
+globs: client/src/**/*.{js,jsx,ts,tsx,css}
+alwaysApply: false
+---
+
+# UI Design System Theme Lock
+
+- Use `AppShell` for authenticated routes and `FeaturePage` + `FeatureHeader` for feature-level pages.
+- Dashboard dark green is the only primary brand color. Use Tailwind theme tokens from `tailwind.config.js`, especially `brand.primary`, instead of raw hex values.
+- Do not add raw colors in components: no hex colors, arbitrary Tailwind color values like `bg-[#...]`, or feature-specific custom palettes.
+- Do not force every card or module tile to use the brand color. Brand green is for headers, primary actions, accents, active states, and selected highlights.
+- Use semantic shared components for new feature UI: `Button`, `FeatureCard`, `StatusAlert`, `LoadingState`, `EmptyState`, and `ActionMenu`.
+- Feature modules must not define their own color systems. Use shared semantic variants such as `default`, `info`, `warning`, `danger`, `success`, `primary`, `secondary`, and `ghost`.
+- Back navigation belongs in `FeatureHeader` top-left. Page-level primary actions belong in `FeatureHeader` top-right.
+- Notification/profile header icons and dashboard greeting are approved primary brand usages.

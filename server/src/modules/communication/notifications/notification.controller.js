@@ -31,6 +31,20 @@ const markAsRead = async (req, res) => {
   }
 };
 
+const markAsConsumed = async (req, res) => {
+  try {
+    const notificationIds = await notificationService.markAsConsumed(req.user._id, req.body || {});
+    return res.json({
+      success: true,
+      notificationIds: notificationIds.map((id) => String(id)),
+      consumedCount: notificationIds.length
+    });
+  } catch (err) {
+    console.error('Mark notification consumed error:', err);
+    return res.status(500).json({ success: false, msg: 'Server error' });
+  }
+};
+
 const deleteNotification = async (req, res) => {
   try {
     const { id } = req.params;
@@ -64,6 +78,7 @@ const clearNotifications = async (req, res) => {
 module.exports = {
   getNotifications,
   markAsRead,
+  markAsConsumed,
   deleteNotification,
   clearNotifications
 };

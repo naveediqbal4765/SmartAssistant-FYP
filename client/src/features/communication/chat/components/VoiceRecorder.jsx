@@ -99,7 +99,7 @@ export default function VoiceRecorder({ disabled, onSendVoice }) {
           </button>
         )}
 
-        <span className="text-sm text-gray-600">{duration}s</span>
+        <span className="text-sm text-gray-700">{duration}s</span>
 
         {audioUrl && (
           <>

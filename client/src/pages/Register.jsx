@@ -59,7 +59,7 @@ const Register = () => {
         <h2 className="text-3xl font-bold text-center text-blue-600 mb-1">
           Smart Assistant
         </h2>
-        <p className="text-center text-gray-600 mb-6">For Senior Citizens</p>
+        <p className="text-center text-gray-700 mb-6">For Senior Citizens</p>
 
         <div className="flex justify-center mb-6">
           <button 

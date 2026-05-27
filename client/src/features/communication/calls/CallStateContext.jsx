@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { startCallSound, stopCallSound } from '../audio/audioFeedback';
 import { endCall as emitEndCall, getCallSocket } from './callSocket';
 
 const CallStateContext = createContext(null);
@@ -14,15 +15,18 @@ export function CallStateProvider({ children }) {
   }, []);
 
   const resetCallState = useCallback(() => {
+    stopCallSound();
     setIncomingCall(null);
     updateCallStatus('idle');
   }, [updateCallStatus]);
 
   const markCallConnecting = useCallback(() => {
+    stopCallSound();
     updateCallStatus('connecting');
   }, [updateCallStatus]);
 
   const markCallInProgress = useCallback(() => {
+    stopCallSound();
     setIncomingCall(null);
     updateCallStatus('in-call');
   }, [updateCallStatus]);
@@ -37,12 +41,14 @@ export function CallStateProvider({ children }) {
       }
 
       setIncomingCall({ fromUserId, fromName, offer, callType });
+      startCallSound();
       updateCallStatus('ringing');
     };
 
     socket.on('call-user', handleIncomingCall);
 
     return () => {
+      stopCallSound();
       socket.off('call-user', handleIncomingCall);
     };
   }, [updateCallStatus]);

@@ -7,10 +7,10 @@
 /* ====================== */
 
 body {
+  @apply bg-slate-50;
   font-size: 1.125rem;        /* Larger default text for seniors */
   line-height: 1.7;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background-color: #f8fafc;
 }
 
 /* Large, easy-to-tap buttons */
@@ -26,8 +26,7 @@ body {
 
 /* High contrast mode for elderly users */
 .high-contrast {
-  background-color: #ffffff;
-  color: #111827;
+  @apply bg-white text-gray-900;
 }
 
 /* Big headings */
@@ -43,4 +42,250 @@ h2 {
 input, select, textarea {
   @apply text-lg px-6 py-4 border-2 border-gray-300 rounded-2xl 
          focus:border-blue-600 focus:outline-none w-full;
+}
+
+/* Communication motion system: fast, subtle, and consistent. */
+:root {
+  --motion-fast: 150ms;
+  --motion-standard: 240ms;
+  --motion-slow: 300ms;
+  --motion-ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes motion-fade-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes motion-fade-slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes motion-modal-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes motion-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes motion-pop {
+  0% { transform: scale(0.8); }
+  60% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+@keyframes motion-page-forward {
+  from {
+    opacity: 0;
+    transform: translateX(28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes motion-page-backward {
+  from {
+    opacity: 0;
+    transform: translateX(-28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes motion-page-exit-backward {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(28px);
+  }
+}
+
+@keyframes motion-auth-enter {
+  from {
+    opacity: 0;
+    transform: translateX(24px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes motion-auth-exit {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+}
+
+@keyframes motion-auth-form-forward {
+  from {
+    opacity: 0;
+    transform: translateX(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes motion-auth-form-backward {
+  from {
+    opacity: 0;
+    transform: translateX(-18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes motion-auth-form-exit-forward {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-18px);
+  }
+}
+
+@keyframes motion-auth-form-exit-backward {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(18px);
+  }
+}
+
+.motion-message-in {
+  animation: motion-fade-slide-up var(--motion-fast) var(--motion-ease-standard) both;
+}
+
+.motion-panel-in {
+  animation: motion-fade-slide-up var(--motion-standard) var(--motion-ease-standard) both;
+}
+
+.motion-dropdown-in {
+  animation: motion-fade-slide-down var(--motion-fast) var(--motion-ease-standard) both;
+}
+
+.motion-modal-backdrop {
+  animation: motion-fade-in var(--motion-standard) var(--motion-ease-standard) both;
+}
+
+.motion-modal-in {
+  animation: motion-modal-in var(--motion-slow) var(--motion-ease-standard) both;
+}
+
+.motion-pop {
+  animation: motion-pop var(--motion-standard) var(--motion-ease-standard) both;
+}
+
+.motion-page-forward {
+  animation: motion-page-forward var(--motion-slow) var(--motion-ease-standard) both;
+  will-change: opacity, transform;
+}
+
+.motion-page-backward {
+  animation: motion-page-backward var(--motion-slow) var(--motion-ease-standard) both;
+  will-change: opacity, transform;
+}
+
+.motion-page-exit-backward {
+  animation: motion-page-exit-backward var(--motion-fast) var(--motion-ease-standard) both;
+  will-change: opacity, transform;
+}
+
+.motion-auth-enter {
+  animation: motion-auth-enter var(--motion-slow) var(--motion-ease-standard) both;
+  will-change: opacity, transform;
+}
+
+.motion-auth-exit {
+  animation: motion-auth-exit var(--motion-standard) var(--motion-ease-standard) both;
+  will-change: opacity, transform;
+}
+
+.motion-auth-form-forward {
+  animation: motion-auth-form-forward var(--motion-standard) var(--motion-ease-standard) both;
+  will-change: opacity, transform;
+}
+
+.motion-auth-form-backward {
+  animation: motion-auth-form-backward var(--motion-standard) var(--motion-ease-standard) both;
+  will-change: opacity, transform;
+}
+
+.motion-auth-form-exit-forward {
+  animation: motion-auth-form-exit-forward var(--motion-fast) var(--motion-ease-standard) both;
+  will-change: opacity, transform;
+}
+
+.motion-auth-form-exit-backward {
+  animation: motion-auth-form-exit-backward var(--motion-fast) var(--motion-ease-standard) both;
+  will-change: opacity, transform;
+}
+
+.motion-interactive {
+  transition:
+    transform var(--motion-fast) var(--motion-ease-standard),
+    background-color var(--motion-fast) var(--motion-ease-standard),
+    color var(--motion-fast) var(--motion-ease-standard),
+    box-shadow var(--motion-standard) var(--motion-ease-standard),
+    border-color var(--motion-fast) var(--motion-ease-standard),
+    opacity var(--motion-fast) var(--motion-ease-standard);
+}
+
+.motion-interactive:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.motion-card {
+  transition:
+    transform var(--motion-standard) var(--motion-ease-standard),
+    box-shadow var(--motion-standard) var(--motion-ease-standard),
+    border-color var(--motion-fast) var(--motion-ease-standard),
+    background-color var(--motion-fast) var(--motion-ease-standard);
+}
+
+.motion-card:hover {
+  transform: translateY(-2px);
 }

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { overlayLayers } from '../../../components/ui/overlayLayers';
 
 const CHECK_INTERVAL_MS = 30000;
 
@@ -44,7 +45,7 @@ export default function MedicationReminder({ medications = [], enabled = false }
   if (!enabled || !activeReminder) return null;
 
   return (
-    <div className="fixed bottom-6 right-6 z-[90] w-full max-w-sm rounded-2xl border border-green-200 bg-white p-5 shadow-2xl">
+    <div className={`fixed bottom-6 right-6 ${overlayLayers.modal} w-full max-w-sm rounded-2xl border border-green-200 bg-white p-5 shadow-2xl`}>
       <p className="text-sm font-semibold uppercase tracking-wide text-green-700">Medication Reminder</p>
       <h3 className="mt-2 text-xl font-bold text-gray-900">
         Time to take {activeReminder.name}
@@ -53,7 +54,7 @@ export default function MedicationReminder({ medications = [], enabled = false }
         Dosage: <span className="font-semibold">{activeReminder.dosage}</span>
       </p>
       {activeReminder.notes && (
-        <p className="mt-2 rounded-xl bg-gray-50 p-3 text-sm text-gray-600">
+        <p className="mt-2 rounded-xl bg-gray-50 p-3 text-sm text-gray-700">
           {activeReminder.notes}
         </p>
       )}

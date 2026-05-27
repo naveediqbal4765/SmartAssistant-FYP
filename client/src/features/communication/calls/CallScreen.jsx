@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { overlayLayers } from '../../../components/ui/overlayLayers';
 
 export default function CallScreen({
   callState,
@@ -40,7 +41,7 @@ export default function CallScreen({
   const durationLabel = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 
   return (
-    <div className="fixed inset-x-4 bottom-6 z-[70] mx-auto max-w-3xl rounded-2xl bg-gray-900 p-5 text-white shadow-2xl">
+    <div className={`motion-panel-in fixed inset-x-4 bottom-6 ${overlayLayers.call} mx-auto max-w-3xl rounded-2xl bg-gray-900 p-5 text-white shadow-2xl`}>
       <audio ref={remoteAudioRef} autoPlay playsInline />
 
       {isVideoCall && (
@@ -60,7 +61,7 @@ export default function CallScreen({
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <p className="text-lg font-bold">{isVideoCall ? 'Video call' : 'Audio call'}</p>
-          <p className="text-sm text-gray-300">
+          <p className="text-sm text-white/70">
             {callState === 'calling' ? 'Calling...' : callState === 'connecting' ? 'Connecting...' : 'In call'}
           </p>
           {callState === 'in-call' && (

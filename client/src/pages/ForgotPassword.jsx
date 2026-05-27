@@ -191,17 +191,17 @@ export default function ForgotPassword() {
   // Simple loading indicator
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="min-h-screen bg-brand-surface flex items-center justify-center">
         <div className="bg-white rounded-2xl p-8 text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Processing...</p>
+          <p className="text-gray-700">Processing...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-brand-surface flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
         
         {/* Header */}
@@ -211,7 +211,7 @@ export default function ForgotPassword() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold text-gray-800">Reset Password</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Reset Password</h1>
           <p className="text-gray-500 mt-2">
             {step === 'email' && 'Enter your email to receive a reset code'}
             {step === 'otp' && 'Enter the 6-digit code sent to your email'}
@@ -256,7 +256,7 @@ export default function ForgotPassword() {
         {/* Step 2: OTP Verification */}
         {step === 'otp' && (
           <div>
-            <p className="text-center text-gray-600 mb-4">
+            <p className="text-center text-gray-700 mb-4">
               Code sent to <span className="font-semibold text-blue-600">{email}</span>
             </p>
             

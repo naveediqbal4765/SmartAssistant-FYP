@@ -75,27 +75,51 @@ export const fetchGroupMessages = async (groupId) => {
   return response.data.messages || [];
 };
 
-export const sendGroupMessage = async ({ groupId, message, messageType = 'text', mediaUrl = '' }) => {
+export const sendGroupMessage = async ({ groupId, message, messageType = 'text', mediaUrl = '', repliedToMessageId = '' }) => {
   const response = await axios.post(
     `${API_BASE_URL}/${groupId}/messages`,
-    { message, messageType, mediaUrl },
+    { message, messageType, mediaUrl, repliedToMessageId },
     { headers: authHeaders() }
   );
   return response.data.message;
 };
 
-export const deleteGroupMessage = async (messageId) => {
+export const updateGroup = async (groupId, payload) => {
+  const response = await axios.patch(`${API_BASE_URL}/${groupId}`, payload, {
+    headers: authHeaders()
+  });
+  return response.data.group;
+};
+
+export const deleteGroupMessage = async (messageId, deleteType = 'forEveryone') => {
   const response = await axios.delete(`${API_BASE_URL}/message/${messageId}`, {
+    headers: authHeaders(),
+    data: { deleteType }
+  });
+  return response.data;
+};
+
+export const reactToGroupMessage = async (messageId, reactionType) => {
+  const response = await axios.post(
+    `${API_BASE_URL}/message/${messageId}/reaction`,
+    { reactionType },
+    { headers: authHeaders() }
+  );
+  return response.data.message;
+};
+
+export const exitGroup = async (groupId) => {
+  const response = await axios.post(`${API_BASE_URL}/${groupId}/exit`, null, {
     headers: authHeaders()
   });
   return response.data;
 };
 
-export const deleteGroupConversation = async (groupId) => {
-  const response = await axios.delete(`http://localhost:5000/api/communication/conversation/${groupId}`, {
+export const muteGroup = async (groupId, muted = true) => {
+  const response = await axios.patch(`${API_BASE_URL}/${groupId}/mute`, { muted }, {
     headers: authHeaders()
   });
-  return response.data;
+  return response.data.group;
 };
 
 export const uploadGroupAudio = async (audioBlob) => {
@@ -138,6 +162,13 @@ export const rejectGroupRequest = async (requestId) => {
     headers: authHeaders()
   });
   return response.data.request;
+};
+
+export const removeGroupMember = async (groupId, userId) => {
+  const response = await axios.delete(`${API_BASE_URL}/${groupId}/members/${userId}`, {
+    headers: authHeaders()
+  });
+  return response.data.group;
 };
 
 export const searchAddableUsers = async (groupId, query) => {

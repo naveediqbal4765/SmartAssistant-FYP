@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { overlayLayers } from '../../../components/ui/overlayLayers';
 import { searchInitialGroupMembers } from './groupApi';
 
 export default function CreateGroupModal({ open, onClose, onCreate }) {
@@ -56,8 +57,15 @@ export default function CreateGroupModal({ open, onClose, onCreate }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 px-4">
-      <form onSubmit={handleSubmit} className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl">
+    <div
+      className={`motion-modal-backdrop fixed inset-0 ${overlayLayers.modal} flex items-center justify-center bg-black/40 px-4`}
+      onPointerDown={onClose}
+    >
+      <form
+        onSubmit={handleSubmit}
+        onPointerDown={(event) => event.stopPropagation()}
+        className="motion-modal-in w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl shadow-gray-900/15"
+      >
         <h2 className="text-2xl font-bold">Create Group</h2>
         <p className="mt-1 text-sm text-gray-500">Select at least 2 members so the group starts with 3 people.</p>
         <input

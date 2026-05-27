@@ -1,7 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { ArrowLeft, Clock, CheckCircle, XCircle, Loader, Eye } from 'lucide-react';
+import { Clock, CheckCircle, XCircle, Loader, Eye } from 'lucide-react';
+import { markNotificationAsConsumed } from '../features/communication/notifications/notificationConsumption';
+import Button from '../components/ui/Button';
+import EmptyState from '../components/ui/EmptyState';
+import FeatureCard from '../components/ui/FeatureCard';
+import FeaturePage from '../components/ui/FeaturePage';
+import LoadingState from '../components/ui/LoadingState';
 
 export default function MyRequests() {
   const navigate = useNavigate();
@@ -20,6 +26,15 @@ export default function MyRequests() {
       });
       if (response.data.success) {
         setTasks(response.data.tasks);
+        response.data.tasks.forEach((task) => {
+          if (task._id) {
+            markNotificationAsConsumed({
+              taskId: task._id,
+              entityType: 'task',
+              entityId: task._id
+            }).catch(() => {});
+          }
+        });
       }
     } catch (err) {
       console.error('Fetch error:', err);
@@ -50,50 +65,32 @@ export default function MyRequests() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader className="animate-spin h-8 w-8 text-blue-600" />
-      </div>
-    );
+    return <LoadingState label="Loading requests..." />;
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
-      <div className="max-w-3xl mx-auto px-6 py-10">
-        <div className="flex items-center justify-between mb-6">
-          <button 
-            onClick={() => navigate('/dashboard')}
-            className="flex items-center gap-2 text-blue-600 hover:underline"
-          >
-            <ArrowLeft size={24} /> Back
-          </button>
-          <button
-            onClick={() => navigate('/request-help')}
-            className="bg-green-600 text-white px-4 py-2 rounded-xl"
-          >
-            + New Request
-          </button>
-        </div>
-
-        <h1 className="text-2xl font-bold text-gray-800 mb-6">My Help Requests</h1>
+    <FeaturePage
+      title="My Help Requests"
+      description="Track the status of requests you have submitted."
+      backLabel="Back to Dashboard"
+      onBack={() => navigate('/dashboard')}
+      maxWidth="max-w-3xl"
+      actions={<Button onClick={() => navigate('/request-help')}>New Request</Button>}
+    >
 
         {tasks.length === 0 ? (
-          <div className="bg-white rounded-2xl shadow-xl p-12 text-center">
-            <Clock size={48} className="text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500 text-lg">No requests yet</p>
-            <p className="text-gray-400">Click "New Request" to get help</p>
-          </div>
+          <EmptyState title="No requests yet" description="Create a new request to get help." />
         ) : (
           <div className="space-y-4">
             {tasks.map((task) => (
-              <div key={task._id} className="bg-white rounded-xl shadow p-5">
+              <FeatureCard key={task._id} className="p-5">
                 <div className="flex justify-between items-start mb-3">
-                  <h3 className="font-bold text-lg text-gray-800">{task.title}</h3>
+                  <h3 className="font-bold text-lg text-gray-900">{task.title}</h3>
                   <span className={`px-3 py-1 rounded-full text-xs font-medium ${getPriorityBadge(task.priority)}`}>
                     {task.priority}
                   </span>
                 </div>
-                <p className="text-gray-600 text-sm mb-3">{task.description}</p>
+                <p className="text-gray-700 text-sm mb-3">{task.description}</p>
                 <div className="flex justify-between items-center">
                   <span className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${getStatusBadge(task.status).color}`}>
                     {getStatusBadge(task.status).icon}
@@ -104,15 +101,14 @@ export default function MyRequests() {
                   </span>
                 </div>
                 {task.volunteerId && (
-                  <div className="mt-3 pt-3 border-t text-sm text-gray-600">
+                  <div className="mt-3 pt-3 border-t text-sm text-gray-700">
                     👤 Volunteer: {task.volunteerId.name}
                   </div>
                 )}
-              </div>
+              </FeatureCard>
             ))}
           </div>
         )}
-      </div>
-    </div>
+    </FeaturePage>
   );
 }

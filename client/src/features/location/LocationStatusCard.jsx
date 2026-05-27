@@ -59,7 +59,7 @@ export default function LocationStatusCard({
           </div>
           <div>
             <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-            <p className="mt-1 text-sm text-gray-600">{description}</p>
+            <p className="mt-1 text-sm text-gray-700">{description}</p>
           </div>
         </div>
 
@@ -74,11 +74,11 @@ export default function LocationStatusCard({
 
       <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-          <p className="text-sm font-medium text-gray-600">Saved Coordinates</p>
+          <p className="text-sm font-medium text-gray-700">Saved Coordinates</p>
           <p className="mt-1 text-gray-900">{formatCoordinates(activeLocation)}</p>
         </div>
         <div>
-          <p className="text-sm font-medium text-gray-600">Last Updated</p>
+          <p className="text-sm font-medium text-gray-700">Last Updated</p>
           <p className="mt-1 text-gray-900">{formatUpdatedAt(activeLocation?.lastUpdated)}</p>
         </div>
       </div>

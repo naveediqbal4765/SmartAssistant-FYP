@@ -10,12 +10,17 @@ export default function ChatBox({
   onSendMessage,
   onSendVoice,
   onDeleteMessage,
+  onReactToMessage,
+  onReplyToMessage,
+  replyTo,
+  onCancelReply,
+  targetMessageId,
   callDisabled,
   onStartAudioCall,
   onStartVideoCall
 }) {
   return (
-    <div className="flex h-[70vh] flex-col rounded-xl bg-white shadow">
+    <div className="motion-panel-in flex h-[70vh] flex-col rounded-xl bg-white shadow-lg shadow-gray-900/10">
       <div className="min-h-0 flex-1">
         <ChatWindow
           conversation={conversation}
@@ -26,6 +31,9 @@ export default function ChatBox({
           onStartAudioCall={onStartAudioCall}
           onStartVideoCall={onStartVideoCall}
           onDeleteMessage={onDeleteMessage}
+          onReactToMessage={onReactToMessage}
+          onReplyToMessage={onReplyToMessage}
+          targetMessageId={targetMessageId}
         />
       </div>
       <ChatInput
@@ -33,6 +41,8 @@ export default function ChatBox({
         sending={sending}
         onSend={onSendMessage}
         onSendVoice={onSendVoice}
+        replyTo={replyTo}
+        onCancelReply={onCancelReply}
       />
     </div>
   );

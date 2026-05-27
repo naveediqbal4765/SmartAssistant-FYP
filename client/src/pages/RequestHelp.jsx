@@ -1,7 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { ArrowLeft, Send, Mic, MicOff, AlertCircle } from 'lucide-react';
+import { Send, Mic, MicOff, AlertCircle } from 'lucide-react';
+import Button from '../components/ui/Button';
+import FeatureCard from '../components/ui/FeatureCard';
+import FeaturePage from '../components/ui/FeaturePage';
+import StatusAlert from '../components/ui/StatusAlert';
 
 export default function RequestHelp() {
   const navigate = useNavigate();
@@ -26,7 +30,7 @@ export default function RequestHelp() {
     { value: 'household', label: '🏠 Household', color: 'text-orange-600', bg: 'bg-orange-100' },
     { value: 'companionship', label: '💬 Companionship', color: 'text-purple-600', bg: 'bg-purple-100' },
     { value: 'emergency', label: '🚨 Emergency', color: 'text-red-700', bg: 'bg-red-200' },
-    { value: 'other', label: '📝 Other', color: 'text-gray-600', bg: 'bg-gray-100' }
+    { value: 'other', label: '📝 Other', color: 'text-gray-700', bg: 'bg-gray-100' }
   ];
 
   const priorities = [
@@ -111,39 +115,28 @@ export default function RequestHelp() {
 
   const getPriorityColor = (priority) => {
     const p = priorities.find(p => p.value === priority);
-    return p ? p.color : 'text-gray-600';
+    return p ? p.color : 'text-gray-700';
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
-      <div className="max-w-2xl mx-auto px-6 py-10">
-        <button 
-          onClick={() => navigate('/dashboard')}
-          className="flex items-center gap-2 text-blue-600 mb-6 hover:underline"
-        >
-          <ArrowLeft size={24} /> Back to Dashboard
-        </button>
-
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+    <FeaturePage
+      title="Request Help"
+      description="Describe what you need assistance with."
+      backLabel="Back to Dashboard"
+      onBack={() => navigate('/dashboard')}
+      maxWidth="max-w-2xl"
+    >
+        <FeatureCard>
           <div className="text-center mb-8">
             <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
               <Send size={36} className="text-green-600" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-800">Request Help</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Request Help</h1>
             <p className="text-gray-500 mt-1">Describe what you need assistance with</p>
           </div>
 
-          {error && (
-            <div className="bg-red-100 text-red-700 p-3 rounded-lg mb-4 text-center">
-              {error}
-            </div>
-          )}
-
-          {success && (
-            <div className="bg-green-100 text-green-700 p-3 rounded-lg mb-4 text-center">
-              {success}
-            </div>
-          )}
+          <StatusAlert variant="error">{error}</StatusAlert>
+          <StatusAlert variant="success">{success}</StatusAlert>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Title */}
@@ -175,7 +168,7 @@ export default function RequestHelp() {
                   type="button"
                   onClick={startVoiceInput}
                   className={`absolute right-3 bottom-3 p-2 rounded-full transition ${
-                    isListening ? 'bg-red-500 text-white animate-pulse' : 'bg-gray-100 text-gray-600'
+                    isListening ? 'bg-red-500 text-white animate-pulse' : 'bg-gray-100 text-gray-700'
                   }`}
                   title="Voice input"
                 >
@@ -265,10 +258,11 @@ export default function RequestHelp() {
               </div>
             )}
 
-            <button
+            <Button
               type="submit"
               disabled={loading}
-              className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-semibold text-lg transition disabled:opacity-50 flex items-center justify-center gap-2"
+              size="lg"
+              className="w-full"
             >
               {loading ? (
                 'Submitting...'
@@ -278,18 +272,17 @@ export default function RequestHelp() {
                   Submit Request
                 </>
               )}
-            </button>
+            </Button>
           </form>
-        </div>
+        </FeatureCard>
 
         {/* Help Info */}
-        <div className="bg-blue-50 rounded-xl p-4 mt-6">
+        <StatusAlert variant="info" className="mt-6">
           <p className="text-sm text-blue-700 text-center">
             💡 Your request will be shared with verified volunteers in your area.
             You'll be notified when someone accepts your request.
           </p>
-        </div>
-      </div>
-    </div>
+        </StatusAlert>
+    </FeaturePage>
   );
 }

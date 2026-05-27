@@ -22,6 +22,13 @@ const emitNotification = (userId, notification) => {
     title: notification.title,
     message: notification.message,
     conversationId: notification.conversationId,
+    groupId: notification.groupId,
+    messageId: notification.messageId,
+    taskId: notification.taskId,
+    callSessionId: notification.callSessionId,
+    emergencyId: notification.emergencyId,
+    entityType: notification.entityType,
+    entityId: notification.entityId,
     fromUserId: notification.fromUserId,
     toUserId: notification.toUserId,
     isRead: notification.isRead,
@@ -29,12 +36,60 @@ const emitNotification = (userId, notification) => {
   });
 };
 
-const emitMessageDeleted = ({ userId, messageId, chatType }) => {
+const emitMessageDeleted = ({ userId, messageId, chatType, deleteType }) => {
   emitToUser(String(userId), 'message-deleted', {
     messageId: String(messageId),
     userId: String(userId),
-    chatType
+    chatType,
+    deleteType
   });
+};
+
+const emitItemReactionUpdated = ({ message, itemType, updatedBy }) => {
+  const payload = {
+    itemType,
+    itemId: String(message._id),
+    reactions: message.reactions || [],
+    updatedBy: String(updatedBy)
+  };
+
+  emitToUser(String(message.senderId), 'ITEM_REACTION_UPDATED', payload);
+  emitToUser(String(message.receiverId), 'ITEM_REACTION_UPDATED', payload);
+};
+
+const emitGroupItemReactionUpdated = ({ group, message, updatedBy }) => {
+  const payload = {
+    itemType: 'groupMessage',
+    groupId: String(message.groupId),
+    itemId: String(message._id),
+    reactions: message.reactions || [],
+    updatedBy: String(updatedBy)
+  };
+
+  (group.members || []).forEach((member) => {
+    emitToUser(String(member.userId?._id || member.userId), 'ITEM_REACTION_UPDATED', payload);
+  });
+};
+
+const emitGroupUpdated = ({ group, removedUserId }) => {
+  if (!group) return;
+
+  const payload = {
+    groupId: String(group._id),
+    group
+  };
+
+  (group.members || []).forEach((member) => {
+    emitToUser(String(member.userId?._id || member.userId), 'group-updated', payload);
+  });
+
+  if (removedUserId) {
+    emitConversationDeleted({
+      userId: removedUserId,
+      conversationId: group._id,
+      chatType: 'group'
+    });
+  }
 };
 
 const emitConversationDeleted = ({ userId, conversationId, chatType }) => {
@@ -52,5 +107,8 @@ module.exports = {
   emitNewMessage,
   emitNotification,
   emitMessageDeleted,
+  emitItemReactionUpdated,
+  emitGroupItemReactionUpdated,
+  emitGroupUpdated,
   emitConversationDeleted
 };

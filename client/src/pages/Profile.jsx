@@ -4,6 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import LocationStatusCard from '../features/location/LocationStatusCard';
 import NearbyVolunteers from '../features/location/NearbyVolunteers';
+import FeaturePage from '../components/ui/FeaturePage';
+import FeatureCard from '../components/ui/FeatureCard';
+import LoadingState from '../components/ui/LoadingState';
+import StatusAlert from '../components/ui/StatusAlert';
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -425,64 +429,23 @@ export default function Profile() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#E2FFEB' }}>
-        <div className="text-xl">Loading profile...</div>
-      </div>
-    );
+    return <LoadingState label="Loading profile..." />;
   }
 
   return (
-    <div className="min-h-screen pb-20" style={{ backgroundColor: '#E2FFEB' }}>
-      {/* Navbar with color #1C382A - Logo left, Logout right */}
-      <div className="w-full shadow-md sticky top-0 z-50" style={{ backgroundColor: '#1C382A' }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex justify-between items-center">
-            {/* Left side - Logo and Title */}
-            <div className="flex items-center gap-3">
-              <button 
-                onClick={() => navigate('/dashboard')}
-                className="flex items-center gap-2 text-white hover:text-gray-300 transition"
-              >
-                <ArrowLeft size={24} />
-                <span className="hidden sm:inline">Back to Dashboard</span>
-              </button>
-              <div className="h-6 w-px bg-white/30 mx-2"></div>
-              <div>
-                <h1 className="text-xl font-bold text-white">Smart Assistant</h1>
-                <p className="text-white/70 text-sm hidden sm:block">{getRoleTitle()} Profile</p>
-              </div>
-            </div>
-            
-            {/* Right side - Logout button */}
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-2 px-4 py-2 text-white hover:bg-white/10 rounded-xl transition-all duration-200"
-            >
-              <LogOut size={20} />
-              <span className="hidden sm:inline">Logout</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <h1 className="text-3xl sm:text-4xl font-bold mb-10 text-gray-900">My Profile</h1>
-
-        {error && (
-          <div className="bg-red-100 text-red-700 p-3 rounded-lg mb-4">
-            {error}
-          </div>
-        )}
-        {success && (
-          <div className="bg-green-100 text-green-700 p-3 rounded-lg mb-4">
-            {success}
-          </div>
-        )}
+    <FeaturePage
+      title="My Profile"
+      description={`${getRoleTitle()} profile, contacts, privacy, and health vault settings.`}
+      backLabel="Back to Dashboard"
+      onBack={() => navigate('/dashboard')}
+      maxWidth="max-w-5xl"
+    >
+        <StatusAlert variant="error">{error}</StatusAlert>
+        <StatusAlert variant="success">{success}</StatusAlert>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Personal Information - Background color #BAE4C7 */}
-          <div className="rounded-2xl shadow-xl p-6 sm:p-8" style={{ backgroundColor: '#BAE4C7' }}>
+          {/* Personal Information */}
+          <FeatureCard className="p-6 sm:p-8">
             <h2 className="text-2xl sm:text-3xl font-semibold mb-8 flex items-center gap-3">
               <User size={32} className="text-blue-600" /> Personal Information
             </h2>
@@ -549,10 +512,10 @@ export default function Profile() {
             >
               <Save size={24} /> {saving ? 'Saving...' : 'Save Profile'}
             </button>
-          </div>
+          </FeatureCard>
 
-          {/* Emergency Contacts - Background color #BAE4C7 */}
-          <div className="rounded-2xl shadow-xl p-6 sm:p-8" style={{ backgroundColor: '#BAE4C7' }}>
+          {/* Emergency Contacts */}
+          <FeatureCard className="p-6 sm:p-8">
             <h2 className="text-2xl sm:text-3xl font-semibold mb-6 flex items-center gap-3">
               <Phone size={32} className="text-red-600" /> Emergency Contacts
             </h2>
@@ -566,7 +529,7 @@ export default function Profile() {
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
                         <p className="font-semibold text-lg">{contact.name}</p>
-                        <p className="text-gray-600">📞 {contact.phone}</p>
+                        <p className="text-gray-700">📞 {contact.phone}</p>
                         <p className="text-sm text-gray-500">
                           {contact.relation} • Priority {contact.priority || 1}
                         </p>
@@ -617,11 +580,11 @@ export default function Profile() {
                 Add Contact
               </button>
             </div>
-          </div>
+          </FeatureCard>
         </div>
 
         {(userRole === 'elder' || userRole === 'volunteer') && (
-          <div className="rounded-2xl shadow-xl p-6 sm:p-8 mt-8" style={{ backgroundColor: '#BAE4C7' }}>
+          <FeatureCard className="mt-8 p-6 sm:p-8">
             <h2 className="text-2xl font-semibold mb-6 flex items-center gap-3">
               <Activity size={32} className="text-emerald-700" />
               Location Awareness
@@ -637,11 +600,11 @@ export default function Profile() {
               />
               {userRole === 'volunteer' && <NearbyVolunteers />}
             </div>
-          </div>
+          </FeatureCard>
         )}
 
         {(userRole === 'elder' || userRole === 'caregiver') && (
-          <div className="rounded-2xl shadow-xl p-6 sm:p-8 mt-8" style={{ backgroundColor: '#BAE4C7' }}>
+          <FeatureCard className="mt-8 p-6 sm:p-8">
             <h2 className="text-2xl font-semibold mb-6 flex items-center gap-3">
               <Users size={32} className="text-green-700" />
               {userRole === 'elder' ? 'Linked Caregivers' : 'Linked Senior'}
@@ -652,8 +615,8 @@ export default function Profile() {
                 <div className="space-y-5">
                   <div className="bg-white rounded-xl p-4 border border-green-200">
                     <p className="font-semibold text-lg">{linkedSenior.name}</p>
-                    <p className="text-gray-600">{linkedSenior.email}</p>
-                    {linkedSenior.phone && <p className="text-gray-600">📞 {linkedSenior.phone}</p>}
+                    <p className="text-gray-700">{linkedSenior.email}</p>
+                    {linkedSenior.phone && <p className="text-gray-700">📞 {linkedSenior.phone}</p>}
                   </div>
                   <LocationStatusCard
                     readOnly
@@ -663,7 +626,7 @@ export default function Profile() {
                   />
                 </div>
               ) : (
-                <p className="text-gray-600">No senior linked to this account.</p>
+                <p className="text-gray-700">No senior linked to this account.</p>
               )
             )}
 
@@ -675,7 +638,7 @@ export default function Profile() {
                       <Link2 className="text-green-700 shrink-0 mt-1" size={24} />
                       <div>
                         <p className="font-semibold text-gray-900">Caregiver Invitation Section</p>
-                        <p className="text-sm text-gray-600 mt-1">
+                        <p className="text-sm text-gray-700 mt-1">
                           Share this code with your caregiver to allow signup.
                         </p>
                       </div>
@@ -694,14 +657,14 @@ export default function Profile() {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-5">
                     <div>
-                      <p className="text-sm font-medium text-gray-600">Current Code</p>
+                      <p className="text-sm font-medium text-gray-700">Current Code</p>
                       <p className="mt-1 text-3xl font-bold tracking-widest text-gray-900">
                         {caregiverInvitation?.code || '------'}
                       </p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-600">Expiry Date</p>
-                      <p className="mt-2 text-gray-800">
+                      <p className="text-sm font-medium text-gray-700">Expiry Date</p>
+                      <p className="mt-2 text-gray-900">
                         {formatInvitationExpiry(caregiverInvitation?.expiresAt)}
                       </p>
                     </div>
@@ -718,7 +681,7 @@ export default function Profile() {
                 </div>
 
                 {linkedCaregivers.length === 0 ? (
-                  <p className="text-gray-600">No caregivers linked yet. Share your caregiver invitation code when they sign up.</p>
+                  <p className="text-gray-700">No caregivers linked yet. Share your caregiver invitation code when they sign up.</p>
                 ) : (
                   <div className="space-y-3">
                     {linkedCaregivers.map((c) => (
@@ -726,8 +689,8 @@ export default function Profile() {
                         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                           <div>
                             <p className="font-semibold">{c.name}</p>
-                            <p className="text-gray-600 text-sm">{c.email}</p>
-                            {c.phone && <p className="text-gray-600 text-sm">📞 {c.phone}</p>}
+                            <p className="text-gray-700 text-sm">{c.email}</p>
+                            {c.phone && <p className="text-gray-700 text-sm">📞 {c.phone}</p>}
                           </div>
                           <button
                             type="button"
@@ -745,21 +708,20 @@ export default function Profile() {
                 )}
               </>
             )}
-          </div>
+          </FeatureCard>
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
           <button
             type="button"
             onClick={() => navigate('/privacy')}
-            className="rounded-2xl shadow-xl p-6 text-left hover:shadow-2xl transition"
-            style={{ backgroundColor: '#BAE4C7' }}
+            className="rounded-2xl border border-gray-200 bg-white p-6 text-left shadow-sm transition hover:bg-gray-50"
           >
             <div className="flex items-center gap-3 mb-2">
               <Shield size={28} className="text-purple-600" />
               <h3 className="text-xl font-semibold">Privacy Settings</h3>
             </div>
-            <p className="text-gray-600 text-sm">
+            <p className="text-gray-700 text-sm">
               {privacySummary
                 ? `Phone ${privacySummary.showPhone ? 'visible' : 'hidden'} · Email ${privacySummary.showEmail ? 'visible' : 'hidden'}`
                 : 'Control who can see your profile details'}
@@ -769,19 +731,18 @@ export default function Profile() {
           <button
             type="button"
             onClick={() => navigate('/activity-logs')}
-            className="rounded-2xl shadow-xl p-6 text-left hover:shadow-2xl transition"
-            style={{ backgroundColor: '#BAE4C7' }}
+            className="rounded-2xl border border-gray-200 bg-white p-6 text-left shadow-sm transition hover:bg-gray-50"
           >
             <div className="flex items-center gap-3 mb-2">
               <Activity size={28} className="text-teal-600" />
               <h3 className="text-xl font-semibold">Activity History</h3>
             </div>
-            <p className="text-gray-600 text-sm">View logins, profile updates, Digital Health Vault activity, and help requests</p>
+            <p className="text-gray-700 text-sm">View logins, profile updates, Digital Health Vault activity, and help requests</p>
           </button>
         </div>
 
-        {/* Digital Health Vault - Background color #BAE4C7 */}
-        <div className="rounded-2xl shadow-xl p-6 sm:p-8 mt-8" style={{ backgroundColor: '#BAE4C7' }}>
+        {/* Digital Health Vault */}
+        <FeatureCard className="mt-8 p-6 sm:p-8">
           <h2 className="text-2xl sm:text-3xl font-semibold mb-6 flex items-center gap-3">
             <FileText size={32} className="text-indigo-600" /> Digital Health Vault
           </h2>
@@ -794,10 +755,10 @@ export default function Profile() {
           >
             📄 Go to Digital Health Vault
           </button>
-        </div>
+        </FeatureCard>
 
         {/* Account Deletion Section */}
-        <div className="bg-red-50 border-2 border-red-200 rounded-2xl shadow-xl p-6 sm:p-8 mt-8">
+        <FeatureCard variant="danger" className="mt-8 p-6 sm:p-8">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
               <span className="text-red-600 text-2xl">⚠️</span>
@@ -810,7 +771,7 @@ export default function Profile() {
           <p className="text-gray-700 mb-4">
             Once you delete your account, <span className="font-bold">all your data will be permanently removed</span> including:
           </p>
-          <ul className="list-disc list-inside text-gray-600 mb-4 space-y-1">
+          <ul className="list-disc list-inside text-gray-700 mb-4 space-y-1">
             <li>Profile information (name, email, phone, address)</li>
             <li>Emergency contacts</li>
             <li>Digital Health Vault files</li>
@@ -823,8 +784,7 @@ export default function Profile() {
           >
             <span>🗑️</span> Delete My Account
           </button>
-        </div>
-      </div>
-    </div>
+        </FeatureCard>
+    </FeaturePage>
   );
 }
