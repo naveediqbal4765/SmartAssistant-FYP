@@ -465,7 +465,7 @@ export default function GroupPage() {
       >
         <StatusAlert variant="error">{error}</StatusAlert>
         {loadingGroups && (
-          <div className="mb-4 rounded-xl bg-white p-4 shadow-md shadow-gray-900/10">
+          <div className="motion-card mb-4 rounded-xl bg-white p-4">
             <SkeletonLine width="lg" />
             <SkeletonBlock className="mt-4 h-16 rounded-xl" />
           </div>

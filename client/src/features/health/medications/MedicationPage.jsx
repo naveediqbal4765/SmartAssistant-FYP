@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import MedicationList from './MedicationList';
 import MedicationForm from './MedicationForm';
-import MedicationReminder from './MedicationReminder';
 import HealthPlaceholder from '../components/HealthPlaceholder';
+import { SENIOR_REMINDERS_REFRESH_EVENT } from '../reminders/GlobalSeniorReminderPopups';
 import {
   createMedication,
   deleteMedication,
@@ -66,9 +66,11 @@ export default function MedicationPage() {
           item._id === updated._id ? updated : item
         )));
         setEditingMedication(null);
+        window.dispatchEvent(new Event(SENIOR_REMINDERS_REFRESH_EVENT));
       } else {
         const created = await createMedication(payload);
         setMedications((current) => [created, ...current]);
+        window.dispatchEvent(new Event(SENIOR_REMINDERS_REFRESH_EVENT));
       }
 
       return true;
@@ -90,6 +92,7 @@ export default function MedicationPage() {
     try {
       await deleteMedication(medication._id);
       setMedications((current) => current.filter((item) => item._id !== medication._id));
+      window.dispatchEvent(new Event(SENIOR_REMINDERS_REFRESH_EVENT));
       if (editingMedication?._id === medication._id) {
         setEditingMedication(null);
       }
@@ -112,7 +115,6 @@ export default function MedicationPage() {
 
   return (
     <HealthPlaceholder title="Medications">
-      <MedicationReminder medications={medications} enabled={isSenior && !loading} />
       <div className="space-y-6">
         {error && (
           <div className="rounded-2xl border border-red-100 bg-red-50 p-4 text-red-700">
@@ -130,19 +132,19 @@ export default function MedicationPage() {
         )}
 
         {isCaregiver && (
-          <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4 text-blue-700">
+          <div className="rounded-2xl border border-green-100 bg-green-50 p-4 text-brand-primary">
             Caregiver view only. You can view the assigned senior&apos;s medications but cannot edit them.
           </div>
         )}
 
         <section>
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-xl font-bold text-gray-900">Medication List</h2>
+            <h2 className="text-xl font-bold text-brand-primary">Medication List</h2>
             {loading && <span className="text-sm text-gray-500">Loading...</span>}
           </div>
 
           {loading ? (
-            <div className="rounded-2xl bg-white p-8 text-center text-gray-500 shadow-sm">
+            <div className="motion-card rounded-2xl bg-white p-8 text-center text-gray-500">
               Loading medications...
             </div>
           ) : (

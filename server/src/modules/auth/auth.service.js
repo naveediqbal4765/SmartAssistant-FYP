@@ -241,7 +241,7 @@ const login = async ({ email, password }) => {
 
   let linkedSenior = null;
   if (user.role === 'caregiver' && user.linkedSeniorId) {
-    linkedSenior = await User.findById(user.linkedSeniorId).select('name email');
+    linkedSenior = await User.findById(user.linkedSeniorId).select('name email phone location');
   }
 
   return {
@@ -260,7 +260,13 @@ const login = async ({ email, password }) => {
         dateOfBirth: user.dateOfBirth || null,
         linkedSeniorId: user.linkedSeniorId || null,
         linkedSenior: linkedSenior
-          ? { id: linkedSenior._id, name: linkedSenior.name, email: linkedSenior.email }
+          ? {
+              id: linkedSenior._id,
+              name: linkedSenior.name,
+              email: linkedSenior.email,
+              phone: linkedSenior.phone || '',
+              location: linkedSenior.location || null
+            }
           : null
       }
     }

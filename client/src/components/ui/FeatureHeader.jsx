@@ -16,7 +16,7 @@ export default function FeatureHeader({
             <ArrowLeft size={18} /> {backLabel}
           </Button>
         )}
-        <h1 className="text-3xl font-bold text-gray-900">{title}</h1>
+        <h1 className="text-3xl font-bold text-brand-primary">{title}</h1>
         {description && <p className="mt-1 text-gray-700">{description}</p>}
       </div>
       {actions && <div className="flex flex-wrap gap-3 sm:justify-end">{actions}</div>}

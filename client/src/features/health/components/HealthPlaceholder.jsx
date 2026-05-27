@@ -8,7 +8,6 @@ export default function HealthPlaceholder({ title, children }) {
   return (
     <FeaturePage
       title={title}
-      description="Feature under development"
       backLabel="Back to Dashboard"
       onBack={() => navigate('/dashboard')}
       maxWidth="max-w-4xl"

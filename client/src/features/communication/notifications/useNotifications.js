@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { getChatSocket } from '../chat/services/socket';
-import { playNotificationSound, playReminderSound } from '../audio/audioFeedback';
+import { playNotificationSound } from '../audio/audioFeedback';
 import {
   clearAllNotifications,
   deleteNotificationById,
@@ -88,7 +88,6 @@ export default function useNotifications() {
       setNotifications((current) => mergeNotifications(current, [notification]));
       if (isReminderNotification(notification)) {
         setReminderPopups((current) => mergeNotifications(current, [notification]));
-        playReminderSound();
         return;
       }
       playNotificationSound();

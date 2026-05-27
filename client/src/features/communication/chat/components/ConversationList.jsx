@@ -11,7 +11,7 @@ export default function ConversationList({
 }) {
   if (loading) {
     return (
-      <div className="overflow-hidden rounded-xl bg-white shadow-md shadow-gray-900/10">
+      <div className="motion-card overflow-hidden rounded-xl bg-white">
         {Array.from({ length: 5 }).map((_, index) => (
           <div key={index} className="border-b p-4 last:border-b-0">
             <div className="flex items-start gap-3">
@@ -36,7 +36,7 @@ export default function ConversationList({
   }
 
   return (
-    <div className="overflow-hidden rounded-xl bg-white shadow-md shadow-gray-900/10">
+    <div className="motion-card overflow-hidden rounded-xl bg-white">
       {conversations.map((conversation) => (
         <ConversationItem
           key={conversation.id}

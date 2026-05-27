@@ -13,7 +13,8 @@ export const createVitalsSnapshot = ({
   systolic,
   diastolic,
   oxygenLevel,
-  temperature
+  temperature,
+  activityStatus = 'Waiting'
 }) => ({
   deviceId,
   seniorId,
@@ -25,7 +26,8 @@ export const createVitalsSnapshot = ({
       diastolic
     },
     oxygenLevel,
-    temperature
+    temperature,
+    activityStatus
   }
 });
 
@@ -38,4 +40,5 @@ export const isValidVitalsSnapshot = (snapshot) => Boolean(
   && typeof snapshot?.vitals?.bloodPressure?.diastolic === 'number'
   && typeof snapshot?.vitals?.oxygenLevel === 'number'
   && typeof snapshot?.vitals?.temperature === 'number'
+  && typeof snapshot?.vitals?.activityStatus === 'string'
 );

@@ -7,10 +7,10 @@ export default function VitalsCard({ label, value, unit = '', helperText = '', t
   };
 
   return (
-    <div className={`rounded-2xl border p-5 shadow-sm ${toneClasses[tone] || toneClasses.green}`}>
+    <div className={`motion-card rounded-2xl border p-5 ${toneClasses[tone] || toneClasses.green}`}>
       <p className="text-sm font-semibold uppercase tracking-wide opacity-80">{label}</p>
       <div className="mt-3 flex items-end gap-2">
-        <span className="text-4xl font-black text-gray-900">{value}</span>
+        <span className="text-4xl font-black text-brand-primary">{value}</span>
         {unit && <span className="mb-1 text-lg font-bold text-gray-700">{unit}</span>}
       </div>
       {helperText && <p className="mt-3 text-sm font-medium text-gray-700">{helperText}</p>}

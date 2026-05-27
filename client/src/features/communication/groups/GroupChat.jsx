@@ -92,7 +92,7 @@ export default function GroupChat({
 
   if (!group) {
     return (
-      <div className="h-[70vh] rounded-xl bg-white shadow-lg shadow-gray-900/10">
+      <div className="motion-card h-[70vh] rounded-xl bg-white">
         <ChatSkeleton />
       </div>
     );
@@ -121,7 +121,7 @@ export default function GroupChat({
   };
 
   return (
-    <div className="motion-panel-in flex h-[70vh] flex-col rounded-xl bg-white shadow-xl shadow-gray-900/10">
+    <div className="motion-panel-in motion-card flex h-[70vh] flex-col rounded-xl bg-white">
       <div className="relative z-10 border-b bg-white p-4">
         <div className="flex items-start justify-between gap-4">
           <div>

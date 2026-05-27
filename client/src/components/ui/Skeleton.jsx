@@ -19,7 +19,7 @@ export function SkeletonLine({ width = 'full', className = '' }) {
 
 export function SkeletonCard({ className = '' }) {
   return (
-    <div className={`rounded-2xl border border-gray-100 bg-white p-6 shadow-sm shadow-gray-900/5 ${className}`}>
+    <div className={`motion-card rounded-2xl border border-gray-100 bg-white p-6 ${className}`}>
       <SkeletonBlock className="h-10 w-10 rounded-full" />
       <SkeletonLine width="lg" className="mt-5" />
       <SkeletonLine width="md" className="mt-3" />

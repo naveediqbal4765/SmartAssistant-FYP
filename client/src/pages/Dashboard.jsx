@@ -3,6 +3,7 @@ import axios from 'axios';
 import DashboardHome from './dashboard/DashboardHome';
 import { normalizeDashboardRole, roleConfig } from './dashboard/dashboardRoleConfig';
 import { DashboardSkeleton } from '../components/ui/Skeleton';
+import { getChatSocket } from '../features/communication/chat/services/socket';
 
 const getTimeGreeting = () => {
   const hour = new Date().getHours();
@@ -15,6 +16,7 @@ export default function Dashboard({ role }) {
   const normalizedRole = normalizeDashboardRole(role);
   const config = roleConfig[normalizedRole];
   const [linkedSenior, setLinkedSenior] = useState(null);
+  const linkedSeniorId = String(linkedSenior?._id || linkedSenior?.id || '');
 
   const loadDashboardContext = useCallback(async () => {
     if (normalizedRole !== 'caregiver') return;
@@ -37,6 +39,49 @@ export default function Dashboard({ role }) {
   useEffect(() => {
     loadDashboardContext();
   }, [loadDashboardContext]);
+
+  useEffect(() => {
+    if (normalizedRole !== 'caregiver' || !linkedSeniorId) return undefined;
+
+    const socket = getChatSocket();
+    const handleSeniorLocationUpdated = (payload) => {
+      if (String(payload?.userId || '') !== linkedSeniorId) return;
+
+      setLinkedSenior((current) => {
+        if (!current) return current;
+
+        const coordinates = [Number(payload.longitude), Number(payload.latitude)];
+        const currentCoordinates = current.location?.coordinates || [];
+        const currentUpdatedAt = current.location?.lastUpdated
+          ? new Date(current.location.lastUpdated).getTime()
+          : 0;
+        const nextUpdatedAt = payload.updatedAt ? new Date(payload.updatedAt).getTime() : Date.now();
+
+        if (
+          Number(currentCoordinates[0]) === coordinates[0] &&
+          Number(currentCoordinates[1]) === coordinates[1] &&
+          currentUpdatedAt === nextUpdatedAt
+        ) {
+          return current;
+        }
+
+        return {
+          ...current,
+          location: {
+            type: 'Point',
+            coordinates,
+            lastUpdated: payload.updatedAt
+          }
+        };
+      });
+    };
+
+    socket.on('SENIOR_LOCATION_UPDATED', handleSeniorLocationUpdated);
+
+    return () => {
+      socket.off('SENIOR_LOCATION_UPDATED', handleSeniorLocationUpdated);
+    };
+  }, [linkedSeniorId, normalizedRole]);
 
   const context = useMemo(() => ({
     linkedSenior

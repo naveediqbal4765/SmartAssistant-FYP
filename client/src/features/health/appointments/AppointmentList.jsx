@@ -27,10 +27,10 @@ export default function AppointmentList({
   return (
     <div className="space-y-3">
       {appointments.map((appointment) => (
-        <div key={appointment._id} className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+        <div key={appointment._id} className="motion-card rounded-2xl border border-gray-200 bg-white p-5">
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div>
-              <h3 className="text-xl font-bold text-gray-900">{appointment.title}</h3>
+              <h3 className="text-xl font-bold text-brand-primary">{appointment.title}</h3>
               <p className="mt-1 text-sm font-semibold text-green-700">
                 {appointment.date} at {formatTime(appointment.time)}
               </p>

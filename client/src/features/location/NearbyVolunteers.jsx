@@ -68,7 +68,7 @@ export default function NearbyVolunteers() {
   }, [loadNearbyVolunteers]);
 
   return (
-    <div className="rounded-2xl border border-blue-200 bg-white/90 p-5 shadow-sm">
+    <div className="motion-card rounded-2xl border border-blue-200 bg-white/90 p-5">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex gap-3">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-700">

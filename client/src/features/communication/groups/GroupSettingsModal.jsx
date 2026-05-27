@@ -68,7 +68,7 @@ export default function GroupSettingsModal({
         </div>
 
         {isAdmin && (
-          <form onSubmit={handleSubmit} className="mt-6 rounded-2xl border border-gray-200 p-4 shadow-sm shadow-gray-900/5">
+          <form onSubmit={handleSubmit} className="motion-card mt-6 rounded-2xl border border-gray-200 p-4">
             <h3 className="font-bold text-gray-900">Group Details</h3>
             <label className="mt-4 block text-sm font-semibold text-gray-700">
               Group name
@@ -92,7 +92,7 @@ export default function GroupSettingsModal({
           </form>
         )}
 
-        <section className="mt-6 rounded-2xl border border-gray-200 p-4 shadow-sm shadow-gray-900/5">
+        <section className="motion-card mt-6 rounded-2xl border border-gray-200 p-4">
           <div className="flex items-center justify-between gap-3">
             <h3 className="font-bold text-gray-900">Members</h3>
             {isAdmin && <Button size="sm" onClick={onOpenAddMember}>Add Member</Button>}
@@ -133,7 +133,7 @@ export default function GroupSettingsModal({
         </section>
 
         {isAdmin && (
-          <section className="mt-6 rounded-2xl border border-gray-200 p-4 shadow-sm shadow-gray-900/5">
+          <section className="motion-card mt-6 rounded-2xl border border-gray-200 p-4">
             <h3 className="mb-4 font-bold text-gray-900">Join Requests</h3>
             <GroupRequestsPanel
               requests={requests}

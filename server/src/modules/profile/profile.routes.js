@@ -5,6 +5,7 @@ const fs = require('fs');
 const auth = require('../../middleware/auth');
 const {
   getProfile,
+  getLinkedSeniorProfile,
   updateProfile,
   updateLocation,
   getPrivacy,
@@ -50,6 +51,7 @@ const upload = multer({
 });
 
 router.get('/profile', auth, getProfile);
+router.get('/profile/:userId', auth, getLinkedSeniorProfile);
 router.put('/profile', auth, updateProfile);
 router.put('/location', auth, updateLocation);
 
@@ -65,6 +67,7 @@ router.delete('/caregiver/:caregiverId', auth, unlinkCaregiver);
 router.get('/activities', auth, getActivities);
 
 router.get('/documents', auth, getDocuments);
+router.get('/documents/:targetUserId', auth, getDocuments);
 router.post('/documents', auth, upload.single('document'), uploadDocument);
 router.delete('/documents/:id', auth, deleteDocument);
 

@@ -4,24 +4,24 @@ import { useNavigate } from 'react-router-dom';
 import { resolveConversation } from '../chat/services/chatApi';
 import { markNotificationAsConsumed } from './notificationConsumption';
 import NotificationDropdown from './NotificationDropdown';
-import ReminderNotificationPopup from './ReminderNotificationPopup';
-import useNotifications from './useNotifications';
 import { overlayLayers } from '../../../components/ui/overlayLayers';
 
-export default function NotificationBell({ className = `fixed right-8 top-6 ${overlayLayers.dropdown}` }) {
+export default function NotificationBell({
+  className = `fixed right-8 top-6 ${overlayLayers.dropdown}`,
+  notificationState
+}) {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const containerRef = useRef(null);
   const {
     notifications,
-    reminderPopups,
     unreadCount,
     loading,
     error,
     markRead,
     deleteNotification,
     clearNotifications
-  } = useNotifications();
+  } = notificationState;
 
   useEffect(() => {
     if (!open) return undefined;
@@ -107,7 +107,6 @@ export default function NotificationBell({ className = `fixed right-8 top-6 ${ov
           onClearNotifications={clearNotifications}
         />
       )}
-      <ReminderNotificationPopup notifications={reminderPopups} onDismiss={markRead} />
     </div>
   );
 }

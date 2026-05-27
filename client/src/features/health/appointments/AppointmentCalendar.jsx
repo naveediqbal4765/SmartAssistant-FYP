@@ -42,7 +42,7 @@ export default function AppointmentCalendar({
   const currentMonth = visibleMonth.getMonth();
 
   return (
-    <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+    <section className="motion-card rounded-2xl border border-gray-200 bg-white p-5">
       <div className="mb-5 flex items-center justify-between">
         <button
           type="button"
@@ -51,7 +51,7 @@ export default function AppointmentCalendar({
         >
           Previous
         </button>
-        <h2 className="text-xl font-bold text-gray-900">{monthLabel(visibleMonth)}</h2>
+        <h2 className="text-xl font-bold text-brand-primary">{monthLabel(visibleMonth)}</h2>
         <button
           type="button"
           onClick={() => onChangeMonth?.(1)}
@@ -84,7 +84,7 @@ export default function AppointmentCalendar({
                 isSelected
                   ? 'border-green-600 bg-green-50 ring-2 ring-green-500'
                   : 'border-gray-200 bg-white hover:bg-gray-50'
-              } ${isCurrentMonth ? 'text-gray-900' : 'text-gray-400'}`}
+              } ${isCurrentMonth ? 'text-brand-primary' : 'text-gray-400'}`}
             >
               <div className="flex items-center justify-between">
                 <span className={`font-semibold ${isToday ? 'text-green-700' : ''}`}>

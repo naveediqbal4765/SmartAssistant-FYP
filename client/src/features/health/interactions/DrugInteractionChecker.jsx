@@ -143,7 +143,7 @@ export default function DrugInteractionChecker() {
 
   return (
     <div className="space-y-6">
-      <form onSubmit={handleSubmit} className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+      <form onSubmit={handleSubmit} className="motion-card rounded-2xl border border-gray-200 bg-white p-5">
         <div className="mb-4">
           <h2 className="text-xl font-bold text-gray-900">Check Drug Interactions</h2>
           <p className="mt-1 text-sm text-gray-500">
@@ -263,12 +263,12 @@ export default function DrugInteractionChecker() {
 
       {result && (
         <section className="space-y-5">
-          <div className={`rounded-2xl border p-5 shadow-sm ${severityStyles[severity] || severityStyles.LOW}`}>
+          <div className={`motion-card rounded-2xl border p-5 ${severityStyles[severity] || severityStyles.LOW}`}>
             <p className="text-sm font-semibold uppercase tracking-wide">Overall Severity</p>
             <h3 className="mt-2 text-3xl font-black">{severity}</h3>
           </div>
 
-          <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+          <div className="motion-card rounded-2xl border border-gray-200 bg-white p-5">
             <h3 className="mb-4 text-xl font-bold text-gray-900">Detected Conflicts</h3>
             {result.conflicts?.length ? (
               <div className="space-y-4">
@@ -294,7 +294,7 @@ export default function DrugInteractionChecker() {
             )}
           </div>
 
-          <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+          <div className="motion-card rounded-2xl border border-gray-200 bg-white p-5">
             <h3 className="mb-3 text-xl font-bold text-gray-900">{explanationTitle}</h3>
             <div className="space-y-3 text-sm leading-6 text-gray-700">
               <ReactMarkdown
@@ -321,7 +321,7 @@ export default function DrugInteractionChecker() {
           )}
 
           {!!result.recognizedMedications?.length && (
-            <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+            <div className="motion-card rounded-2xl border border-gray-200 bg-white p-5">
               <h3 className="mb-3 text-xl font-bold text-gray-900">Recognized Medicines</h3>
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                 {result.recognizedMedications.map((medicine) => (

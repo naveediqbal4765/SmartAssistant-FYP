@@ -12,6 +12,16 @@ const getProfile = async (req, res) => {
   }
 };
 
+const getLinkedSeniorProfile = async (req, res) => {
+  try {
+    const result = await profileService.getLinkedSeniorProfile(req.user, req.params.userId);
+    return res.status(result.status).json(result.body);
+  } catch (err) {
+    console.error('Linked senior profile fetch error:', err);
+    return res.status(500).json({ success: false, msg: 'Server error' });
+  }
+};
+
 const updateProfile = async (req, res) => {
   try {
     const result = await profileService.updateProfile(req.user, req.body);
@@ -101,7 +111,7 @@ const getActivities = async (req, res) => {
 
 const getDocuments = async (req, res) => {
   try {
-    const result = await profileService.getDocuments(req.user);
+    const result = await profileService.getDocuments(req.user, req.params.targetUserId);
     return res.status(result.status).json(result.body);
   } catch (err) {
     console.error('Document fetch error:', err);
@@ -141,6 +151,7 @@ const deleteAccount = async (req, res) => {
 
 module.exports = {
   getProfile,
+  getLinkedSeniorProfile,
   updateProfile,
   updateLocation,
   getPrivacy,

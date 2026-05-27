@@ -1,4 +1,5 @@
 const User = require('../../shared/models/User');
+const { emitSeniorLocationUpdated } = require('../communication/sockets/socket.manager');
 
 const FIVE_KM_METERS = 5000;
 const TEN_KM_METERS = 10000;
@@ -45,6 +46,10 @@ const updateUserLocation = async (user, payload) => {
   };
 
   await user.save();
+
+  if (user.role === 'elder') {
+    emitSeniorLocationUpdated({ senior: user, location: user.location });
+  }
 
   return {
     status: 200,

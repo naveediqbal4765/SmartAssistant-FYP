@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { ArrowLeft, Save, User, Phone, FileText, Trash2, LogOut, Shield, Activity, Users, Link2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import LocationStatusCard from '../features/location/LocationStatusCard';
 import NearbyVolunteers from '../features/location/NearbyVolunteers';
@@ -11,6 +11,8 @@ import StatusAlert from '../components/ui/StatusAlert';
 
 export default function Profile() {
   const navigate = useNavigate();
+  const { profileUserId } = useParams();
+  const isLinkedSeniorView = Boolean(profileUserId);
   
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -18,11 +20,13 @@ export default function Profile() {
   const [success, setSuccess] = useState('');
   
   const [profile, setProfile] = useState({
+    id: '',
     name: '',
     email: '',
     phone: '',
     address: '',
     dateOfBirth: '',
+    location: null
   });
 
   const [emergencyContacts, setEmergencyContacts] = useState([]);
@@ -63,7 +67,10 @@ export default function Profile() {
       const token = getAuthToken();
       if (!token) return;
 
-      const response = await axios.get('http://localhost:5000/api/user/profile', {
+      const profileUrl = profileUserId
+        ? `http://localhost:5000/api/user/profile/${profileUserId}`
+        : 'http://localhost:5000/api/user/profile';
+      const response = await axios.get(profileUrl, {
         headers: { 
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -73,18 +80,20 @@ export default function Profile() {
       if (response.data.success) {
         const userData = response.data.user;
         setProfile({
+          id: userData.id || userData._id || '',
           name: userData.name || '',
           email: userData.email || '',
           phone: userData.phone || '',
           address: userData.address || '',
           dateOfBirth: userData.dateOfBirth ? userData.dateOfBirth.split('T')[0] : '',
+          location: userData.location || null
         });
         setUserRole(userData.role || '');
         setLinkedSenior(userData.linkedSenior || null);
         setLinkedCaregivers(userData.linkedCaregivers || []);
         setPrivacySummary(userData.privacySettings || null);
 
-        if (userData.role === 'elder') {
+        if (userData.role === 'elder' && !isLinkedSeniorView) {
           try {
             const invitationResponse = await axios.get('http://localhost:5000/api/auth/senior/caregiver-link-code', {
               headers: {
@@ -104,22 +113,26 @@ export default function Profile() {
           setCaregiverInvitation(null);
         }
         
-        const updatedUser = { 
-          ...JSON.parse(localStorage.getItem('user') || '{}'), 
-          ...userData 
-        };
-        localStorage.setItem('user', JSON.stringify(updatedUser));
-      }
-      
-      const contactsResponse = await axios.get('http://localhost:5000/api/user/contacts', {
-        headers: { 
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+        if (!isLinkedSeniorView) {
+          const updatedUser = {
+            ...JSON.parse(localStorage.getItem('user') || '{}'),
+            ...userData
+          };
+          localStorage.setItem('user', JSON.stringify(updatedUser));
         }
-      });
-      
-      if (contactsResponse.data.success) {
-        setEmergencyContacts(contactsResponse.data.contacts || []);
+      }
+
+      if (!isLinkedSeniorView) {
+        const contactsResponse = await axios.get('http://localhost:5000/api/user/contacts', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (contactsResponse.data.success) {
+          setEmergencyContacts(contactsResponse.data.contacts || []);
+        }
       }
       
     } catch (err) {
@@ -133,23 +146,27 @@ export default function Profile() {
           navigate('/login');
         }, 2000);
       } else {
-        const userData = JSON.parse(localStorage.getItem('user') || '{}');
-        if (userData.name) {
-          setProfile({
-            name: userData.name || '',
-            email: userData.email || '',
-            phone: userData.phone || '',
-            address: userData.address || '',
-            dateOfBirth: userData.dateOfBirth || '',
-          });
+        if (!isLinkedSeniorView) {
+          const userData = JSON.parse(localStorage.getItem('user') || '{}');
+          if (userData.name) {
+            setProfile({
+              id: userData.id || userData._id || '',
+              name: userData.name || '',
+              email: userData.email || '',
+              phone: userData.phone || '',
+              address: userData.address || '',
+              dateOfBirth: userData.dateOfBirth || '',
+              location: userData.location || null
+            });
+          }
         }
-        setError('Could not load data from server. Using local data.');
+        setError(isLinkedSeniorView ? 'Could not load linked senior profile.' : 'Could not load data from server. Using local data.');
         setTimeout(() => setError(''), 3000);
       }
     } finally {
       setLoading(false);
     }
-  }, [navigate]);
+  }, [isLinkedSeniorView, navigate, profileUserId]);
 
   useEffect(() => {
     fetchUserData();
@@ -428,14 +445,19 @@ export default function Profile() {
     return new Date(expiresAt).toLocaleString();
   };
 
+  const openHealthVault = () => {
+    const targetUserId = isLinkedSeniorView ? profileUserId : profile.id;
+    navigate(targetUserId ? `/health/vault/${targetUserId}` : '/health/vault');
+  };
+
   if (loading) {
     return <LoadingState label="Loading profile..." />;
   }
 
   return (
     <FeaturePage
-      title="My Profile"
-      description={`${getRoleTitle()} profile, contacts, privacy, and health vault settings.`}
+      title={isLinkedSeniorView ? `${profile.name || 'Senior'}'s Profile` : 'My Profile'}
+      description={isLinkedSeniorView ? 'View-only linked senior profile.' : `${getRoleTitle()} profile, contacts, privacy, and health vault settings.`}
       backLabel="Back to Dashboard"
       onBack={() => navigate('/dashboard')}
       maxWidth="max-w-5xl"
@@ -446,8 +468,8 @@ export default function Profile() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Personal Information */}
           <FeatureCard className="p-6 sm:p-8">
-            <h2 className="text-2xl sm:text-3xl font-semibold mb-8 flex items-center gap-3">
-              <User size={32} className="text-blue-600" /> Personal Information
+            <h2 className="text-2xl sm:text-3xl font-semibold mb-8 flex items-center gap-3 text-brand-primary">
+              <User size={32} className="text-brand-primary" /> Personal Information
             </h2>
 
             <div className="space-y-6">
@@ -457,6 +479,7 @@ export default function Profile() {
                   type="text" 
                   value={profile.name}
                   onChange={(e) => setProfile({...profile, name: e.target.value})}
+                  disabled={isLinkedSeniorView}
                   className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                 />
               </div>
@@ -479,6 +502,7 @@ export default function Profile() {
                   value={profile.phone}
                   onChange={(e) => setProfile({...profile, phone: e.target.value})}
                   placeholder="+92 300 1234567"
+                  disabled={isLinkedSeniorView}
                   className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                 />
               </div>
@@ -489,6 +513,7 @@ export default function Profile() {
                   type="date" 
                   value={profile.dateOfBirth}
                   onChange={(e) => setProfile({...profile, dateOfBirth: e.target.value})}
+                  disabled={isLinkedSeniorView}
                   className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                 />
               </div>
@@ -500,22 +525,25 @@ export default function Profile() {
                   onChange={(e) => setProfile({...profile, address: e.target.value})}
                   placeholder="Enter your full address"
                   rows={3}
+                  disabled={isLinkedSeniorView}
                   className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                 />
               </div>
             </div>
 
-            <button 
-              onClick={saveProfile}
-              disabled={saving}
-              className="w-full mt-8 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-semibold text-lg disabled:opacity-50 flex items-center justify-center gap-3"
-            >
-              <Save size={24} /> {saving ? 'Saving...' : 'Save Profile'}
-            </button>
+            {!isLinkedSeniorView && (
+              <button
+                onClick={saveProfile}
+                disabled={saving}
+                className="w-full mt-8 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-semibold text-lg disabled:opacity-50 flex items-center justify-center gap-3"
+              >
+                <Save size={24} /> {saving ? 'Saving...' : 'Save Profile'}
+              </button>
+            )}
           </FeatureCard>
 
           {/* Emergency Contacts */}
-          <FeatureCard className="p-6 sm:p-8">
+          {!isLinkedSeniorView && <FeatureCard className="p-6 sm:p-8">
             <h2 className="text-2xl sm:text-3xl font-semibold mb-6 flex items-center gap-3">
               <Phone size={32} className="text-red-600" /> Emergency Contacts
             </h2>
@@ -580,30 +608,34 @@ export default function Profile() {
                 Add Contact
               </button>
             </div>
-          </FeatureCard>
+          </FeatureCard>}
         </div>
 
         {(userRole === 'elder' || userRole === 'volunteer') && (
           <FeatureCard className="mt-8 p-6 sm:p-8">
             <h2 className="text-2xl font-semibold mb-6 flex items-center gap-3">
-              <Activity size={32} className="text-emerald-700" />
-              Location Awareness
+              <Activity size={32} className="text-brand-primary" />
+              <span className="text-brand-primary">Location Awareness</span>
             </h2>
             <div className="space-y-5">
               <LocationStatusCard
-                title={userRole === 'elder' ? 'Senior Location Status' : 'Volunteer Location Status'}
+                title={isLinkedSeniorView ? 'Senior Live Location' : userRole === 'elder' ? 'Senior Location Status' : 'Volunteer Location Status'}
                 description={
-                  userRole === 'elder'
+                  isLinkedSeniorView
+                    ? "View-only access to the senior's latest saved location through Google Maps."
+                    : userRole === 'elder'
                     ? 'Update your location so emergency alerts can reach nearby volunteers and your linked caregivers.'
                     : 'Update your location so nearby task and emergency routing can include you accurately.'
                 }
+                readOnly={isLinkedSeniorView}
+                location={isLinkedSeniorView ? profile.location : null}
               />
-              {userRole === 'volunteer' && <NearbyVolunteers />}
+              {userRole === 'volunteer' && !isLinkedSeniorView && <NearbyVolunteers />}
             </div>
           </FeatureCard>
         )}
 
-        {(userRole === 'elder' || userRole === 'caregiver') && (
+        {!isLinkedSeniorView && (userRole === 'elder' || userRole === 'caregiver') && (
           <FeatureCard className="mt-8 p-6 sm:p-8">
             <h2 className="text-2xl font-semibold mb-6 flex items-center gap-3">
               <Users size={32} className="text-green-700" />
@@ -620,8 +652,8 @@ export default function Profile() {
                   </div>
                   <LocationStatusCard
                     readOnly
-                    title="Senior Location Preview"
-                    description="Senior location is used for emergency routing. Exact coordinates are not exposed in this profile response yet."
+                    title="Senior Live Location"
+                    description="View-only access to the senior's latest saved location through Google Maps."
                     location={linkedSenior.location || null}
                   />
                 </div>
@@ -711,11 +743,11 @@ export default function Profile() {
           </FeatureCard>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+        {!isLinkedSeniorView && <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
           <button
             type="button"
             onClick={() => navigate('/privacy')}
-            className="rounded-2xl border border-gray-200 bg-white p-6 text-left shadow-sm transition hover:bg-gray-50"
+            className="motion-card rounded-2xl border border-gray-200 bg-white p-6 text-left hover:bg-gray-50"
           >
             <div className="flex items-center gap-3 mb-2">
               <Shield size={28} className="text-purple-600" />
@@ -731,7 +763,7 @@ export default function Profile() {
           <button
             type="button"
             onClick={() => navigate('/activity-logs')}
-            className="rounded-2xl border border-gray-200 bg-white p-6 text-left shadow-sm transition hover:bg-gray-50"
+            className="motion-card rounded-2xl border border-gray-200 bg-white p-6 text-left hover:bg-gray-50"
           >
             <div className="flex items-center gap-3 mb-2">
               <Activity size={28} className="text-teal-600" />
@@ -739,10 +771,10 @@ export default function Profile() {
             </div>
             <p className="text-gray-700 text-sm">View logins, profile updates, Digital Health Vault activity, and help requests</p>
           </button>
-        </div>
+        </div>}
 
         {/* Digital Health Vault */}
-        <FeatureCard className="mt-8 p-6 sm:p-8">
+        {userRole === 'elder' && !isLinkedSeniorView && <FeatureCard className="mt-8 p-6 sm:p-8">
           <h2 className="text-2xl sm:text-3xl font-semibold mb-6 flex items-center gap-3">
             <FileText size={32} className="text-indigo-600" /> Digital Health Vault
           </h2>
@@ -750,15 +782,15 @@ export default function Profile() {
             📄 Store your medical reports, prescriptions, and ID cards securely.
           </p>
           <button 
-            onClick={() => navigate('/health/vault')} 
+            onClick={openHealthVault}
             className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-semibold transition"
           >
             📄 Go to Digital Health Vault
           </button>
-        </FeatureCard>
+        </FeatureCard>}
 
         {/* Account Deletion Section */}
-        <FeatureCard variant="danger" className="mt-8 p-6 sm:p-8">
+        {!isLinkedSeniorView && <FeatureCard variant="danger" className="mt-8 p-6 sm:p-8">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
               <span className="text-red-600 text-2xl">⚠️</span>
@@ -784,7 +816,7 @@ export default function Profile() {
           >
             <span>🗑️</span> Delete My Account
           </button>
-        </FeatureCard>
+        </FeatureCard>}
     </FeaturePage>
   );
 }

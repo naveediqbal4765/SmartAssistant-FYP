@@ -26,14 +26,14 @@ export default function MedicationList({
   return (
     <div className="space-y-3">
       {medications.map((medication) => (
-        <div key={medication._id} className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+        <div key={medication._id} className="motion-card rounded-2xl border border-gray-200 bg-white p-5">
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div>
-              <h3 className="text-xl font-bold text-gray-900">{medication.name}</h3>
+              <h3 className="text-xl font-bold text-brand-primary">{medication.name}</h3>
               <div className="mt-2 grid grid-cols-1 gap-2 text-sm text-gray-700 sm:grid-cols-3">
-                <p><span className="font-semibold text-gray-900">Dosage:</span> {medication.dosage}</p>
-                <p><span className="font-semibold text-gray-900">Frequency:</span> {medication.frequency}</p>
-                <p><span className="font-semibold text-gray-900">Time:</span> {formatTime(medication.time)}</p>
+                <p><span className="font-semibold text-brand-primary">Dosage:</span> {medication.dosage}</p>
+                <p><span className="font-semibold text-brand-primary">Frequency:</span> {medication.frequency}</p>
+                <p><span className="font-semibold text-brand-primary">Time:</span> {formatTime(medication.time)}</p>
               </div>
               {medication.notes && (
                 <p className="mt-3 rounded-xl bg-gray-50 p-3 text-sm text-gray-700">{medication.notes}</p>

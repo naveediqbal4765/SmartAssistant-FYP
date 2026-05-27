@@ -1,4 +1,5 @@
 const fs = require('fs');
+const mongoose = require('mongoose');
 const User = require('../../shared/models/User');
 const ActivityLog = require('../../shared/models/ActivityLog');
 const Document = require('../../shared/models/Document');
@@ -32,7 +33,7 @@ const getProfile = async (user) => {
   let linkedCaregivers = [];
 
   if (user.role === 'caregiver' && user.linkedSeniorId) {
-    linkedSenior = await User.findById(user.linkedSeniorId).select('name email phone');
+    linkedSenior = await User.findById(user.linkedSeniorId).select('name email phone location');
   }
 
   if (user.role === 'elder') {
@@ -61,6 +62,47 @@ const getProfile = async (user) => {
         linkedSenior,
         linkedCaregivers,
         privacySettings: user.privacySettings || defaultPrivacySettings
+      }
+    }
+  };
+};
+
+const getLinkedSeniorProfile = async (user, seniorId) => {
+  if (user.role !== 'caregiver' || !user.linkedSeniorId) {
+    return { status: 403, body: { success: false, msg: 'Linked senior access is only available to caregivers' } };
+  }
+
+  if (String(user.linkedSeniorId) !== String(seniorId)) {
+    return { status: 403, body: { success: false, msg: 'You can only view your linked senior profile' } };
+  }
+
+  const senior = await User.findOne({ _id: seniorId, role: 'elder' })
+    .select('name email phone address dateOfBirth location privacySettings');
+
+  if (!senior) {
+    return { status: 404, body: { success: false, msg: 'Linked senior not found' } };
+  }
+
+  await logActivity(user._id, 'linked_senior_profile_view', `Viewed linked senior profile: ${senior._id}`);
+
+  return {
+    status: 200,
+    body: {
+      success: true,
+      readOnly: true,
+      user: {
+        id: senior._id,
+        name: senior.name,
+        email: senior.email,
+        role: senior.role,
+        phone: senior.phone || '',
+        address: senior.address || '',
+        dateOfBirth: senior.dateOfBirth || null,
+        location: senior.location || null,
+        linkedSeniorId: null,
+        linkedSenior: null,
+        linkedCaregivers: [],
+        privacySettings: senior.privacySettings || defaultPrivacySettings
       }
     }
   };
@@ -215,11 +257,44 @@ const getActivities = async (user, query) => {
   return { status: 200, body: { success: true, activities } };
 };
 
-const getDocuments = async (user) => {
-  const documents = await Document.find({ userId: user._id })
+const resolveVaultSubject = (user, targetUserId) => {
+  const subjectUserId = targetUserId || user._id;
+  const subjectId = String(subjectUserId);
+  const userId = String(user._id);
+
+  if (!mongoose.Types.ObjectId.isValid(subjectId)) {
+    return { allowed: false };
+  }
+
+  if (user.role === 'elder' && subjectId === userId) {
+    return { allowed: true, subjectUserId };
+  }
+
+  if (user.role === 'caregiver' && user.linkedSeniorId && subjectId === String(user.linkedSeniorId)) {
+    return { allowed: true, subjectUserId, readOnly: true };
+  }
+
+  return { allowed: false };
+};
+
+const getDocuments = async (user, targetUserId = null) => {
+  const vaultSubject = resolveVaultSubject(user, targetUserId);
+  if (!vaultSubject.allowed) {
+    return { status: 403, body: { success: false, msg: 'You do not have access to this Digital Health Vault' } };
+  }
+
+  const documents = await Document.find({ userId: vaultSubject.subjectUserId })
     .sort({ createdAt: -1 });
 
-  return { status: 200, body: { success: true, documents } };
+  return {
+    status: 200,
+    body: {
+      success: true,
+      documents,
+      subjectUserId: vaultSubject.subjectUserId,
+      readOnly: Boolean(vaultSubject.readOnly)
+    }
+  };
 };
 
 const uploadDocument = async (user, payload, file) => {
@@ -303,6 +378,7 @@ const deleteAccount = async (user) => {
 
 module.exports = {
   getProfile,
+  getLinkedSeniorProfile,
   updateProfile,
   getPrivacy,
   updatePrivacy,

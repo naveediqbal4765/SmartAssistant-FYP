@@ -47,7 +47,7 @@ export default function MedicationForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+    <form onSubmit={handleSubmit} className="motion-card rounded-2xl border border-gray-200 bg-white p-5">
       <div className="mb-4">
         <h2 className="text-xl font-bold text-gray-900">
           {editingMedication ? 'Edit Medication' : 'Add Medication'}

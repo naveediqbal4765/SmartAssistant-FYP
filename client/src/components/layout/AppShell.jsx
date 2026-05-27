@@ -1,6 +1,7 @@
 import AppHeader from './AppHeader';
 import { useEffect, useMemo } from 'react';
 import { useLocation, useNavigationType } from 'react-router-dom';
+import { useNotificationState } from '../../features/communication/notifications/NotificationContext';
 
 const routeDepth = (pathname) => {
   if (pathname === '/dashboard') return 0;
@@ -26,6 +27,7 @@ const getPageMotionClass = (pathname, navigationType) => {
 export default function AppShell({ children, role, onLogout, exiting = false }) {
   const location = useLocation();
   const navigationType = useNavigationType();
+  const notificationState = useNotificationState();
   const isAuthEntry = typeof window !== 'undefined'
     && sessionStorage.getItem('navigation:authEntry') === 'true';
   const pageMotionClass = useMemo(
@@ -40,7 +42,7 @@ export default function AppShell({ children, role, onLogout, exiting = false }) 
 
   return (
     <div className={`min-h-screen bg-brand-surface ${exiting ? 'motion-auth-exit' : 'motion-auth-enter'}`}>
-      <AppHeader role={role} onLogout={onLogout} />
+      <AppHeader role={role} onLogout={onLogout} notificationState={notificationState} />
       <main className={pageMotionClass}>{children}</main>
     </div>
   );

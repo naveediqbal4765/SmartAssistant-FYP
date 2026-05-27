@@ -15,21 +15,30 @@ export function CallStateProvider({ children }) {
   }, []);
 
   const resetCallState = useCallback(() => {
-    stopCallSound();
     setIncomingCall(null);
     updateCallStatus('idle');
   }, [updateCallStatus]);
 
   const markCallConnecting = useCallback(() => {
-    stopCallSound();
     updateCallStatus('connecting');
   }, [updateCallStatus]);
 
   const markCallInProgress = useCallback(() => {
-    stopCallSound();
     setIncomingCall(null);
     updateCallStatus('in-call');
   }, [updateCallStatus]);
+
+  useEffect(() => {
+    const shouldRing = Boolean(incomingCall) && callStatus === 'ringing';
+
+    if (shouldRing) {
+      startCallSound();
+      return () => stopCallSound();
+    }
+
+    stopCallSound();
+    return undefined;
+  }, [callStatus, incomingCall]);
 
   useEffect(() => {
     const socket = getCallSocket();
@@ -41,17 +50,28 @@ export function CallStateProvider({ children }) {
       }
 
       setIncomingCall({ fromUserId, fromName, offer, callType });
-      startCallSound();
       updateCallStatus('ringing');
     };
 
+    const handleTerminalCallEvent = () => {
+      resetCallState();
+    };
+
     socket.on('call-user', handleIncomingCall);
+    socket.on('call-accepted', handleTerminalCallEvent);
+    socket.on('end-call', handleTerminalCallEvent);
+    socket.on('call-error', handleTerminalCallEvent);
+    socket.on('disconnect', handleTerminalCallEvent);
 
     return () => {
       stopCallSound();
       socket.off('call-user', handleIncomingCall);
+      socket.off('call-accepted', handleTerminalCallEvent);
+      socket.off('end-call', handleTerminalCallEvent);
+      socket.off('call-error', handleTerminalCallEvent);
+      socket.off('disconnect', handleTerminalCallEvent);
     };
-  }, [updateCallStatus]);
+  }, [resetCallState, updateCallStatus]);
 
   const value = useMemo(() => ({
     incomingCall,

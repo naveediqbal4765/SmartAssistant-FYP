@@ -1,4 +1,3 @@
-import { useNavigate } from 'react-router-dom';
 import CallReminderPanel from '../../components/CallReminderPanel';
 import LocationStatusCard from '../../features/location/LocationStatusCard';
 import NearbyVolunteers from '../../features/location/NearbyVolunteers';
@@ -36,35 +35,18 @@ function VolunteerReadinessPanel() {
 }
 
 function CaregiverAlertCenter({ linkedSenior }) {
-  const navigate = useNavigate();
-
   return (
     <RoleStabilityPanel
       title="Caregiver Alert Center"
       description="You receive senior emergency and task alerts through the global alert banner. Location controls stay with the senior."
     >
       {linkedSenior ? (
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-          <div className="rounded-2xl border border-green-200 bg-white/90 p-5 shadow-sm">
-            <h4 className="text-lg font-semibold text-gray-900">Linked Senior</h4>
-            <p className="mt-3 font-semibold text-gray-900">{linkedSenior.name}</p>
-            <p className="text-sm text-gray-700">{linkedSenior.email}</p>
-            {linkedSenior.phone && <p className="text-sm text-gray-700">Phone: {linkedSenior.phone}</p>}
-            <button
-              type="button"
-              onClick={() => navigate('/profile')}
-              className="mt-5 rounded-xl bg-green-700 px-5 py-3 font-semibold text-white transition hover:bg-green-800"
-            >
-              View Senior Details
-            </button>
-          </div>
-          <LocationStatusCard
-            readOnly
-            title="Senior Location Preview"
-            description="Emergency routing uses the senior location. Exact coordinates appear only when exposed by profile data."
-            location={linkedSenior.location || null}
-          />
-        </div>
+        <LocationStatusCard
+          readOnly
+          title="Senior Live Location"
+          description="View-only access to the senior's latest saved location. Location controls stay with the senior."
+          location={linkedSenior.location || null}
+        />
       ) : (
         <div className="rounded-2xl border border-yellow-200 bg-yellow-50 p-5 text-yellow-800">
           No senior is linked to this caregiver account yet.

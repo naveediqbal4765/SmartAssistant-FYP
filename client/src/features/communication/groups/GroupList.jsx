@@ -111,7 +111,7 @@ export default function GroupList({
 }) {
   return (
     <div className="space-y-4">
-      <div className="rounded-xl bg-white shadow-xl shadow-gray-900/10">
+      <div className="motion-card rounded-xl bg-white">
         <div className="border-b p-4 font-bold">My Groups</div>
         {!groups.length && <div className="p-4 text-gray-500">No groups yet.</div>}
         {groups.map((group) => (
@@ -127,7 +127,7 @@ export default function GroupList({
         ))}
       </div>
 
-      <div className="rounded-xl bg-white shadow-lg shadow-gray-900/10">
+      <div className="motion-card rounded-xl bg-white">
         <div className="border-b p-4 font-bold">Discover Groups</div>
         {!discoverableGroups.length && <div className="p-4 text-gray-500">No groups to join.</div>}
         {discoverableGroups.map((group) => {

@@ -21,7 +21,20 @@ body {
 
 /* Cards used in dashboard */
 .senior-card {
-  @apply bg-white p-8 rounded-3xl shadow-xl border border-gray-100;
+  @apply bg-white p-8 rounded-3xl border border-gray-100;
+  transition:
+    transform var(--motion-standard) var(--motion-ease-standard),
+    box-shadow var(--motion-standard) var(--motion-ease-standard);
+  box-shadow:
+    0 12px 30px rgb(15 23 42 / 0.08),
+    0 2px 8px rgb(15 23 42 / 0.04);
+}
+
+.senior-card:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    0 20px 48px rgb(15 23 42 / 0.12),
+    0 8px 20px rgb(15 23 42 / 0.06);
 }
 
 /* High contrast mode for elderly users */
@@ -284,8 +297,22 @@ input, select, textarea {
     box-shadow var(--motion-standard) var(--motion-ease-standard),
     border-color var(--motion-fast) var(--motion-ease-standard),
     background-color var(--motion-fast) var(--motion-ease-standard);
+  box-shadow:
+    0 12px 30px rgb(15 23 42 / 0.08),
+    0 2px 8px rgb(15 23 42 / 0.04);
+  will-change: transform, box-shadow;
 }
 
 .motion-card:hover {
-  transform: translateY(-2px);
+  transform: translateY(-3px);
+  box-shadow:
+    0 20px 48px rgb(15 23 42 / 0.12),
+    0 8px 20px rgb(15 23 42 / 0.06);
+}
+
+.motion-card-active {
+  box-shadow:
+    0 16px 38px rgb(15 23 42 / 0.10),
+    0 4px 14px rgb(15 23 42 / 0.05);
+  transform: translateY(-1px);
 }

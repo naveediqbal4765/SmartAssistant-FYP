@@ -30,18 +30,22 @@ export default function useWebRTC({ onCallEnded, useGlobalIncomingCall = false }
   const [muted, setMuted] = useState(false);
   const [cameraOn, setCameraOn] = useState(false);
   const [error, setError] = useState('');
+  const globalIncomingCall = globalCallState?.incomingCall;
+  const globalResetCallState = globalCallState?.resetCallState;
+  const globalMarkCallConnecting = globalCallState?.markCallConnecting;
+  const globalMarkCallInProgress = globalCallState?.markCallInProgress;
   const activeIncomingCall = useGlobalIncomingCall && globalCallState
-    ? globalCallState.incomingCall
+    ? globalIncomingCall
     : incomingCall;
 
   const clearIncomingCall = useCallback(() => {
-    if (useGlobalIncomingCall && globalCallState) {
-      globalCallState.resetCallState();
+    if (useGlobalIncomingCall && globalResetCallState) {
+      globalResetCallState();
       return;
     }
 
     setIncomingCall(null);
-  }, [globalCallState, useGlobalIncomingCall]);
+  }, [globalResetCallState, useGlobalIncomingCall]);
 
   const stopTimer = useCallback(() => {
     if (durationTimerRef.current) {
@@ -221,7 +225,7 @@ export default function useWebRTC({ onCallEnded, useGlobalIncomingCall = false }
     try {
       setError('');
       setCallState('connecting');
-      globalCallState?.markCallConnecting();
+      globalMarkCallConnecting?.();
       const nextCallType = activeIncomingCall.callType || 'audio';
       const isVideoCall = nextCallType === 'video';
       setCallType(nextCallType);
@@ -237,8 +241,8 @@ export default function useWebRTC({ onCallEnded, useGlobalIncomingCall = false }
       const answer = await peer.createAnswer();
       await peer.setLocalDescription(answer);
       emitCallAccepted({ toUserId: activeIncomingCall.fromUserId, answer });
-      if (useGlobalIncomingCall && globalCallState) {
-        globalCallState.markCallInProgress();
+      if (useGlobalIncomingCall && globalMarkCallInProgress) {
+        globalMarkCallInProgress();
       } else {
         setIncomingCall(null);
       }
@@ -248,7 +252,15 @@ export default function useWebRTC({ onCallEnded, useGlobalIncomingCall = false }
       setError('Could not accept call');
       cleanup();
     }
-  }, [activeIncomingCall, cleanup, createPeer, globalCallState, startTimer, useGlobalIncomingCall]);
+  }, [
+    activeIncomingCall,
+    cleanup,
+    createPeer,
+    globalMarkCallConnecting,
+    globalMarkCallInProgress,
+    startTimer,
+    useGlobalIncomingCall
+  ]);
 
   const rejectIncomingCall = useCallback(() => {
     if (activeIncomingCall?.fromUserId) {

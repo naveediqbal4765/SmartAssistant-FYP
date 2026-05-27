@@ -92,6 +92,37 @@ const emitGroupUpdated = ({ group, removedUserId }) => {
   }
 };
 
+const emitSeniorLocationUpdated = ({ senior, location }) => {
+  if (!senior || !location) return;
+
+  const [lng, lat] = location.coordinates || [];
+  const payload = {
+    userId: String(senior._id),
+    latitude: Number(lat),
+    longitude: Number(lng),
+    updatedAt: location.lastUpdated || new Date()
+  };
+
+  emitToUser(String(senior._id), 'SENIOR_LOCATION_UPDATED', payload);
+  (senior.linkedCaregivers || []).forEach((caregiverId) => {
+    emitToUser(String(caregiverId), 'SENIOR_LOCATION_UPDATED', payload);
+  });
+};
+
+const emitSeniorTelemetryUpdated = ({ senior, telemetry }) => {
+  if (!senior || !telemetry) return;
+
+  const payload = {
+    userId: String(senior._id),
+    ...telemetry
+  };
+
+  emitToUser(String(senior._id), 'SENIOR_TELEMETRY_UPDATED', payload);
+  (senior.linkedCaregivers || []).forEach((caregiverId) => {
+    emitToUser(String(caregiverId), 'SENIOR_TELEMETRY_UPDATED', payload);
+  });
+};
+
 const emitConversationDeleted = ({ userId, conversationId, chatType }) => {
   emitToUser(String(userId), 'conversation-deleted', {
     conversationId: String(conversationId),
@@ -110,5 +141,7 @@ module.exports = {
   emitItemReactionUpdated,
   emitGroupItemReactionUpdated,
   emitGroupUpdated,
+  emitSeniorLocationUpdated,
+  emitSeniorTelemetryUpdated,
   emitConversationDeleted
 };

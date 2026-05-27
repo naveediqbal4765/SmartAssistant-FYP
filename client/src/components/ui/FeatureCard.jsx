@@ -8,7 +8,7 @@ const variants = {
 
 export default function FeatureCard({ children, variant = 'default', className = '' }) {
   return (
-    <section className={`motion-card rounded-2xl border p-6 shadow-sm ${variants[variant] || variants.default} ${className}`}>
+    <section className={`motion-card rounded-2xl border p-6 ${variants[variant] || variants.default} ${className}`}>
       {children}
     </section>
   );

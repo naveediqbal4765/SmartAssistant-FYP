@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { FileText, Upload, Trash2, Eye, Plus, X, Loader } from 'lucide-react';
 import Button from '../components/ui/Button';
@@ -11,10 +11,13 @@ import StatusAlert from '../components/ui/StatusAlert';
 
 export default function DocumentVault() {
   const navigate = useNavigate();
+  const { targetUserId } = useParams();
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [showUpload, setShowUpload] = useState(false);
+  const [readOnly, setReadOnly] = useState(false);
+  const [accessDenied, setAccessDenied] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   
@@ -35,27 +38,38 @@ export default function DocumentVault() {
 
   useEffect(() => {
     fetchDocuments();
-  }, []);
+  }, [targetUserId]);
 
   const fetchDocuments = async () => {
     try {
+      setAccessDenied(false);
+      setError('');
       const token = localStorage.getItem('token');
       if (!token) {
         navigate('/login');
         return;
       }
 
-      const response = await axios.get('http://localhost:5000/api/user/documents', {
+      const documentUrl = targetUserId
+        ? `http://localhost:5000/api/user/documents/${targetUserId}`
+        : 'http://localhost:5000/api/user/documents';
+      const response = await axios.get(documentUrl, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
       if (response.data.success) {
         setDocuments(response.data.documents || []);
+        setReadOnly(Boolean(response.data.readOnly));
       }
     } catch (err) {
       console.error('Fetch error:', err);
       if (err.response?.status === 401) {
         navigate('/login');
+      } else if (err.response?.status === 403) {
+        setReadOnly(true);
+        setAccessDenied(true);
+        setDocuments([]);
+        setError(err.response?.data?.msg || 'You do not have access to this Digital Health Vault');
       } else {
         setError('Failed to load Digital Health Vault files');
       }
@@ -65,6 +79,8 @@ export default function DocumentVault() {
   };
 
   const handleFileSelect = (e) => {
+    if (readOnly) return;
+
     const file = e.target.files[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
@@ -77,6 +93,8 @@ export default function DocumentVault() {
   };
 
   const handleUpload = async () => {
+    if (readOnly) return;
+
     if (!newDocument.title) {
       setError('Please enter a vault item title');
       return;
@@ -124,6 +142,8 @@ export default function DocumentVault() {
   };
 
   const deleteDocument = async (id) => {
+    if (readOnly) return;
+
     if (!window.confirm('Are you sure you want to delete this Digital Health Vault item?')) return;
 
     try {
@@ -157,14 +177,21 @@ export default function DocumentVault() {
     return <LoadingState label="Loading Digital Health Vault..." />;
   }
 
+  const pageDescription = readOnly
+    ? "Caregiver view only. You can view the assigned senior's documents but cannot edit them."
+    : 'Store your medical records and prescriptions securely.';
+  const cardDescription = readOnly
+    ? "Assigned senior's documents"
+    : 'Store your medical records and prescriptions securely.';
+
   return (
     <FeaturePage
       title="Digital Health Vault"
-      description="Store your medical records and prescriptions securely."
-      backLabel="Back to Profile"
-      onBack={() => navigate('/profile')}
+      description={pageDescription}
+      backLabel="Back to Dashboard"
+      onBack={() => navigate('/dashboard')}
       maxWidth="max-w-4xl"
-      actions={(
+      actions={!readOnly && !accessDenied && (
         <Button onClick={() => setShowUpload(!showUpload)}>
           {showUpload ? <X size={20} /> : <Plus size={20} />}
           {showUpload ? 'Cancel' : 'Upload'}
@@ -178,8 +205,8 @@ export default function DocumentVault() {
                 <FileText size={28} className="text-indigo-600" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Digital Health Vault</h1>
-                <p className="text-gray-500">Store your medical records & prescriptions securely</p>
+                <h1 className="text-2xl font-bold text-brand-primary">Digital Health Vault</h1>
+                <p className="text-gray-700">{cardDescription}</p>
               </div>
             </div>
           </div>
@@ -188,7 +215,7 @@ export default function DocumentVault() {
           <StatusAlert variant="success">{success}</StatusAlert>
 
           {/* Upload Form */}
-          {showUpload && (
+          {!readOnly && !accessDenied && showUpload && (
             <div className="bg-gray-50 rounded-xl p-6 mb-6 border-2 border-dashed border-gray-300">
               <h3 className="font-semibold text-lg mb-4">Upload New Vault Item</h3>
               <div className="space-y-4">
@@ -258,19 +285,24 @@ export default function DocumentVault() {
           )}
 
           {/* Digital Health Vault List */}
-          {documents.length === 0 ? (
+          {accessDenied ? (
+            <EmptyState
+              title="Vault access unavailable"
+              description="You do not have permission to view this Digital Health Vault."
+            />
+          ) : documents.length === 0 ? (
             <EmptyState
               title="No Digital Health Vault items yet"
-              description='Click "Upload" to add your medical reports and prescriptions.'
+              description={readOnly ? 'No Digital Health Vault items are available yet.' : 'Click "Upload" to add your medical reports and prescriptions.'}
             />
           ) : (
             <div className="space-y-3">
               {documents.map((doc) => (
-                <div key={doc._id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:shadow-md transition">
+                <div key={doc._id} className="motion-card flex items-center justify-between p-4 bg-gray-50 rounded-xl">
                   <div className="flex items-center gap-3 flex-1">
                     <FileText size={28} className="text-indigo-500" />
                     <div className="flex-1">
-                      <p className="font-semibold text-gray-900">{doc.title}</p>
+                      <p className="font-semibold text-brand-primary">{doc.title}</p>
                       <div className="flex gap-3 text-sm text-gray-500">
                         <span>{getTypeLabel(doc.type)}</span>
                         <span>•</span>
@@ -287,13 +319,15 @@ export default function DocumentVault() {
                     >
                       <Eye size={20} />
                     </button>
-                    <button
-                      onClick={() => deleteDocument(doc._id)}
-                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
-                      title="Delete"
-                    >
-                      <Trash2 size={20} />
-                    </button>
+                    {!readOnly && (
+                      <button
+                        onClick={() => deleteDocument(doc._id)}
+                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
+                        title="Delete"
+                      >
+                        <Trash2 size={20} />
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}

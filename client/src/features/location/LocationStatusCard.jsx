@@ -16,6 +16,19 @@ const formatCoordinates = (location) => {
   return `${Number(lat).toFixed(5)}, ${Number(lng).toFixed(5)}`;
 };
 
+const getGoogleMapsUrl = (location) => {
+  const [lng, lat] = location?.coordinates || [];
+  if (!Number.isFinite(Number(lat)) || !Number.isFinite(Number(lng))) {
+    return '';
+  }
+
+  if (Number(lat) === 0 && Number(lng) === 0) {
+    return '';
+  }
+
+  return `https://www.google.com/maps?q=${Number(lat)},${Number(lng)}`;
+};
+
 const formatUpdatedAt = (value) => {
   if (!value) return 'Not updated yet';
   return new Date(value).toLocaleString();
@@ -46,19 +59,20 @@ export default function LocationStatusCard({
   });
 
   const activeLocation = readOnly ? readOnlyLocation : (syncedLocation || location);
+  const googleMapsUrl = getGoogleMapsUrl(activeLocation);
   const isDefaultLocation =
     !activeLocation?.coordinates ||
     (Number(activeLocation.coordinates[0]) === 0 && Number(activeLocation.coordinates[1]) === 0);
 
   return (
-    <div className="rounded-2xl border border-emerald-200 bg-white/90 p-5 shadow-sm">
+    <div className="motion-card rounded-2xl border border-emerald-200 bg-white/90 p-5">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex gap-3">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
             <MapPin size={24} />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+            <h3 className="text-lg font-semibold text-brand-primary">{title}</h3>
             <p className="mt-1 text-sm text-gray-700">{description}</p>
           </div>
         </div>
@@ -74,8 +88,19 @@ export default function LocationStatusCard({
 
       <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-          <p className="text-sm font-medium text-gray-700">Saved Coordinates</p>
-          <p className="mt-1 text-gray-900">{formatCoordinates(activeLocation)}</p>
+          <p className="text-sm font-medium text-gray-700">Google Maps Location</p>
+          {googleMapsUrl ? (
+            <a
+              href={googleMapsUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-1 block break-all font-semibold text-emerald-700 underline-offset-4 hover:underline"
+            >
+              {googleMapsUrl}
+            </a>
+          ) : (
+            <p className="mt-1 text-gray-900">{formatCoordinates(activeLocation)}</p>
+          )}
         </div>
         <div>
           <p className="text-sm font-medium text-gray-700">Last Updated</p>

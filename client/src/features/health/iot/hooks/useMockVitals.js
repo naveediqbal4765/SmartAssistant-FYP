@@ -22,7 +22,8 @@ const createInitialVitals = ({ deviceId, seniorId }) => createVitalsSnapshot({
   systolic: 122,
   diastolic: 78,
   oxygenLevel: 98,
-  temperature: 36.8
+  temperature: 36.8,
+  activityStatus: 'Resting'
 });
 
 const fluctuateVitals = (previous) => createVitalsSnapshot({
@@ -32,7 +33,8 @@ const fluctuateVitals = (previous) => createVitalsSnapshot({
   systolic: Math.round(clamp(previous.vitals.bloodPressure.systolic + randomDelta(4), 105, 145)),
   diastolic: Math.round(clamp(previous.vitals.bloodPressure.diastolic + randomDelta(3), 65, 95)),
   oxygenLevel: Math.round(clamp(previous.vitals.oxygenLevel + randomDelta(1.2), 94, 100)),
-  temperature: roundOne(clamp(previous.vitals.temperature + randomDelta(0.15), 36.1, 37.6))
+  temperature: roundOne(clamp(previous.vitals.temperature + randomDelta(0.15), 36.1, 37.6)),
+  activityStatus: previous.vitals.heartRate > 92 ? 'Active' : 'Resting'
 });
 
 export default function useMockVitals() {

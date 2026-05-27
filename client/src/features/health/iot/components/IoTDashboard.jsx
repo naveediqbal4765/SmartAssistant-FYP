@@ -16,10 +16,10 @@ export default function IoTDashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+      <div className="motion-card rounded-2xl border border-gray-200 bg-white p-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Live IoT Telemetry</h2>
+            <h2 className="text-2xl font-bold text-brand-primary">Live IoT Telemetry</h2>
             <p className="mt-1 text-gray-700">
               Swap-safe vitals stream using the unified vitals source abstraction.
             </p>
@@ -32,9 +32,9 @@ export default function IoTDashboard() {
         </div>
 
         <div className="mt-4 grid grid-cols-1 gap-3 text-sm text-gray-700 sm:grid-cols-3">
-          <p><span className="font-semibold text-gray-900">Device:</span> {vitalsSnapshot?.deviceId || 'N/A'}</p>
-          <p><span className="font-semibold text-gray-900">Senior:</span> {vitalsSnapshot?.seniorId || 'N/A'}</p>
-          <p><span className="font-semibold text-gray-900">Updated:</span> {formatTimestamp(vitalsSnapshot?.timestamp)}</p>
+          <p><span className="font-semibold text-brand-primary">Device:</span> {vitalsSnapshot?.deviceId || 'N/A'}</p>
+          <p><span className="font-semibold text-brand-primary">Senior:</span> {vitalsSnapshot?.seniorId || 'N/A'}</p>
+          <p><span className="font-semibold text-brand-primary">Updated:</span> {formatTimestamp(vitalsSnapshot?.timestamp)}</p>
         </div>
       </div>
 
@@ -62,15 +62,15 @@ export default function IoTDashboard() {
             tone="green"
           />
           <VitalsCard
-            label="Temperature"
-            value={vitals.temperature}
-            unit="°C"
-            helperText="Simulated body temperature"
+            label="Activity Status"
+            value={vitals.activityStatus}
+            unit=""
+            helperText="Latest senior activity signal"
             tone="amber"
           />
         </div>
       ) : (
-        <div className="rounded-2xl border border-dashed border-gray-300 bg-white p-8 text-center text-gray-500">
+        <div className="motion-card rounded-2xl border border-dashed border-gray-300 bg-white p-8 text-center text-gray-500">
           Waiting for vitals data...
         </div>
       )}

@@ -15,6 +15,11 @@ export const fetchAppointments = async () => {
   return response.data.appointments || [];
 };
 
+export const fetchEligibleAppointmentReminders = async () => {
+  const response = await axios.get(`${API_BASE_URL}/reminders/eligible`, { headers: authHeaders() });
+  return response.data.reminders || [];
+};
+
 export const createAppointment = async (payload) => {
   const response = await axios.post(API_BASE_URL, payload, { headers: authHeaders() });
   return response.data.appointment;
@@ -32,4 +37,13 @@ export const deleteAppointment = async (appointmentId) => {
     headers: authHeaders()
   });
   return response.data;
+};
+
+export const dismissAppointmentReminder = async (appointmentId, reminderVersion) => {
+  const response = await axios.patch(
+    `${API_BASE_URL}/${appointmentId}/reminder/dismiss`,
+    { reminderVersion },
+    { headers: authHeaders() }
+  );
+  return response.data.reminder;
 };

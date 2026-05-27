@@ -11,7 +11,7 @@ const roleLabels = {
   caregiver: 'Caregiver'
 };
 
-export default function AppHeader({ role, onLogout }) {
+export default function AppHeader({ role, onLogout, notificationState }) {
   const navigate = useNavigate();
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef(null);
@@ -52,7 +52,10 @@ export default function AppHeader({ role, onLogout }) {
           <span className="hidden rounded-full bg-white/10 px-3 py-1 text-sm font-semibold text-white sm:inline-flex">
             {roleLabel}
           </span>
-          <NotificationBell className="relative right-auto top-auto z-auto" />
+          <NotificationBell
+            className="relative right-auto top-auto z-auto"
+            notificationState={notificationState}
+          />
           <div ref={profileRef} className="relative">
             <button
               type="button"

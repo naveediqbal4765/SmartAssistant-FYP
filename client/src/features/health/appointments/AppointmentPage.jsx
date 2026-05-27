@@ -3,8 +3,7 @@ import HealthPlaceholder from '../components/HealthPlaceholder';
 import AppointmentCalendar, { toDateKey } from './AppointmentCalendar';
 import AppointmentForm from './AppointmentForm';
 import AppointmentList from './AppointmentList';
-import AppointmentNotification from './AppointmentNotification';
-import useAppointmentNotifications from './useAppointmentNotifications';
+import { SENIOR_REMINDERS_REFRESH_EVENT } from '../reminders/GlobalSeniorReminderPopups';
 import {
   createAppointment,
   deleteAppointment,
@@ -35,13 +34,6 @@ export default function AppointmentPage() {
   const role = currentUser.role;
   const isSenior = role === 'elder';
   const isCaregiver = role === 'caregiver';
-  const {
-    activeNotification,
-    dismissNotification
-  } = useAppointmentNotifications({
-    appointments,
-    enabled: isSenior && !loading
-  });
 
   const loadAppointments = useCallback(async () => {
     setLoading(true);
@@ -89,12 +81,14 @@ export default function AppointmentPage() {
         )));
         setSelectedDate(updated.date);
         setEditingAppointment(null);
+        window.dispatchEvent(new Event(SENIOR_REMINDERS_REFRESH_EVENT));
       } else {
         const created = await createAppointment(payload);
         setAppointments((current) => [...current, created].sort((a, b) => (
           `${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`)
         )));
         setSelectedDate(created.date);
+        window.dispatchEvent(new Event(SENIOR_REMINDERS_REFRESH_EVENT));
       }
 
       return true;
@@ -116,6 +110,7 @@ export default function AppointmentPage() {
     try {
       await deleteAppointment(appointment._id);
       setAppointments((current) => current.filter((item) => item._id !== appointment._id));
+      window.dispatchEvent(new Event(SENIOR_REMINDERS_REFRESH_EVENT));
       if (editingAppointment?._id === appointment._id) {
         setEditingAppointment(null);
       }
@@ -138,10 +133,6 @@ export default function AppointmentPage() {
 
   return (
     <HealthPlaceholder title="Appointments">
-      <AppointmentNotification
-        notification={activeNotification}
-        onDismiss={dismissNotification}
-      />
       <div className="space-y-6">
         {error && (
           <div className="rounded-2xl border border-red-100 bg-red-50 p-4 text-red-700">
@@ -150,7 +141,7 @@ export default function AppointmentPage() {
         )}
 
         {isCaregiver && (
-          <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4 text-blue-700">
+          <div className="rounded-2xl border border-green-100 bg-green-50 p-4 text-brand-primary">
             Caregiver view only. You can view the assigned senior&apos;s appointments but cannot edit them.
           </div>
         )}
@@ -175,12 +166,12 @@ export default function AppointmentPage() {
 
         <section>
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-xl font-bold text-gray-900">Appointments for {selectedDate}</h2>
+            <h2 className="text-xl font-bold text-brand-primary">Appointments for {selectedDate}</h2>
             {loading && <span className="text-sm text-gray-500">Loading...</span>}
           </div>
 
           {loading ? (
-            <div className="rounded-2xl bg-white p-8 text-center text-gray-500 shadow-sm">
+            <div className="motion-card rounded-2xl bg-white p-8 text-center text-gray-500">
               Loading appointments...
             </div>
           ) : (

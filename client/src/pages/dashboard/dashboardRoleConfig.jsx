@@ -18,7 +18,7 @@ export const roleConfig = {
       { title: 'My Profile', icon: User, tone: 'info', route: '/profile' },
       { title: 'My Requests', icon: Clipboard, tone: 'highlight', route: '/my-requests' },
       { title: 'Medications', icon: Bell, tone: 'warning', route: '/health/medications' },
-      { title: 'Digital Health Vault', icon: FileText, tone: 'indigo', route: '/health/vault' },
+      { title: 'Digital Health Vault', icon: FileText, tone: 'indigo', vaultTarget: 'self' },
       { title: 'Chat', icon: MessageCircle, tone: 'brand', route: '/chat' },
       { title: 'Groups', icon: Users, tone: 'cyan', route: '/groups' },
       { title: 'Appointments', icon: Calendar, tone: 'teal', route: '/health/appointments' },
@@ -58,13 +58,13 @@ export const roleConfig = {
       description: "Monitor your loved one's health, location, and get instant alerts in case of emergency."
     },
     modules: [
-      { title: 'Linked Senior', icon: Users, tone: 'highlight', route: '/profile' },
-      { title: 'Medications (View)', icon: Bell, tone: 'info', route: '/health/medications' },
-      { title: 'Digital Health Vault (View)', icon: FileText, tone: 'teal', route: '/health/vault' },
-      { title: 'My Profile', icon: User, tone: 'indigo', route: '/profile' },
-      { title: 'Chat', icon: MessageCircle, tone: 'brand', route: '/chat' },
-      { title: 'Groups', icon: Users, tone: 'cyan', route: '/groups' },
-      { title: 'Appointments (View)', icon: Calendar, tone: 'highlight', route: '/health/appointments' }
+      { title: 'Linked Senior', icon: Users, tone: 'highlight', relationshipTarget: 'linkedSenior' },
+      { title: "Senior's Medications", icon: Bell, tone: 'info', route: '/health/medications' },
+      { title: "Senior's Health Vault", icon: FileText, tone: 'teal', vaultTarget: 'linkedSenior' },
+      { title: "Senior's Appointments", icon: Calendar, tone: 'highlight', route: '/health/appointments' },
+      { title: "Senior's Health Telemetry", icon: Activity, tone: 'lime', route: '/health/telemetry' },
+      { title: "Senior's Requests", icon: Clipboard, tone: 'warning', route: '/my-requests' },
+      { title: 'My Profile', icon: User, tone: 'indigo', route: '/profile' }
     ]
   }
 };

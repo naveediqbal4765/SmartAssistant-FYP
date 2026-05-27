@@ -21,6 +21,8 @@ import DrugInteractionPage from './features/health/interactions/DrugInteractionP
 import { disconnectChatSocket } from './features/communication/chat/services/socket';
 import { CallStateProvider } from './features/communication/calls/CallStateContext';
 import GlobalCallHandler from './features/communication/calls/GlobalCallHandler';
+import { NotificationProvider, useNotificationState } from './features/communication/notifications/NotificationContext';
+import GlobalSeniorReminderPopups from './features/health/reminders/GlobalSeniorReminderPopups';
 import AppShell from './components/layout/AppShell';
 
 function ScrollToTopOnRouteChange() {
@@ -35,6 +37,24 @@ function ScrollToTopOnRouteChange() {
   }, [location.pathname, location.search]);
 
   return null;
+}
+
+function AuthenticatedGlobalOverlays({ userRole }) {
+  const notificationState = useNotificationState();
+  const isSenior = userRole === 'elder' || userRole === 'senior';
+
+  return (
+    <>
+      <GlobalSeniorReminderPopups
+        enabled={isSenior}
+        callReminderPopups={notificationState.reminderPopups}
+        onDismissCallReminder={notificationState.markRead}
+      />
+      <CallStateProvider>
+        <GlobalCallHandler />
+      </CallStateProvider>
+    </>
+  );
 }
 
 function App() {
@@ -123,11 +143,11 @@ function App() {
     );
   };
 
-  return (
-    <Router>
-      <ScrollToTopOnRouteChange />
-      <div className="min-h-screen bg-slate-50">
-        <Routes>
+  const hasStoredSession = Boolean(localStorage.getItem('token') && localStorage.getItem('user'));
+  const shouldUseAuthenticatedProviders = isAuthenticated || hasStoredSession;
+
+  const appRoutes = (
+    <Routes>
           {/* Public Routes */}
           <Route 
             path="/login" 
@@ -155,6 +175,15 @@ function App() {
                 <Profile />
               </PrivateRoute>
             } 
+          />
+
+          <Route
+            path="/profile/:profileUserId"
+            element={
+              <PrivateRoute>
+                <Profile />
+              </PrivateRoute>
+            }
           />
           
           <Route 
@@ -262,6 +291,15 @@ function App() {
           />
 
           <Route
+            path="/health/vault/:targetUserId"
+            element={
+              <PrivateRoute>
+                <HealthVaultPage />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
             path="/health/appointments"
             element={
               <PrivateRoute>
@@ -293,14 +331,21 @@ function App() {
 
           {/* Default Route */}
           <Route path="/" element={<Navigate to="/login" />} />
-        </Routes>
+    </Routes>
+  );
 
-        {isAuthenticated && (
-          <CallStateProvider>
-            <GlobalCallHandler />
-          </CallStateProvider>
+  return (
+    <Router>
+      <ScrollToTopOnRouteChange />
+      <div className="min-h-screen bg-slate-50">
+        {shouldUseAuthenticatedProviders ? (
+          <NotificationProvider>
+            {appRoutes}
+            {isAuthenticated && <AuthenticatedGlobalOverlays userRole={userRole} />}
+          </NotificationProvider>
+        ) : (
+          appRoutes
         )}
-
       </div>
     </Router>
   );

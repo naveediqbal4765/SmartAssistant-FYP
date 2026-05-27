@@ -15,10 +15,46 @@ const moduleToneClasses = {
   reward: 'bg-gradient-to-r from-yellow-500 to-yellow-700'
 };
 
+const caregiverOwnedModuleTitles = {
+  '/health/medications': 'Medications',
+  '/health/appointments': 'Appointments',
+  '/health/telemetry': 'Health Telemetry',
+  '/my-requests': 'Requests'
+};
+
 export default function DashboardHome({ config, context, greeting }) {
   const navigate = useNavigate();
+  const isCaregiverDashboard = config.roleLabel === 'Caregiver';
+  const seniorName = context?.linkedSenior?.name?.trim();
+  const seniorOwnerLabel = seniorName || 'Senior';
+  const currentUser = (() => {
+    try {
+      return JSON.parse(localStorage.getItem('user') || '{}');
+    } catch (err) {
+      return {};
+    }
+  })();
 
   const handleModuleClick = (module) => {
+    if (module.relationshipTarget === 'linkedSenior') {
+      const seniorId = context?.linkedSenior?._id || context?.linkedSenior?.id;
+      if (seniorId) {
+        navigate(`/profile/${seniorId}`);
+      }
+      return;
+    }
+
+    if (module.vaultTarget) {
+      const targetUserId = module.vaultTarget === 'linkedSenior'
+        ? context?.linkedSenior?._id || context?.linkedSenior?.id
+        : currentUser._id || currentUser.id;
+
+      if (targetUserId) {
+        navigate(`/health/vault/${targetUserId}`);
+      }
+      return;
+    }
+
     if (module.route) {
       navigate(module.route);
       return;
@@ -42,27 +78,35 @@ export default function DashboardHome({ config, context, greeting }) {
         {config.modules.map((module) => {
           const Icon = module.icon;
           const toneClass = moduleToneClasses[module.tone] || moduleToneClasses.brand;
+          const ownedModuleName = isCaregiverDashboard
+            ? module.vaultTarget === 'linkedSenior'
+              ? 'Health Vault'
+              : caregiverOwnedModuleTitles[module.route]
+            : null;
+          const moduleTitle = ownedModuleName
+            ? `${seniorOwnerLabel}'s ${ownedModuleName}`
+            : module.title;
 
           return (
             <button
-              key={module.title}
+              key={module.route || module.vaultTarget || module.title}
               type="button"
               onClick={() => handleModuleClick(module)}
-              className={`${toneClass} motion-card motion-interactive flex h-48 flex-col items-center justify-center rounded-2xl p-6 shadow-lg hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-white/70`}
+              className={`${toneClass} motion-card motion-interactive flex h-48 flex-col items-center justify-center rounded-2xl p-6 focus:outline-none focus:ring-4 focus:ring-white/70`}
             >
               <div className="mb-5 text-white">
                 <Icon size={32} />
               </div>
-              <span className="text-center text-xl font-bold text-white">{module.title}</span>
+              <span className="text-center text-xl font-bold text-white">{moduleTitle}</span>
             </button>
           );
         })}
       </div>
 
-      <div className="rounded-2xl border border-gray-200 bg-white/90 p-8 shadow-lg backdrop-blur-sm">
+      <div className="motion-card rounded-2xl border border-gray-200 bg-white/90 p-8 backdrop-blur-sm">
         <div className="mb-4 flex items-center gap-3">
           <span className="text-4xl">{config.summary.icon}</span>
-          <h3 className="text-2xl font-bold text-gray-900">{config.summary.title}</h3>
+          <h3 className="text-2xl font-bold text-brand-primary">{config.summary.title}</h3>
         </div>
         <p className="text-lg leading-relaxed text-gray-700">{config.summary.description}</p>
       </div>

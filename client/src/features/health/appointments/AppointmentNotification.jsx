@@ -1,10 +1,14 @@
 import { overlayLayers } from '../../../components/ui/overlayLayers';
 
-export default function AppointmentNotification({ notification, onDismiss }) {
+export default function AppointmentNotification({ notification, onDismiss, floating = true }) {
   if (!notification?.appointment) return null;
 
+  const containerClass = floating
+    ? `fixed bottom-6 right-6 ${overlayLayers.modal} w-full max-w-sm rounded-2xl border border-blue-200 bg-white p-5 shadow-2xl`
+    : 'motion-modal-in pointer-events-auto w-full rounded-2xl border border-blue-200 bg-white p-5 shadow-xl shadow-gray-900/15';
+
   return (
-    <div className={`fixed bottom-6 right-6 ${overlayLayers.modal} w-full max-w-sm rounded-2xl border border-blue-200 bg-white p-5 shadow-2xl`}>
+    <div className={containerClass}>
       <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">
         Appointment Notification
       </p>

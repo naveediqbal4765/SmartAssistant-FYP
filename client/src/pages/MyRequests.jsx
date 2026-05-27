@@ -13,6 +13,8 @@ export default function MyRequests() {
   const navigate = useNavigate();
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+  const isCaregiver = currentUser?.role === 'caregiver';
 
   useEffect(() => {
     fetchTasks();
@@ -71,21 +73,24 @@ export default function MyRequests() {
   return (
     <FeaturePage
       title="My Help Requests"
-      description="Track the status of requests you have submitted."
+      description={isCaregiver ? 'View senior-related requests and support activity.' : 'Track the status of requests you have submitted.'}
       backLabel="Back to Dashboard"
       onBack={() => navigate('/dashboard')}
       maxWidth="max-w-3xl"
-      actions={<Button onClick={() => navigate('/request-help')}>New Request</Button>}
+      actions={isCaregiver ? null : <Button onClick={() => navigate('/request-help')}>New Request</Button>}
     >
 
         {tasks.length === 0 ? (
-          <EmptyState title="No requests yet" description="Create a new request to get help." />
+          <EmptyState
+            title="No requests yet"
+            description={isCaregiver ? 'No senior requests are available yet.' : 'Create a new request to get help.'}
+          />
         ) : (
           <div className="space-y-4">
             {tasks.map((task) => (
               <FeatureCard key={task._id} className="p-5">
                 <div className="flex justify-between items-start mb-3">
-                  <h3 className="font-bold text-lg text-gray-900">{task.title}</h3>
+                  <h3 className="font-bold text-lg text-brand-primary">{task.title}</h3>
                   <span className={`px-3 py-1 rounded-full text-xs font-medium ${getPriorityBadge(task.priority)}`}>
                     {task.priority}
                   </span>
