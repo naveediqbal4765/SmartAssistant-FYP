@@ -61,20 +61,26 @@ export default function AppointmentForm({
           placeholder="Appointment title"
           className="rounded-xl border border-gray-300 px-4 py-3 focus:border-green-600 focus:outline-none disabled:bg-gray-100"
         />
-        <input
-          type="date"
-          value={form.date}
-          onChange={(event) => handleChange('date', event.target.value)}
-          disabled={submitting}
-          className="rounded-xl border border-gray-300 px-4 py-3 focus:border-green-600 focus:outline-none disabled:bg-gray-100"
-        />
-        <input
-          type="time"
-          value={form.time}
-          onChange={(event) => handleChange('time', event.target.value)}
-          disabled={submitting}
-          className="rounded-xl border border-gray-300 px-4 py-3 focus:border-green-600 focus:outline-none disabled:bg-gray-100"
-        />
+        <label className="text-sm font-semibold text-brand-primary">
+          Date
+          <input
+            type="date"
+            value={form.date}
+            onChange={(event) => handleChange('date', event.target.value)}
+            disabled={submitting}
+            className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 font-normal text-gray-900 focus:border-green-600 focus:outline-none disabled:bg-gray-100"
+          />
+        </label>
+        <label className="text-sm font-semibold text-brand-primary">
+          Time
+          <input
+            type="time"
+            value={form.time}
+            onChange={(event) => handleChange('time', event.target.value)}
+            disabled={submitting}
+            className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 font-normal text-gray-900 focus:border-green-600 focus:outline-none disabled:bg-gray-100"
+          />
+        </label>
       </div>
 
       <textarea

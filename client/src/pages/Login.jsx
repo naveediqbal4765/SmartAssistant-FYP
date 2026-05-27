@@ -9,6 +9,7 @@ export default function Login({ onLogin }) {
   const [isRegister, setIsRegister] = useState(false);
   const [formMotionDirection, setFormMotionDirection] = useState('forward');
   const [formTransitionPhase, setFormTransitionPhase] = useState('entering');
+  const [roleTransitionPhase, setRoleTransitionPhase] = useState('idle');
   const [authTransitioning, setAuthTransitioning] = useState(false);
   const [form, setForm] = useState({
     name: '',
@@ -36,6 +37,27 @@ export default function Login({ onLogin }) {
     return formMotionDirection === 'forward'
       ? 'motion-auth-form-forward'
       : 'motion-auth-form-backward';
+  };
+
+  const getRolePanelMotionClass = () => (
+    roleTransitionPhase === 'exiting' || roleTransitionPhase === 'entering'
+      ? 'opacity-0 translate-y-2 scale-[0.98]'
+      : 'opacity-100 translate-y-0 scale-100'
+  );
+
+  const handleRoleChange = (role) => {
+    if (role === form.role || roleTransitionPhase === 'exiting') return;
+
+    setRoleTransitionPhase('exiting');
+    setTimeout(() => {
+      setForm((current) => ({
+        ...current,
+        role,
+        seniorLinkCode: role === 'caregiver' ? current.seniorLinkCode : ''
+      }));
+      setRoleTransitionPhase('entering');
+      setTimeout(() => setRoleTransitionPhase('idle'), 20);
+    }, 170);
   };
 
   const switchAuthMode = (nextIsRegister) => {
@@ -167,13 +189,13 @@ export default function Login({ onLogin }) {
 
   return (
     <div 
-      className="min-h-screen bg-cover bg-center bg-no-repeat bg-fixed"
+      className="auth-focus-scope min-h-screen bg-cover bg-center bg-no-repeat bg-fixed"
       style={{ 
         backgroundImage: "url('/images/background.jpg')"
       }}
     >
-      {/* Lighter overlay - Background image will show clearly */}
-      <div className="min-h-screen bg-brand-surface/50 motion-auth-enter">
+      {/* Dark overlay keeps the background visible while preserving text contrast. */}
+      <div className="min-h-screen bg-[#0f1f17]/70 motion-auth-enter">
         
         <div className="w-full bg-brand-primary shadow-lg">
           <div className="px-4 py-4 sm:px-6 md:px-8 lg:px-12">
@@ -209,8 +231,8 @@ export default function Login({ onLogin }) {
             {/* Right Side - Login/Register Form */}
             <div className="flex-1 max-w-md w-full">
               <div
-                className={`rounded-2xl p-6 shadow-2xl sm:p-8 ${authTransitioning ? 'motion-auth-exit' : ''}`}
-                style={{ backgroundColor: '#BAE4C7' }}
+                className={`motion-card rounded-2xl p-6 sm:p-8 ${authTransitioning ? 'motion-auth-exit' : ''}`}
+                style={{ backgroundColor: '#a9c6b2' }}
               >
                 
                 {/* Logo at Top of Form */}
@@ -240,25 +262,25 @@ export default function Login({ onLogin }) {
                   {!isRegister ? (
                     <>
                       <div className="mb-4">
-                        <label className="block text-gray-700 mb-2 text-sm font-semibold">Username / Email</label>
+                        <label className="block text-[#1c382a] mb-2 text-sm font-semibold">Username / Email</label>
                         <input
                           type="email"
                           placeholder="Enter your email"
                           value={form.email}
                           onChange={(e) => setForm({ ...form, email: e.target.value })}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+                          className="w-full rounded-xl border-0 bg-white px-4 py-3 shadow-sm transition duration-200 ease-in-out placeholder:text-sm hover:-translate-y-0.5 hover:shadow-md focus:-translate-y-0.5 focus:border-transparent focus:shadow-[0_0_0_3px_rgba(28,56,42,0.18),0_10px_24px_rgba(15,31,23,0.10)] focus:outline-none focus:ring-0"
                           required
                         />
                       </div>
 
                       <div className="mb-4">
-                        <label className="block text-gray-700 mb-2 text-sm font-semibold">Password</label>
+                        <label className="block text-[#1c382a] mb-2 text-sm font-semibold">Password</label>
                         <input
                           type="password"
                           placeholder="Enter your password"
                           value={form.password}
                           onChange={(e) => setForm({ ...form, password: e.target.value })}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+                          className="w-full rounded-xl border-0 bg-white px-4 py-3 shadow-sm transition duration-200 ease-in-out placeholder:text-sm hover:-translate-y-0.5 hover:shadow-md focus:-translate-y-0.5 focus:border-transparent focus:shadow-[0_0_0_3px_rgba(28,56,42,0.18),0_10px_24px_rgba(15,31,23,0.10)] focus:outline-none focus:ring-0"
                           required
                         />
                       </div>
@@ -267,7 +289,7 @@ export default function Login({ onLogin }) {
                         <button
                           type="submit"
                           disabled={loading || authTransitioning}
-                          className="flex-1 bg-green-700 hover:bg-green-800 text-white py-3 rounded-xl font-semibold text-base transition disabled:opacity-50"
+                          className="flex-1 bg-[#1c382a] hover:-translate-y-1 hover:bg-[#142a20] hover:shadow-lg active:translate-y-px active:bg-[#0f1f17] text-white py-3 rounded-xl font-semibold text-base shadow-sm transition duration-200 ease-in-out disabled:opacity-50"
                         >
                           {loading ? '...' : 'Login'}
                         </button>
@@ -277,7 +299,7 @@ export default function Login({ onLogin }) {
                             switchAuthMode(true);
                           }}
                           disabled={authTransitioning}
-                          className="flex-1 bg-white hover:bg-gray-100 text-gray-700 py-3 rounded-xl font-semibold text-base transition border border-gray-300"
+                          className="flex-1 bg-white text-[#1c382a] hover:-translate-y-1 hover:bg-[#1c382a] hover:text-white hover:shadow-lg active:translate-y-px active:bg-[#0f1f17] py-3 rounded-xl font-semibold text-base shadow-sm transition duration-200 ease-in-out"
                         >
                           Sign Up
                         </button>
@@ -295,7 +317,7 @@ export default function Login({ onLogin }) {
                           type="button"
                           onClick={() => navigate('/forgot-password')}
                           disabled={authTransitioning}
-                          className="text-green-700 text-sm hover:underline"
+                          className="text-[#1c382a] text-sm hover:text-[#0f1f17] hover:underline"
                         >
                           Reset Password?
                         </button>
@@ -305,43 +327,43 @@ export default function Login({ onLogin }) {
                     /* REGISTER MODE */
                     <>
                       <div className="mb-4">
-                        <label className="block text-gray-700 mb-2 text-sm font-semibold">Full Name</label>
+                        <label className="block text-[#1c382a] mb-2 text-sm font-semibold">Full Name</label>
                         <input
                           type="text"
                           placeholder="Enter your full name"
                           value={form.name}
                           onChange={(e) => setForm({ ...form, name: e.target.value })}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+                          className="w-full rounded-xl border-0 bg-white px-4 py-3 shadow-sm transition duration-200 ease-in-out placeholder:text-sm hover:-translate-y-0.5 hover:shadow-md focus:-translate-y-0.5 focus:border-transparent focus:shadow-[0_0_0_3px_rgba(28,56,42,0.18),0_10px_24px_rgba(15,31,23,0.10)] focus:outline-none focus:ring-0"
                           required
                         />
                       </div>
 
                       <div className="mb-4">
-                        <label className="block text-gray-700 mb-2 text-sm font-semibold">Username / Email</label>
+                        <label className="block text-[#1c382a] mb-2 text-sm font-semibold">Username / Email</label>
                         <input
                           type="email"
                           placeholder="Enter your email"
                           value={form.email}
                           onChange={(e) => setForm({ ...form, email: e.target.value })}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+                          className="w-full rounded-xl border-0 bg-white px-4 py-3 shadow-sm transition duration-200 ease-in-out placeholder:text-sm hover:-translate-y-0.5 hover:shadow-md focus:-translate-y-0.5 focus:border-transparent focus:shadow-[0_0_0_3px_rgba(28,56,42,0.18),0_10px_24px_rgba(15,31,23,0.10)] focus:outline-none focus:ring-0"
                           required
                         />
                       </div>
 
                       <div className="mb-4">
-                        <label className="block text-gray-700 mb-2 text-sm font-semibold">Password</label>
+                        <label className="block text-[#1c382a] mb-2 text-sm font-semibold">Password</label>
                         <input
                           type="password"
                           placeholder="Enter your password"
                           value={form.password}
                           onChange={(e) => setForm({ ...form, password: e.target.value })}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+                          className="w-full rounded-xl border-0 bg-white px-4 py-3 shadow-sm transition duration-200 ease-in-out placeholder:text-sm hover:-translate-y-0.5 hover:shadow-md focus:-translate-y-0.5 focus:border-transparent focus:shadow-[0_0_0_3px_rgba(28,56,42,0.18),0_10px_24px_rgba(15,31,23,0.10)] focus:outline-none focus:ring-0"
                           required
                         />
                       </div>
 
                       <div className="mb-4">
-                        <label className="block text-gray-700 mb-2 text-sm font-semibold">Confirm Password</label>
+                        <label className="block text-[#1c382a] mb-2 text-sm font-semibold">Confirm Password</label>
                         <input
                           type="password"
                           placeholder="Confirm your password"
@@ -352,7 +374,7 @@ export default function Login({ onLogin }) {
                               setError('');
                             }
                           }}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+                          className="w-full rounded-xl border-0 bg-white px-4 py-3 shadow-sm transition duration-200 ease-in-out placeholder:text-sm hover:-translate-y-0.5 hover:shadow-md focus:-translate-y-0.5 focus:border-transparent focus:shadow-[0_0_0_3px_rgba(28,56,42,0.18),0_10px_24px_rgba(15,31,23,0.10)] focus:outline-none focus:ring-0"
                           required
                         />
                       </div>
@@ -362,33 +384,33 @@ export default function Login({ onLogin }) {
                         <div className="flex gap-2">
                           <button
                             type="button"
-                            onClick={() => setForm({ ...form, role: 'volunteer', seniorLinkCode: '' })}
-                            className={`flex-1 py-2 px-2 rounded-xl text-xs sm:text-sm font-medium transition ${
+                            onClick={() => handleRoleChange('volunteer')}
+                            className={`flex-1 py-2 px-2 rounded-xl text-xs sm:text-sm font-medium shadow-sm transition duration-200 ease-in-out hover:-translate-y-0.5 hover:shadow-md active:translate-y-px ${
                               form.role === 'volunteer' 
-                                ? 'bg-green-700 text-white' 
-                                : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                                ? 'bg-[#1c382a] text-white hover:bg-[#142a20] active:bg-[#0f1f17]'
+                                : 'bg-white text-[#1c382a] hover:bg-[#eef4f0] active:bg-[#dce8e1]'
                             }`}
                           >
                             🤝 Volunteer
                           </button>
                           <button
                             type="button"
-                            onClick={() => setForm({ ...form, role: 'elder', seniorLinkCode: '' })}
-                            className={`flex-1 py-2 px-2 rounded-xl text-xs sm:text-sm font-medium transition ${
+                            onClick={() => handleRoleChange('elder')}
+                            className={`flex-1 py-2 px-2 rounded-xl text-xs sm:text-sm font-medium shadow-sm transition duration-200 ease-in-out hover:-translate-y-0.5 hover:shadow-md active:translate-y-px ${
                               form.role === 'elder' 
-                                ? 'bg-green-700 text-white' 
-                                : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                                ? 'bg-[#1c382a] text-white hover:bg-[#142a20] active:bg-[#0f1f17]'
+                                : 'bg-white text-[#1c382a] hover:bg-[#eef4f0] active:bg-[#dce8e1]'
                             }`}
                           >
                             👴 Senior
                           </button>
                           <button
                             type="button"
-                            onClick={() => setForm({ ...form, role: 'caregiver' })}
-                            className={`flex-1 py-2 px-2 rounded-xl text-xs sm:text-sm font-medium transition ${
+                            onClick={() => handleRoleChange('caregiver')}
+                            className={`flex-1 py-2 px-2 rounded-xl text-xs sm:text-sm font-medium shadow-sm transition duration-200 ease-in-out hover:-translate-y-0.5 hover:shadow-md active:translate-y-px ${
                               form.role === 'caregiver' 
-                                ? 'bg-green-700 text-white' 
-                                : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                                ? 'bg-[#1c382a] text-white hover:bg-[#142a20] active:bg-[#0f1f17]'
+                                : 'bg-white text-[#1c382a] hover:bg-[#eef4f0] active:bg-[#dce8e1]'
                             }`}
                           >
                             🏥 Caregiver
@@ -396,36 +418,41 @@ export default function Login({ onLogin }) {
                         </div>
                       </div>
 
-                      {form.role === 'caregiver' && (
-                        <div className="mb-6">
-                          <label className="block text-gray-700 mb-2 text-sm font-semibold">
-                            Senior link code
-                          </label>
-                          <input
-                            type="text"
-                            inputMode="numeric"
-                            pattern="[0-9]{6}"
-                            maxLength={6}
-                            placeholder="6-digit code from senior's email"
-                            value={form.seniorLinkCode}
-                            onChange={(e) => setForm({
-                              ...form,
-                              seniorLinkCode: e.target.value.replace(/\D/g, '').slice(0, 6)
-                            })}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 bg-white tracking-widest text-center text-lg font-semibold"
-                            required
-                          />
-                          <p className="text-gray-700 text-xs mt-2">
-                            Ask your senior to log in first. They will receive this code by email.
-                          </p>
-                        </div>
-                      )}
+                      <div
+                        key={form.role}
+                        className={`transition-all duration-200 ease-out ${getRolePanelMotionClass()}`}
+                      >
+                        {form.role === 'caregiver' && (
+                          <div className="mb-6">
+                            <label className="block text-[#1c382a] mb-2 text-sm font-semibold">
+                              Senior link code
+                            </label>
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              pattern="[0-9]{6}"
+                              maxLength={6}
+                              placeholder="6-digit code from senior's email"
+                              value={form.seniorLinkCode}
+                              onChange={(e) => setForm({
+                                ...form,
+                                seniorLinkCode: e.target.value.replace(/\D/g, '').slice(0, 6)
+                              })}
+                            className="w-full rounded-xl border-0 bg-white px-4 py-3 shadow-sm transition duration-200 ease-in-out placeholder:text-sm hover:-translate-y-0.5 hover:shadow-md focus:-translate-y-0.5 focus:border-transparent focus:shadow-[0_0_0_3px_rgba(28,56,42,0.18),0_10px_24px_rgba(15,31,23,0.10)] focus:outline-none focus:ring-0"
+                              required
+                            />
+                            <p className="text-gray-700 text-xs mt-2">
+                              Ask your senior to log in first. They will receive this code by email.
+                            </p>
+                          </div>
+                        )}
+                      </div>
 
                       <div className="flex gap-3">
                         <button
                           type="submit"
                           disabled={loading || authTransitioning}
-                          className="flex-1 bg-green-700 hover:bg-green-800 text-white py-3 rounded-xl font-semibold text-base transition disabled:opacity-50"
+                          className="flex-1 bg-[#1c382a] hover:-translate-y-1 hover:bg-[#142a20] hover:shadow-lg active:translate-y-px active:bg-[#0f1f17] text-white py-3 rounded-xl font-semibold text-base shadow-sm transition duration-200 ease-in-out disabled:opacity-50"
                         >
                           {loading ? '...' : 'Register'}
                         </button>
@@ -435,7 +462,7 @@ export default function Login({ onLogin }) {
                             switchAuthMode(false);
                           }}
                           disabled={authTransitioning}
-                          className="flex-1 bg-white hover:bg-gray-100 text-gray-700 py-3 rounded-xl font-semibold text-base transition border border-gray-300"
+                          className="flex-1 bg-white text-[#1c382a] hover:-translate-y-1 hover:bg-[#1c382a] hover:text-white hover:shadow-lg active:translate-y-px active:bg-[#0f1f17] py-3 rounded-xl font-semibold text-base shadow-sm transition duration-200 ease-in-out"
                         >
                           Back
                         </button>
@@ -458,7 +485,7 @@ export default function Login({ onLogin }) {
                      {/* Google Login Link */}
 <a 
   href="http://localhost:5000/api/auth/google"
-  className="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-50 border border-gray-300 py-3 rounded-xl transition"
+  className="w-full flex items-center justify-center gap-3 bg-white hover:-translate-y-1 hover:bg-gray-50 hover:shadow-lg active:translate-y-px py-3 rounded-xl shadow-sm transition duration-200 ease-in-out"
 >
   <svg className="w-5 h-5" viewBox="0 0 24 24">
     <path className="fill-blue-500" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -471,7 +498,7 @@ export default function Login({ onLogin }) {
                       {/* Facebook Login Link */}
 <a 
   href="http://localhost:5000/api/auth/facebook"
-  className="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-50 border border-gray-300 py-3 rounded-xl transition"
+  className="w-full flex items-center justify-center gap-3 bg-white hover:-translate-y-1 hover:bg-gray-50 hover:shadow-lg active:translate-y-px py-3 rounded-xl shadow-sm transition duration-200 ease-in-out"
 >
   <svg className="w-5 h-5 text-blue-700" fill="currentColor" viewBox="0 0 24 24">
     <path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" />
@@ -483,7 +510,7 @@ export default function Login({ onLogin }) {
                 )}
               </div>
 
-              <p className="text-center text-gray-700 text-xs mt-6">
+              <p className="text-center text-white text-xs mt-6">
                 © 2026 Smart Assistant. Care for Seniors, By Group 41.
               </p>
             </div>

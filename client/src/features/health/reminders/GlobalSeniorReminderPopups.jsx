@@ -9,21 +9,17 @@ import {
   fetchEligibleAppointmentReminders
 } from '../appointments/appointmentApi';
 import MedicationReminder from '../medications/MedicationReminder';
-import { fetchMedications } from '../medications/medicationApi';
+import {
+  dismissMedicationReminder,
+  fetchEligibleMedicationReminders,
+  markMedicationReminderTaken,
+  skipMedicationReminder
+} from '../medications/medicationApi';
 
 export const SENIOR_REMINDERS_REFRESH_EVENT = 'senior-reminders:refresh';
 
 const REFRESH_INTERVAL_MS = 60000;
-const MEDICATION_CHECK_INTERVAL_MS = 30000;
-const DISMISSED_MEDICATIONS_STORAGE_KEY = 'senior-reminders:dismissed-medications';
 const PLAYED_REMINDERS_STORAGE_KEY = 'senior-reminders:played-alerts';
-
-const getCurrentTimeKey = () => {
-  const now = new Date();
-  return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-};
-
-const getDateKey = () => new Date().toISOString().slice(0, 10);
 
 const getStorageSet = (storageKey) => {
   if (typeof window === 'undefined') return new Set();
@@ -40,37 +36,31 @@ const writeStorageSet = (storageKey, valueSet) => {
   sessionStorage.setItem(storageKey, JSON.stringify(Array.from(valueSet)));
 };
 
-const getMedicationReminderKey = (medication, timeKey = getCurrentTimeKey()) => (
-  medication?._id ? `medication:${medication._id}:${getDateKey()}:${timeKey}` : ''
-);
-
 export default function GlobalSeniorReminderPopups({
   enabled = false,
   callReminderPopups = [],
   onDismissCallReminder
 }) {
   const [appointmentReminders, setAppointmentReminders] = useState([]);
-  const [medications, setMedications] = useState([]);
-  const [activeMedicationReminder, setActiveMedicationReminder] = useState(null);
+  const [medicationReminders, setMedicationReminders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const dismissedMedicationKeysRef = useRef(getStorageSet(DISMISSED_MEDICATIONS_STORAGE_KEY));
   const playedReminderKeysRef = useRef(getStorageSet(PLAYED_REMINDERS_STORAGE_KEY));
 
   const loadReminderSources = useCallback(async () => {
     if (!enabled) {
       setAppointmentReminders([]);
-      setMedications([]);
+      setMedicationReminders([]);
       setLoading(false);
       return;
     }
 
     try {
-      const [appointmentReminderData, medicationData] = await Promise.all([
+      const [appointmentReminderData, medicationReminderData] = await Promise.all([
         fetchEligibleAppointmentReminders(),
-        fetchMedications()
+        fetchEligibleMedicationReminders()
       ]);
       setAppointmentReminders(appointmentReminderData);
-      setMedications(medicationData);
+      setMedicationReminders(medicationReminderData);
     } catch (err) {
       console.error('Failed to load global senior reminders:', err);
     } finally {
@@ -93,26 +83,6 @@ export default function GlobalSeniorReminderPopups({
     };
   }, [enabled, loadReminderSources]);
 
-  useEffect(() => {
-    if (!enabled || loading || !medications.length) return undefined;
-
-    const checkMedications = () => {
-      const currentTime = getCurrentTimeKey();
-      const dueMedication = medications.find((medication) => {
-        const reminderKey = getMedicationReminderKey(medication, currentTime);
-        return medication?.time === currentTime
-          && reminderKey
-          && !dismissedMedicationKeysRef.current.has(reminderKey);
-      });
-
-      setActiveMedicationReminder(dueMedication || null);
-    };
-
-    checkMedications();
-    const intervalId = window.setInterval(checkMedications, MEDICATION_CHECK_INTERVAL_MS);
-    return () => window.clearInterval(intervalId);
-  }, [enabled, loading, medications]);
-
   const markSoundPlayed = useCallback((reminderKey) => {
     if (!reminderKey || playedReminderKeysRef.current.has(reminderKey)) return;
 
@@ -130,17 +100,18 @@ export default function GlobalSeniorReminderPopups({
       }
     });
 
-    const medicationKey = getMedicationReminderKey(activeMedicationReminder);
-    if (medicationKey) {
-      markSoundPlayed(medicationKey);
-    }
+    medicationReminders.forEach((reminder) => {
+      if (reminder?.occurrenceKey) {
+        markSoundPlayed(`medication:${reminder.occurrenceKey}`);
+      }
+    });
 
     callReminderPopups.forEach((notification) => {
       if (notification?._id) {
         markSoundPlayed(`call:${notification._id}`);
       }
     });
-  }, [activeMedicationReminder, appointmentReminders, callReminderPopups, enabled, markSoundPlayed]);
+  }, [appointmentReminders, callReminderPopups, enabled, markSoundPlayed, medicationReminders]);
 
   const dismissAppointment = async (appointmentId, reminderVersion) => {
     setAppointmentReminders((current) => current.filter((appointment) => (
@@ -156,13 +127,21 @@ export default function GlobalSeniorReminderPopups({
     }
   };
 
-  const dismissMedicationReminder = (medication) => {
-    const reminderKey = getMedicationReminderKey(medication);
-    if (reminderKey) {
-      dismissedMedicationKeysRef.current.add(reminderKey);
-      writeStorageSet(DISMISSED_MEDICATIONS_STORAGE_KEY, dismissedMedicationKeysRef.current);
+  const updateMedicationReminder = async (reminder, action) => {
+    setMedicationReminders((current) => current.filter((item) => item.occurrenceKey !== reminder.occurrenceKey));
+
+    try {
+      if (action === 'taken') {
+        await markMedicationReminderTaken(reminder.medicationId, reminder.occurrenceKey);
+      } else if (action === 'skipped') {
+        await skipMedicationReminder(reminder.medicationId, reminder.occurrenceKey);
+      } else {
+        await dismissMedicationReminder(reminder.medicationId, reminder.occurrenceKey);
+      }
+    } catch (err) {
+      console.error('Failed to update medication reminder:', err);
+      loadReminderSources();
     }
-    setActiveMedicationReminder(null);
   };
 
   if (!enabled) return null;
@@ -181,12 +160,17 @@ export default function GlobalSeniorReminderPopups({
           floating={false}
         />
       ))}
-      <MedicationReminder
-        enabled={!loading}
-        activeReminder={activeMedicationReminder}
-        onDismiss={dismissMedicationReminder}
-        floating={false}
-      />
+      {medicationReminders.map((reminder) => (
+        <MedicationReminder
+          key={reminder.occurrenceKey}
+          enabled={!loading}
+          activeReminder={reminder}
+          onDismiss={(item) => updateMedicationReminder(item, 'dismissed')}
+          onMarkTaken={(item) => updateMedicationReminder(item, 'taken')}
+          onSkip={(item) => updateMedicationReminder(item, 'skipped')}
+          floating={false}
+        />
+      ))}
       <ReminderNotificationPopup
         notifications={callReminderPopups}
         onDismiss={onDismissCallReminder}

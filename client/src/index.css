@@ -57,6 +57,24 @@ input, select, textarea {
          focus:border-blue-600 focus:outline-none w-full;
 }
 
+/* Auth screens use shadow-only focus states to avoid harsh browser/Tailwind borders. */
+.auth-focus-scope input:focus,
+.auth-focus-scope input:focus-visible,
+.auth-focus-scope textarea:focus,
+.auth-focus-scope textarea:focus-visible,
+.auth-focus-scope select:focus,
+.auth-focus-scope select:focus-visible {
+  border-color: transparent !important;
+  outline: none !important;
+  --tw-ring-color: transparent !important;
+  --tw-ring-offset-color: transparent !important;
+  --tw-ring-offset-shadow: 0 0 #0000 !important;
+  --tw-ring-shadow: 0 0 #0000 !important;
+  box-shadow:
+    0 0 0 3px rgba(28, 56, 42, 0.18),
+    0 10px 24px rgba(15, 31, 23, 0.10) !important;
+}
+
 /* Communication motion system: fast, subtle, and consistent. */
 :root {
   --motion-fast: 150ms;

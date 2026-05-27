@@ -15,6 +15,11 @@ export const fetchMedications = async () => {
   return response.data.medications || [];
 };
 
+export const fetchEligibleMedicationReminders = async () => {
+  const response = await axios.get(`${API_BASE_URL}/reminders/eligible`, { headers: authHeaders() });
+  return response.data.reminders || [];
+};
+
 export const createMedication = async (payload) => {
   const response = await axios.post(API_BASE_URL, payload, { headers: authHeaders() });
   return response.data.medication;
@@ -33,3 +38,24 @@ export const deleteMedication = async (medicationId) => {
   });
   return response.data;
 };
+
+const updateMedicationReminderStatus = async (medicationId, occurrenceKey, action) => {
+  const response = await axios.patch(
+    `${API_BASE_URL}/${medicationId}/reminder/${action}`,
+    { occurrenceKey },
+    { headers: authHeaders() }
+  );
+  return response.data.reminder;
+};
+
+export const dismissMedicationReminder = (medicationId, occurrenceKey) => (
+  updateMedicationReminderStatus(medicationId, occurrenceKey, 'dismiss')
+);
+
+export const markMedicationReminderTaken = (medicationId, occurrenceKey) => (
+  updateMedicationReminderStatus(medicationId, occurrenceKey, 'taken')
+);
+
+export const skipMedicationReminder = (medicationId, occurrenceKey) => (
+  updateMedicationReminderStatus(medicationId, occurrenceKey, 'skip')
+);

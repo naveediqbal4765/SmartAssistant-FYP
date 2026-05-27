@@ -3,6 +3,7 @@ import MedicationList from './MedicationList';
 import MedicationForm from './MedicationForm';
 import HealthPlaceholder from '../components/HealthPlaceholder';
 import { SENIOR_REMINDERS_REFRESH_EVENT } from '../reminders/GlobalSeniorReminderPopups';
+import { getChatSocket } from '../../communication/chat/services/socket';
 import {
   createMedication,
   deleteMedication,
@@ -17,6 +18,38 @@ const getCurrentUser = () => {
   } catch (err) {
     return {};
   }
+};
+
+const MEDICATION_STATUS_UPDATED_EVENT = 'MEDICATION_REMINDER_STATUS_UPDATED';
+const CAREGIVER_MEDICATION_POLL_MS = 15000;
+
+const mergeMedicationReminderStatus = (medications, payload = {}) => {
+  const medicationId = String(payload.medicationId || payload.reminder?.medicationId || '');
+  const occurrence = payload.reminder;
+
+  if (!medicationId || !occurrence?.occurrenceKey) return medications;
+
+  let matched = false;
+  const nextMedications = medications.map((medication) => {
+    if (String(medication._id) !== medicationId) return medication;
+
+    matched = true;
+    let occurrenceMatched = false;
+    const reminderOccurrences = (medication.reminderOccurrences || []).map((item) => {
+      if (item.occurrenceKey !== occurrence.occurrenceKey) return item;
+      occurrenceMatched = true;
+      return { ...item, ...occurrence };
+    });
+
+    return {
+      ...medication,
+      reminderOccurrences: occurrenceMatched
+        ? reminderOccurrences
+        : [...reminderOccurrences, occurrence]
+    };
+  });
+
+  return matched ? nextMedications : medications;
 };
 
 export default function MedicationPage() {
@@ -54,6 +87,33 @@ export default function MedicationPage() {
 
     loadMedications();
   }, [loadMedications, role]);
+
+  useEffect(() => {
+    if (!isCaregiver) return undefined;
+
+    const socket = getChatSocket();
+    const handleMedicationStatusUpdated = (payload) => {
+      setMedications((current) => mergeMedicationReminderStatus(current, payload));
+    };
+
+    socket.on(MEDICATION_STATUS_UPDATED_EVENT, handleMedicationStatusUpdated);
+    return () => socket.off(MEDICATION_STATUS_UPDATED_EVENT, handleMedicationStatusUpdated);
+  }, [isCaregiver]);
+
+  useEffect(() => {
+    if (!isCaregiver) return undefined;
+
+    const intervalId = window.setInterval(async () => {
+      try {
+        const data = await fetchMedications();
+        setMedications(data);
+      } catch (err) {
+        console.error('Failed to refresh caregiver medication status:', err);
+      }
+    }, CAREGIVER_MEDICATION_POLL_MS);
+
+    return () => window.clearInterval(intervalId);
+  }, [isCaregiver]);
 
   const handleSubmit = async (payload) => {
     setSubmitting(true);

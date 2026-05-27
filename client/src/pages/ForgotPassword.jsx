@@ -191,7 +191,7 @@ export default function ForgotPassword() {
   // Simple loading indicator
   if (loading) {
     return (
-      <div className="min-h-screen bg-brand-surface flex items-center justify-center">
+      <div className="auth-focus-scope min-h-screen bg-brand-surface flex items-center justify-center">
         <div className="bg-white rounded-2xl p-8 text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-700">Processing...</p>
@@ -201,7 +201,7 @@ export default function ForgotPassword() {
   }
 
   return (
-    <div className="min-h-screen bg-brand-surface flex items-center justify-center p-4">
+    <div className="auth-focus-scope min-h-screen bg-brand-surface flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
         
         {/* Header */}
@@ -241,12 +241,12 @@ export default function ForgotPassword() {
               placeholder="Enter your email address"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl transition duration-200 ease-in-out focus:-translate-y-0.5 focus:border-transparent focus:shadow-[0_0_0_3px_rgba(28,56,42,0.18),0_10px_24px_rgba(15,31,23,0.10)] focus:outline-none focus:ring-0"
               required
             />
             <button
               type="submit"
-              className="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-semibold text-lg transition"
+              className="w-full mt-6 bg-[#1c382a] hover:bg-[#142a20] active:bg-[#0f1f17] text-white py-3 rounded-xl font-semibold text-lg transition"
             >
               Send Reset Code
             </button>
@@ -272,14 +272,14 @@ export default function ForgotPassword() {
                   value={digit}
                   onChange={(e) => handleOtpChange(index, e.target.value)}
                   onKeyDown={(e) => handleKeyDown(index, e)}
-                  className="w-14 h-14 text-center text-2xl font-bold border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                  className="w-14 h-14 text-center text-2xl font-bold border-2 border-gray-300 rounded-xl transition duration-200 ease-in-out focus:-translate-y-0.5 focus:border-transparent focus:shadow-[0_0_0_3px_rgba(28,56,42,0.18),0_10px_24px_rgba(15,31,23,0.10)] focus:outline-none focus:ring-0"
                 />
               ))}
             </div>
 
             <button
               onClick={handleVerifyOtp}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-semibold text-lg transition"
+              className="w-full bg-[#1c382a] hover:bg-[#142a20] active:bg-[#0f1f17] text-white py-3 rounded-xl font-semibold text-lg transition"
             >
               Verify Code
             </button>
@@ -287,7 +287,7 @@ export default function ForgotPassword() {
             <div className="text-center mt-4">
               <button
                 onClick={handleResendOtp}
-                className="text-blue-600 hover:text-blue-700 text-sm"
+                className="text-[#1c382a] hover:text-[#0f1f17] text-sm"
               >
                 Didn't receive code? Resend
               </button>
@@ -303,18 +303,18 @@ export default function ForgotPassword() {
               placeholder="New Password (min 6 characters)"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl transition duration-200 ease-in-out focus:-translate-y-0.5 focus:border-transparent focus:shadow-[0_0_0_3px_rgba(28,56,42,0.18),0_10px_24px_rgba(15,31,23,0.10)] focus:outline-none focus:ring-0 mb-4"
             />
             <input
               type="password"
               placeholder="Confirm New Password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 mb-6"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl transition duration-200 ease-in-out focus:-translate-y-0.5 focus:border-transparent focus:shadow-[0_0_0_3px_rgba(28,56,42,0.18),0_10px_24px_rgba(15,31,23,0.10)] focus:outline-none focus:ring-0 mb-6"
             />
             <button
               onClick={handleResetPassword}
-              className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-semibold text-lg transition"
+              className="w-full bg-[#1c382a] hover:bg-[#142a20] active:bg-[#0f1f17] text-white py-3 rounded-xl font-semibold text-lg transition"
             >
               Reset Password
             </button>
@@ -325,7 +325,7 @@ export default function ForgotPassword() {
         <div className="text-center mt-6">
           <button
             onClick={() => navigate('/login')}
-            className="text-blue-600 hover:text-blue-700 text-sm"
+            className="text-[#1c382a] hover:text-[#0f1f17] text-sm"
           >
             ← Back to Login
           </button>

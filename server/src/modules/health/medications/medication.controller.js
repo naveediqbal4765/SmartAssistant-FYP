@@ -26,6 +26,29 @@ const getMedications = async (req, res) => {
   }
 };
 
+const getEligibleReminders = async (req, res) => {
+  try {
+    const reminders = await medicationService.getEligibleReminders(req.user);
+    return res.json({ success: true, reminders });
+  } catch (err) {
+    return handleError(res, err, 'Fetch medication reminders error:');
+  }
+};
+
+const updateReminderStatus = (status) => async (req, res) => {
+  try {
+    const reminder = await medicationService.updateReminderStatus(
+      req.user,
+      req.params.id,
+      req.body.occurrenceKey,
+      status
+    );
+    return res.json({ success: true, reminder });
+  } catch (err) {
+    return handleError(res, err, 'Update medication reminder error:');
+  }
+};
+
 const updateMedication = async (req, res) => {
   try {
     const medication = await medicationService.updateMedication(req.user, req.params.id, req.body);
@@ -47,6 +70,10 @@ const deleteMedication = async (req, res) => {
 module.exports = {
   createMedication,
   getMedications,
+  getEligibleReminders,
+  dismissReminder: updateReminderStatus('dismissed'),
+  markReminderTaken: updateReminderStatus('taken'),
+  skipReminder: updateReminderStatus('skipped'),
   updateMedication,
   deleteMedication
 };

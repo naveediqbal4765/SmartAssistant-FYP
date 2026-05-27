@@ -123,6 +123,21 @@ const emitSeniorTelemetryUpdated = ({ senior, telemetry }) => {
   });
 };
 
+const emitMedicationReminderStatusUpdated = ({ senior, medication, reminder }) => {
+  if (!senior || !medication || !reminder) return;
+
+  const payload = {
+    seniorId: String(senior._id),
+    medicationId: String(medication._id),
+    reminder
+  };
+
+  emitToUser(String(senior._id), 'MEDICATION_REMINDER_STATUS_UPDATED', payload);
+  (senior.linkedCaregivers || []).forEach((caregiverId) => {
+    emitToUser(String(caregiverId), 'MEDICATION_REMINDER_STATUS_UPDATED', payload);
+  });
+};
+
 const emitConversationDeleted = ({ userId, conversationId, chatType }) => {
   emitToUser(String(userId), 'conversation-deleted', {
     conversationId: String(conversationId),
@@ -143,5 +158,6 @@ module.exports = {
   emitGroupUpdated,
   emitSeniorLocationUpdated,
   emitSeniorTelemetryUpdated,
+  emitMedicationReminderStatusUpdated,
   emitConversationDeleted
 };

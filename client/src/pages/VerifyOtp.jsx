@@ -122,7 +122,7 @@ const VerifyOtp = ({ email, onVerificationSuccess, onBackToLogin }) => {
 
   if (redirecting) {
     return (
-      <div className="min-h-screen bg-brand-surface flex items-center justify-center p-6">
+      <div className="auth-focus-scope min-h-screen bg-brand-surface flex items-center justify-center p-6">
         <div className="bg-white p-8 rounded-2xl shadow-lg text-center max-w-md">
           <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mx-auto mb-4"></div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Verification Successful!</h2>
@@ -133,7 +133,7 @@ const VerifyOtp = ({ email, onVerificationSuccess, onBackToLogin }) => {
   }
 
   return (
-    <div className="min-h-screen bg-brand-surface flex items-center justify-center p-4">
+    <div className="auth-focus-scope min-h-screen bg-brand-surface flex items-center justify-center p-4">
       <div className="bg-white p-6 rounded-2xl shadow-lg w-full max-w-md">
         <div className="text-center mb-6">
           <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -172,7 +172,7 @@ const VerifyOtp = ({ email, onVerificationSuccess, onBackToLogin }) => {
               value={digit}
               onChange={(e) => handleOtpChange(index, e.target.value)}
               onKeyDown={(e) => handleKeyDown(index, e)}
-              className="border-2 border-brand-primary bg-white text-center font-mono font-bold text-brand-primary focus:outline-none"
+              className="border-2 border-brand-primary bg-white text-center font-mono font-bold text-brand-primary transition duration-200 ease-in-out focus:-translate-y-0.5 focus:border-transparent focus:shadow-[0_0_0_3px_rgba(28,56,42,0.18),0_10px_24px_rgba(15,31,23,0.10)] focus:outline-none focus:ring-0"
               style={{
                 width: '60px',
                 height: '60px',
@@ -193,7 +193,7 @@ const VerifyOtp = ({ email, onVerificationSuccess, onBackToLogin }) => {
         <button
           onClick={handleVerify}
           disabled={loading}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-medium disabled:opacity-70 transition-all text-lg"
+          className="w-full bg-[#1c382a] hover:bg-[#142a20] active:bg-[#0f1f17] text-white py-3 rounded-xl font-medium disabled:opacity-70 transition-all text-lg"
         >
           {loading ? 'Verifying...' : 'Verify Account'}
         </button>
@@ -208,7 +208,7 @@ const VerifyOtp = ({ email, onVerificationSuccess, onBackToLogin }) => {
           <button
             onClick={handleResendOtp}
             disabled={resendLoading}
-            className="text-blue-600 hover:text-blue-700 disabled:opacity-50 transition"
+            className="text-[#1c382a] hover:text-[#0f1f17] disabled:opacity-50 transition"
           >
             {resendLoading ? 'Sending...' : "Didn't receive code? Resend"}
           </button>

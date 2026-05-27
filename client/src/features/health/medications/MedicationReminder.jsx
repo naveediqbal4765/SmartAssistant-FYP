@@ -15,7 +15,9 @@ export default function MedicationReminder({
   enabled = false,
   floating = true,
   activeReminder: controlledReminder,
-  onDismiss
+  onDismiss,
+  onMarkTaken,
+  onSkip
 }) {
   const notifiedRef = useRef(new Set());
   const [activeReminder, setActiveReminder] = useState(null);
@@ -66,24 +68,57 @@ export default function MedicationReminder({
       <p className="mt-2 text-gray-700">
         Dosage: <span className="font-semibold">{visibleReminder.dosage}</span>
       </p>
+      {visibleReminder.scheduledFor && (
+        <p className="mt-2 text-gray-700">
+          Scheduled: <span className="font-semibold">{new Date(visibleReminder.scheduledFor).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+        </p>
+      )}
       {visibleReminder.notes && (
         <p className="mt-2 rounded-xl bg-gray-50 p-3 text-sm text-gray-700">
           {visibleReminder.notes}
         </p>
       )}
-      <button
-        type="button"
-        onClick={() => {
-          if (isControlled) {
-            onDismiss?.(visibleReminder);
-            return;
-          }
-          setActiveReminder(null);
-        }}
-        className="mt-4 w-full rounded-xl bg-green-600 px-4 py-3 font-semibold text-white hover:bg-green-700"
-      >
-        Dismiss
-      </button>
+      <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
+        <button
+          type="button"
+          onClick={() => {
+            if (isControlled) {
+              onMarkTaken?.(visibleReminder);
+              return;
+            }
+            setActiveReminder(null);
+          }}
+          className="rounded-xl bg-green-600 px-4 py-3 font-semibold text-white hover:bg-green-700"
+        >
+          Taken
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            if (isControlled) {
+              onSkip?.(visibleReminder);
+              return;
+            }
+            setActiveReminder(null);
+          }}
+          className="rounded-xl bg-yellow-100 px-4 py-3 font-semibold text-yellow-800 hover:bg-yellow-200"
+        >
+          Skip
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            if (isControlled) {
+              onDismiss?.(visibleReminder);
+              return;
+            }
+            setActiveReminder(null);
+          }}
+          className="rounded-xl bg-gray-100 px-4 py-3 font-semibold text-gray-800 hover:bg-gray-200"
+        >
+          Dismiss
+        </button>
+      </div>
     </div>
   );
 }
