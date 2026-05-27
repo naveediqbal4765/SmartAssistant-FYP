@@ -19,6 +19,7 @@ import {
 export const SENIOR_REMINDERS_REFRESH_EVENT = 'senior-reminders:refresh';
 
 const REFRESH_INTERVAL_MS = 60000;
+const APPOINTMENT_POPUP_VISIBLE_MS = 60000;
 const PLAYED_REMINDERS_STORAGE_KEY = 'senior-reminders:played-alerts';
 
 const getStorageSet = (storageKey) => {
@@ -96,7 +97,7 @@ export default function GlobalSeniorReminderPopups({
 
     appointmentReminders.forEach((appointment) => {
       if (appointment?._id && appointment?.reminderVersion) {
-        markSoundPlayed(`appointment:${appointment._id}:${appointment.reminderVersion}`);
+        markSoundPlayed(`appointment:${appointment._id}:${appointment.reminderVersion}:${appointment.lastReminderShownAt || ''}`);
       }
     });
 
@@ -112,6 +113,27 @@ export default function GlobalSeniorReminderPopups({
       }
     });
   }, [appointmentReminders, callReminderPopups, enabled, markSoundPlayed, medicationReminders]);
+
+  useEffect(() => {
+    if (!enabled || !appointmentReminders.length) return undefined;
+
+    const timers = appointmentReminders.map((appointment) => {
+      const shownAt = appointment.lastReminderShownAt
+        ? new Date(appointment.lastReminderShownAt).getTime()
+        : Date.now();
+      const remainingMs = Math.max(0, shownAt + APPOINTMENT_POPUP_VISIBLE_MS - Date.now());
+
+      return window.setTimeout(() => {
+        setAppointmentReminders((current) => current.filter((item) => (
+          String(item._id) !== String(appointment._id)
+            || item.reminderVersion !== appointment.reminderVersion
+            || item.lastReminderShownAt !== appointment.lastReminderShownAt
+        )));
+      }, remainingMs);
+    });
+
+    return () => timers.forEach((timerId) => window.clearTimeout(timerId));
+  }, [appointmentReminders, enabled]);
 
   const dismissAppointment = async (appointmentId, reminderVersion) => {
     setAppointmentReminders((current) => current.filter((appointment) => (

@@ -2,6 +2,9 @@ const mongoose = require('mongoose');
 const Appointment = require('./appointment.model');
 const PRE_ALERT_MINUTES = 30;
 const EXPIRE_AFTER_MINUTES = 60;
+const POPUP_VISIBLE_MINUTES = 1;
+const REPEAT_AFTER_MINUTES = 5;
+const DEFAULT_TIMEZONE = 'UTC';
 
 const createError = (status, message) => {
   const err = new Error(message);
@@ -49,26 +52,85 @@ const validateAppointmentPayload = (payload) => {
     title: payload.title.trim(),
     date: payload.date.trim(),
     time: payload.time.trim(),
+    timezone: normalizeTimezone(payload.timezone),
     notes: payload.notes?.trim() || ''
   };
 };
 
-const getAppointmentDateTime = ({ date, time }) => {
-  const appointmentDate = new Date(`${date}T${time}:00`);
-  if (Number.isNaN(appointmentDate.getTime())) {
+const normalizeTimezone = (timezone = DEFAULT_TIMEZONE) => {
+  const candidate = String(timezone || DEFAULT_TIMEZONE).trim();
+  try {
+    new Intl.DateTimeFormat('en-US', { timeZone: candidate }).format(new Date());
+    return candidate;
+  } catch (err) {
+    throw createError(400, 'Valid appointment timezone is required');
+  }
+};
+
+const getZonedParts = (date, timezone) => {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: timezone,
+    hourCycle: 'h23',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  }).formatToParts(date);
+
+  return Object.fromEntries(
+    parts
+      .filter((part) => part.type !== 'literal')
+      .map((part) => [part.type, Number(part.value)])
+  );
+};
+
+const getAppointmentDateTime = ({ date, time, timezone = DEFAULT_TIMEZONE }) => {
+  const [year, month, day] = String(date).split('-').map(Number);
+  const [hour, minute] = String(time).split(':').map(Number);
+  if ([year, month, day, hour, minute].some((value) => !Number.isFinite(value))) {
     throw createError(400, 'Valid appointment date and time are required');
   }
+
+  const targetUtc = Date.UTC(year, month - 1, day, hour, minute, 0);
+  let utcValue = targetUtc;
+
+  for (let index = 0; index < 3; index += 1) {
+    const parts = getZonedParts(new Date(utcValue), timezone);
+    const zonedAsUtc = Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute, parts.second || 0);
+    utcValue = targetUtc - (zonedAsUtc - utcValue);
+  }
+
+  const appointmentDate = new Date(utcValue);
+  const finalParts = getZonedParts(appointmentDate, timezone);
+  if (
+    finalParts.year !== year ||
+    finalParts.month !== month ||
+    finalParts.day !== day ||
+    finalParts.hour !== hour ||
+    finalParts.minute !== minute
+  ) {
+    throw createError(400, 'Appointment time does not exist in the selected timezone');
+  }
+
   return appointmentDate;
 };
 
-const buildReminderLifecycle = ({ date, time }) => {
-  const appointmentDate = getAppointmentDateTime({ date, time });
+const buildReminderLifecycle = ({ date, time, timezone = DEFAULT_TIMEZONE }) => {
+  const normalizedTimezone = normalizeTimezone(timezone);
+  const appointmentDate = getAppointmentDateTime({ date, time, timezone: normalizedTimezone });
+  const reminderActiveAt = new Date(appointmentDate.getTime() - PRE_ALERT_MINUTES * 60 * 1000);
   return {
+    timezone: normalizedTimezone,
+    appointmentAtUTC: appointmentDate,
     reminderStatus: 'pending',
-    reminderVersion: `${date}T${time}`,
-    reminderActiveAt: new Date(appointmentDate.getTime() - PRE_ALERT_MINUTES * 60 * 1000),
+    reminderVersion: `${date}T${time}:${normalizedTimezone}`,
+    reminderActiveAt,
     reminderExpiresAt: new Date(appointmentDate.getTime() + EXPIRE_AFTER_MINUTES * 60 * 1000),
-    reminderDismissedAt: null
+    reminderDismissedAt: null,
+    lastReminderShownAt: null,
+    nextReminderAt: reminderActiveAt
   };
 };
 
@@ -77,27 +139,49 @@ const normalizeAppointmentForReminder = (appointment) => ({
   title: appointment.title,
   date: appointment.date,
   time: appointment.time,
+  timezone: appointment.timezone,
+  appointmentAtUTC: appointment.appointmentAtUTC,
   notes: appointment.notes,
   reminderStatus: appointment.reminderStatus,
   reminderVersion: appointment.reminderVersion,
   reminderActiveAt: appointment.reminderActiveAt,
-  reminderExpiresAt: appointment.reminderExpiresAt
+  reminderExpiresAt: appointment.reminderExpiresAt,
+  lastReminderShownAt: appointment.lastReminderShownAt,
+  nextReminderAt: appointment.nextReminderAt
 });
 
 const backfillReminderLifecycle = async (seniorId) => {
   const legacyAppointments = await Appointment.find({
     seniorId,
     $or: [
+      { timezone: { $exists: false } },
+      { appointmentAtUTC: { $exists: false } },
       { reminderVersion: { $exists: false } },
       { reminderActiveAt: { $exists: false } },
       { reminderExpiresAt: { $exists: false } },
-      { reminderStatus: { $exists: false } }
+      { reminderStatus: { $exists: false } },
+      { nextReminderAt: { $exists: false } }
     ]
   });
 
   await Promise.all(legacyAppointments.map((appointment) => {
-    const lifecycle = buildReminderLifecycle(appointment);
-    Object.assign(appointment, lifecycle);
+    const lifecycle = buildReminderLifecycle({
+      date: appointment.date,
+      time: appointment.time,
+      timezone: appointment.timezone || DEFAULT_TIMEZONE
+    });
+
+    appointment.timezone = appointment.timezone || lifecycle.timezone;
+    appointment.appointmentAtUTC = appointment.appointmentAtUTC
+      || (appointment.reminderActiveAt
+        ? new Date(appointment.reminderActiveAt.getTime() + PRE_ALERT_MINUTES * 60 * 1000)
+        : lifecycle.appointmentAtUTC);
+    appointment.reminderVersion = appointment.reminderVersion || lifecycle.reminderVersion;
+    appointment.reminderActiveAt = appointment.reminderActiveAt || lifecycle.reminderActiveAt;
+    appointment.reminderExpiresAt = appointment.reminderExpiresAt || lifecycle.reminderExpiresAt;
+    appointment.reminderStatus = appointment.reminderStatus || lifecycle.reminderStatus;
+    appointment.nextReminderAt = appointment.nextReminderAt || appointment.reminderActiveAt || lifecycle.nextReminderAt;
+    appointment.lastReminderShownAt = appointment.lastReminderShownAt || null;
     return appointment.save();
   }));
 };
@@ -144,6 +228,8 @@ const getEligibleReminders = async (user) => {
   if (user.role !== 'elder') return [];
 
   const now = new Date();
+  const visibleSince = new Date(now.getTime() - POPUP_VISIBLE_MINUTES * 60 * 1000);
+  const nextCycleAt = new Date(now.getTime() + (POPUP_VISIBLE_MINUTES + REPEAT_AFTER_MINUTES) * 60 * 1000);
   await backfillReminderLifecycle(user._id);
 
   await Appointment.updateMany(
@@ -162,14 +248,36 @@ const getEligibleReminders = async (user) => {
       reminderActiveAt: { $lte: now },
       reminderExpiresAt: { $gte: now }
     },
-    { $set: { reminderStatus: 'active' } }
+    [
+      {
+        $set: {
+          reminderStatus: 'active',
+          nextReminderAt: { $ifNull: ['$nextReminderAt', '$reminderActiveAt'] }
+        }
+      }
+    ]
+  );
+
+  await Appointment.updateMany(
+    {
+      seniorId: user._id,
+      reminderStatus: 'active',
+      reminderExpiresAt: { $gte: now },
+      nextReminderAt: { $lte: now }
+    },
+    {
+      $set: {
+        lastReminderShownAt: now,
+        nextReminderAt: nextCycleAt
+      }
+    }
   );
 
   const reminders = await Appointment.find({
     seniorId: user._id,
     reminderStatus: 'active',
-    reminderActiveAt: { $lte: now },
-    reminderExpiresAt: { $gte: now }
+    reminderExpiresAt: { $gte: now },
+    lastReminderShownAt: { $gte: visibleSince }
   }).sort({ reminderActiveAt: 1, time: 1 });
 
   return reminders.map(normalizeAppointmentForReminder);

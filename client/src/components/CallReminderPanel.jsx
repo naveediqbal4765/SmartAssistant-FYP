@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import { Bell, Plus, Trash2, X } from 'lucide-react';
+import { useDialog } from './ui/GlobalDialogProvider';
 
 const API_BASE_URL = 'http://localhost:5000/api/reminders';
 
@@ -19,11 +20,13 @@ const formatTime = (value) => {
 };
 
 export default function CallReminderPanel() {
+  const dialog = useDialog();
   const [reminders, setReminders] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [title, setTitle] = useState('');
   const [targetUserName, setTargetUserName] = useState('');
   const [scheduledTime, setScheduledTime] = useState('');
+  const [clearingAll, setClearingAll] = useState(false);
   const [error, setError] = useState('');
 
   const upcomingReminders = useMemo(() => {
@@ -75,6 +78,35 @@ export default function CallReminderPanel() {
     }
   };
 
+  const handleClearAll = async () => {
+    if (!upcomingReminders.length) return;
+
+    const confirmed = await dialog.showConfirm({
+      title: 'Clear all call reminders?',
+      message: 'This will clear all reminders for this section',
+      confirmText: 'Clear All',
+      cancelText: 'Cancel'
+    });
+    if (!confirmed) return;
+
+    const reminderIds = upcomingReminders.map((reminder) => reminder._id);
+    const reminderIdSet = new Set(reminderIds.map(String));
+    setClearingAll(true);
+    setError('');
+    setReminders((current) => current.filter((reminder) => !reminderIdSet.has(String(reminder._id))));
+
+    try {
+      await Promise.all(reminderIds.map((reminderId) => (
+        axios.delete(`${API_BASE_URL}/${reminderId}`, { headers: authHeaders() })
+      )));
+    } catch (err) {
+      setError(err.response?.data?.msg || 'Failed to clear call reminders');
+      loadReminders();
+    } finally {
+      setClearingAll(false);
+    }
+  };
+
   return (
     <div className="motion-card mb-10 rounded-2xl border border-gray-200 bg-white/90 p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -87,14 +119,26 @@ export default function CallReminderPanel() {
             <p className="text-sm text-gray-700">Simple alerts for future calls.</p>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={() => setShowForm((value) => !value)}
-          className="flex items-center gap-2 rounded-xl bg-green-600 px-4 py-2 font-semibold text-white hover:bg-green-700"
-        >
-          {showForm ? <X size={18} /> : <Plus size={18} />}
-          {showForm ? 'Close' : 'Add Reminder'}
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          {upcomingReminders.length > 0 && (
+            <button
+              type="button"
+              onClick={handleClearAll}
+              disabled={clearingAll}
+              className="rounded-xl border border-red-200 px-4 py-2 font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50"
+            >
+              {clearingAll ? 'Clearing...' : 'Clear All'}
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => setShowForm((value) => !value)}
+            className="flex items-center gap-2 rounded-xl bg-green-600 px-4 py-2 font-semibold text-white hover:bg-green-700"
+          >
+            {showForm ? <X size={18} /> : <Plus size={18} />}
+            {showForm ? 'Close' : 'Add Reminder'}
+          </button>
+        </div>
       </div>
 
       {error && <div className="mt-4 rounded-xl bg-red-50 p-3 text-red-700">{error}</div>}

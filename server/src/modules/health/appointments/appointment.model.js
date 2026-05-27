@@ -22,6 +22,17 @@ const AppointmentSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
+  timezone: {
+    type: String,
+    required: true,
+    default: 'UTC',
+    trim: true
+  },
+  appointmentAtUTC: {
+    type: Date,
+    required: true,
+    index: true
+  },
   notes: {
     type: String,
     default: '',
@@ -52,10 +63,20 @@ const AppointmentSchema = new mongoose.Schema({
     type: Date,
     default: null
   },
+  lastReminderShownAt: {
+    type: Date,
+    default: null
+  },
+  nextReminderAt: {
+    type: Date,
+    required: true,
+    index: true
+  },
   createdAt: { type: Date, default: Date.now }
 });
 
 AppointmentSchema.index({ seniorId: 1, date: 1, time: 1 });
 AppointmentSchema.index({ seniorId: 1, reminderStatus: 1, reminderActiveAt: 1, reminderExpiresAt: 1 });
+AppointmentSchema.index({ seniorId: 1, reminderStatus: 1, nextReminderAt: 1, reminderExpiresAt: 1 });
 
 module.exports = mongoose.model('Appointment', AppointmentSchema);

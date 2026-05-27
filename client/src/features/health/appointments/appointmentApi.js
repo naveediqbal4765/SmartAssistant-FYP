@@ -6,6 +6,15 @@ const authHeaders = () => ({
   Authorization: `Bearer ${localStorage.getItem('token') || ''}`
 });
 
+const getBrowserTimezone = () => (
+  Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+);
+
+const withTimezone = (payload = {}) => ({
+  ...payload,
+  timezone: payload.timezone || getBrowserTimezone()
+});
+
 export const getAppointmentErrorMessage = (err, fallback = 'Appointment request failed') => (
   err?.response?.data?.msg || err?.response?.data?.message || err?.message || fallback
 );
@@ -21,12 +30,12 @@ export const fetchEligibleAppointmentReminders = async () => {
 };
 
 export const createAppointment = async (payload) => {
-  const response = await axios.post(API_BASE_URL, payload, { headers: authHeaders() });
+  const response = await axios.post(API_BASE_URL, withTimezone(payload), { headers: authHeaders() });
   return response.data.appointment;
 };
 
 export const updateAppointment = async (appointmentId, payload) => {
-  const response = await axios.put(`${API_BASE_URL}/${appointmentId}`, payload, {
+  const response = await axios.put(`${API_BASE_URL}/${appointmentId}`, withTimezone(payload), {
     headers: authHeaders()
   });
   return response.data.appointment;
@@ -47,3 +56,4 @@ export const dismissAppointmentReminder = async (appointmentId, reminderVersion)
   );
   return response.data.reminder;
 };
+

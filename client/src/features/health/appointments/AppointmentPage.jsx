@@ -31,6 +31,7 @@ export default function AppointmentPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState('');
+  const [clearingAll, setClearingAll] = useState(false);
   const [error, setError] = useState('');
 
   const role = currentUser.role;
@@ -129,6 +130,34 @@ export default function AppointmentPage() {
     }
   };
 
+  const handleClearAll = async () => {
+    if (!appointments.length) return;
+
+    const confirmed = await dialog.showConfirm({
+      title: 'Clear all appointment reminders?',
+      message: 'This will clear all reminders for this section',
+      confirmText: 'Clear All',
+      cancelText: 'Cancel'
+    });
+    if (!confirmed) return;
+
+    const appointmentsToDelete = appointments;
+    setClearingAll(true);
+    setError('');
+    setAppointments([]);
+    setEditingAppointment(null);
+
+    try {
+      await Promise.all(appointmentsToDelete.map((appointment) => deleteAppointment(appointment._id)));
+      window.dispatchEvent(new Event(SENIOR_REMINDERS_REFRESH_EVENT));
+    } catch (err) {
+      setError(getAppointmentErrorMessage(err, 'Failed to clear appointment reminders'));
+      loadAppointments();
+    } finally {
+      setClearingAll(false);
+    }
+  };
+
   if (role === 'volunteer') {
     return (
       <HealthPlaceholder title="Appointments">
@@ -175,7 +204,19 @@ export default function AppointmentPage() {
         <section>
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-xl font-bold text-brand-primary">Appointments for {selectedDate}</h2>
-            {loading && <span className="text-sm text-gray-500">Loading...</span>}
+            <div className="flex items-center gap-3">
+              {loading && <span className="text-sm text-gray-500">Loading...</span>}
+              {isSenior && appointments.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleClearAll}
+                  disabled={clearingAll}
+                  className="rounded-xl border border-red-200 px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50"
+                >
+                  {clearingAll ? 'Clearing...' : 'Clear All'}
+                </button>
+              )}
+            </div>
           </div>
 
           {loading ? (
