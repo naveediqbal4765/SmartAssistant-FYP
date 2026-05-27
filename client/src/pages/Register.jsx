@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useDialog } from '../components/ui/GlobalDialogProvider';
 
 const Register = () => {
   const navigate = useNavigate();
+  const dialog = useDialog();
 
   const [formData, setFormData] = useState({
     name: '',
@@ -41,7 +43,10 @@ const Register = () => {
     console.log("Response from backend:", data);   // ← Add this too
 
     if (response.ok) {
-      alert(data.msg || 'Registration successful!');
+      await dialog.showAlert({
+        title: 'Registration successful',
+        message: data.msg || 'Registration successful!'
+      });
       navigate('/login');
     } else {
       setError(data.msg || 'Something went wrong');

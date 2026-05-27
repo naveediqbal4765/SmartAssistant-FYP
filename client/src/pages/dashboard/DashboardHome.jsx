@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import DashboardPanels from './DashboardPanels';
+import { useDialog } from '../../components/ui/GlobalDialogProvider';
 
 const moduleToneClasses = {
   brand: 'bg-brand-primary hover:bg-brand-secondary',
@@ -19,11 +20,12 @@ const caregiverOwnedModuleTitles = {
   '/health/medications': 'Medications',
   '/health/appointments': 'Appointments',
   '/health/telemetry': 'Health Telemetry',
-  '/my-requests': 'Requests'
+  '/task-requests': 'Task Requests'
 };
 
 export default function DashboardHome({ config, context, greeting }) {
   const navigate = useNavigate();
+  const dialog = useDialog();
   const isCaregiverDashboard = config.roleLabel === 'Caregiver';
   const seniorName = context?.linkedSenior?.name?.trim();
   const seniorOwnerLabel = seniorName || 'Senior';
@@ -35,7 +37,7 @@ export default function DashboardHome({ config, context, greeting }) {
     }
   })();
 
-  const handleModuleClick = (module) => {
+  const handleModuleClick = async (module) => {
     if (module.relationshipTarget === 'linkedSenior') {
       const seniorId = context?.linkedSenior?._id || context?.linkedSenior?.id;
       if (seniorId) {
@@ -61,7 +63,10 @@ export default function DashboardHome({ config, context, greeting }) {
     }
 
     if (module.comingSoon) {
-      window.alert(module.comingSoon);
+      await dialog.showAlert({
+        title: 'Coming soon',
+        message: module.comingSoon
+      });
     }
   };
 

@@ -8,9 +8,11 @@ import FeaturePage from '../components/ui/FeaturePage';
 import FeatureCard from '../components/ui/FeatureCard';
 import LoadingState from '../components/ui/LoadingState';
 import StatusAlert from '../components/ui/StatusAlert';
+import { useDialog } from '../components/ui/GlobalDialogProvider';
 
 export default function Profile() {
   const navigate = useNavigate();
+  const dialog = useDialog();
   const { profileUserId } = useParams();
   const isLinkedSeniorView = Boolean(profileUserId);
   
@@ -270,7 +272,13 @@ export default function Profile() {
   };
 
   const deleteEmergencyContact = async (id) => {
-    if (!window.confirm('Are you sure you want to remove this contact?')) return;
+    const confirmed = await dialog.showConfirm({
+      title: 'Remove emergency contact?',
+      message: 'Are you sure you want to remove this contact?',
+      confirmText: 'Remove',
+      cancelText: 'Cancel'
+    });
+    if (!confirmed) return;
 
     try {
       const token = getAuthToken();
@@ -331,7 +339,13 @@ export default function Profile() {
     const caregiverId = caregiver._id || caregiver.id;
     if (!caregiverId) return;
 
-    if (!window.confirm(`Remove ${caregiver.name || 'this caregiver'} from your caregiver list?`)) {
+    const confirmed = await dialog.showConfirm({
+      title: 'Remove caregiver?',
+      message: `Remove ${caregiver.name || 'this caregiver'} from your caregiver list?`,
+      confirmText: 'Remove',
+      cancelText: 'Cancel'
+    });
+    if (!confirmed) {
       return;
     }
 
@@ -373,38 +387,51 @@ export default function Profile() {
   };
 
   const handleDeleteAccount = async () => {
-    const confirmed = window.confirm(
-      '⚠️ WARNING: This action is PERMANENT!\n\n' +
-      'All your data will be deleted:\n' +
-      '• Profile information\n' +
-      '• Emergency contacts\n' +
-      '• Digital Health Vault files\n' +
-      '• Request history\n' +
-      '• Activity logs\n\n' +
-      'Are you sure you want to delete your account?'
-    );
+    const confirmed = await dialog.showConfirm({
+      title: 'Delete account permanently?',
+      message:
+        'WARNING: This action is PERMANENT!\n\n' +
+        'All your data will be deleted:\n' +
+        '- Profile information\n' +
+        '- Emergency contacts\n' +
+        '- Digital Health Vault files\n' +
+        '- Request history\n' +
+        '- Activity logs\n\n' +
+        'Are you sure you want to delete your account?',
+      confirmText: 'Continue',
+      cancelText: 'Cancel'
+    });
     
     if (!confirmed) return;
     
     let finalConfirm = '';
     try {
-      finalConfirm = window.prompt(
-        'Type "DELETE" to permanently delete your account:\n\n' +
-        '(This action cannot be undone)'
-      );
+      finalConfirm = await dialog.showPrompt({
+        title: 'Confirm account deletion',
+        message: 'Type "DELETE" to permanently delete your account.\n\nThis action cannot be undone.',
+        inputPlaceholder: 'DELETE',
+        confirmText: 'Continue',
+        cancelText: 'Cancel',
+        multiline: false
+      });
     } catch (e) {
       return;
     }
     
     if (!finalConfirm || finalConfirm.toUpperCase() !== 'DELETE') {
-      alert('❌ Account deletion cancelled. You must type "DELETE" to confirm.');
+      await dialog.showAlert({
+        title: 'Account deletion cancelled',
+        message: 'You must type "DELETE" to confirm.'
+      });
       return;
     }
     
-    const reallySure = window.confirm(
-      'FINAL WARNING: This will permanently erase ALL your data.\n\n' +
-      'Click OK to permanently delete your account.'
-    );
+    const reallySure = await dialog.showConfirm({
+      title: 'Final warning',
+      message: 'This will permanently erase ALL your data.',
+      confirmText: 'Delete Account',
+      cancelText: 'Cancel'
+    });
     
     if (!reallySure) return;
     
@@ -416,17 +443,26 @@ export default function Profile() {
       
       if (response.data.success) {
         localStorage.clear();
-        alert('✅ Your account has been permanently deleted.\n\nThank you for using Smart Assistant.\nWe are sad to see you go!');
+        await dialog.showAlert({
+          title: 'Account deleted',
+          message: 'Your account has been permanently deleted.\n\nThank you for using Smart Assistant.\nWe are sad to see you go!'
+        });
         setTimeout(() => {
           window.location.href = '/login';
         }, 100);
       } else {
-        alert('❌ Failed to delete account: ' + response.data.msg);
+        await dialog.showAlert({
+          title: 'Failed to delete account',
+          message: response.data.msg || 'Failed to delete account.'
+        });
       }
     } catch (err) {
       console.error('Delete account error:', err);
       localStorage.clear();
-      alert('Your account has been logged out.');
+      await dialog.showAlert({
+        title: 'Logged out',
+        message: 'Your account has been logged out.'
+      });
       setTimeout(() => {
         window.location.href = '/login';
       }, 100);

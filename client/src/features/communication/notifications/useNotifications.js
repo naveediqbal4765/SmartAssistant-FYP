@@ -95,8 +95,22 @@ export default function useNotifications() {
 
     socket.on('newNotification', handleNewNotification);
 
+    const handleTaskAccepted = (payload = {}) => {
+      const taskId = String(payload.task?._id || payload.taskId || '');
+      if (!taskId) return;
+
+      setNotifications((current) => current.map((notification) => (
+        String(notification.taskId || notification.entityId || '') === taskId && notification.taskAction === 'created'
+          ? { ...notification, isRead: true }
+          : notification
+      )));
+    };
+
+    socket.on('task_accepted', handleTaskAccepted);
+
     return () => {
       socket.off('newNotification', handleNewNotification);
+      socket.off('task_accepted', handleTaskAccepted);
     };
   }, []);
 

@@ -4,6 +4,7 @@ import AppointmentCalendar, { toDateKey } from './AppointmentCalendar';
 import AppointmentForm from './AppointmentForm';
 import AppointmentList from './AppointmentList';
 import { SENIOR_REMINDERS_REFRESH_EVENT } from '../reminders/GlobalSeniorReminderPopups';
+import { useDialog } from '../../../components/ui/GlobalDialogProvider';
 import {
   createAppointment,
   deleteAppointment,
@@ -21,6 +22,7 @@ const getCurrentUser = () => {
 };
 
 export default function AppointmentPage() {
+  const dialog = useDialog();
   const currentUser = useMemo(() => getCurrentUser(), []);
   const [appointments, setAppointments] = useState([]);
   const [selectedDate, setSelectedDate] = useState(() => toDateKey(new Date()));
@@ -102,7 +104,13 @@ export default function AppointmentPage() {
 
   const handleDelete = async (appointment) => {
     if (!appointment?._id) return;
-    if (!window.confirm(`Delete ${appointment.title}?`)) return;
+    const confirmed = await dialog.showConfirm({
+      title: 'Delete appointment?',
+      message: `Delete ${appointment.title}?`,
+      confirmText: 'Delete',
+      cancelText: 'Cancel'
+    });
+    if (!confirmed) return;
 
     setDeletingId(appointment._id);
     setError('');

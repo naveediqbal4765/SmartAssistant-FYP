@@ -1,4 +1,4 @@
-import { Activity, Award, Bell, Calendar, Clipboard, FileText, Heart, MessageCircle, User, Users } from 'lucide-react';
+import { Activity, Award, Bell, Calendar, CheckCircle, Clipboard, FileText, Heart, MessageCircle, User, Users } from 'lucide-react';
 
 export const normalizeDashboardRole = (role) => (role === 'elder' ? 'senior' : role);
 
@@ -14,9 +14,8 @@ export const roleConfig = {
       description: 'You can request help, set medication reminders, detect falls, and stay connected with your family and community volunteers.'
     },
     modules: [
-      { title: 'Request Help', icon: Heart, tone: 'success', route: '/request-help' },
+      { title: 'Task Requests', icon: Clipboard, tone: 'success', route: '/task-requests' },
       { title: 'My Profile', icon: User, tone: 'info', route: '/profile' },
-      { title: 'My Requests', icon: Clipboard, tone: 'highlight', route: '/my-requests' },
       { title: 'Medications', icon: Bell, tone: 'warning', route: '/health/medications' },
       { title: 'Digital Health Vault', icon: FileText, tone: 'indigo', vaultTarget: 'self' },
       { title: 'Chat', icon: MessageCircle, tone: 'brand', route: '/chat' },
@@ -37,10 +36,11 @@ export const roleConfig = {
       description: "You can view nearby help requests, earn rewards for helping seniors, and make a real difference in someone's life."
     },
     modules: [
-      { title: 'Available Tasks', icon: Activity, tone: 'success', comingSoon: 'Available Tasks - Coming Soon' },
-      { title: 'My Tasks', icon: Clipboard, tone: 'info', comingSoon: 'My Tasks - Coming Soon' },
+      { title: 'Available Tasks', icon: Activity, tone: 'success', route: '/task-requests?view=available' },
+      { title: 'My Tasks', icon: Clipboard, tone: 'info', route: '/task-requests?view=my' },
+      { title: 'Completed Tasks', icon: CheckCircle, tone: 'highlight', route: '/task-requests?view=completed' },
       { title: 'My Profile', icon: User, tone: 'highlight', route: '/profile' },
-      { title: 'My Rewards', icon: Award, tone: 'reward', comingSoon: 'My Rewards - Coming Soon' },
+      { title: 'My Rewards', icon: Award, tone: 'reward', route: '/task-requests?view=rewards' },
       { title: 'Help Seniors', icon: Users, tone: 'indigo', comingSoon: 'Help Seniors - Coming Soon' },
       { title: 'Impact Stats', icon: Activity, tone: 'teal', comingSoon: 'Impact Stats - Coming Soon' },
       { title: 'Chat', icon: MessageCircle, tone: 'brand', route: '/chat' },
@@ -63,7 +63,7 @@ export const roleConfig = {
       { title: "Senior's Health Vault", icon: FileText, tone: 'teal', vaultTarget: 'linkedSenior' },
       { title: "Senior's Appointments", icon: Calendar, tone: 'highlight', route: '/health/appointments' },
       { title: "Senior's Health Telemetry", icon: Activity, tone: 'lime', route: '/health/telemetry' },
-      { title: "Senior's Requests", icon: Clipboard, tone: 'warning', route: '/my-requests' },
+      { title: "Senior's Task Requests", icon: Clipboard, tone: 'warning', route: '/task-requests' },
       { title: 'My Profile', icon: User, tone: 'indigo', route: '/profile' }
     ]
   }

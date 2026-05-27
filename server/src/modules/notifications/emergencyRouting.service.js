@@ -71,6 +71,18 @@ const getNearbyVolunteerTargets = async (location) => {
 };
 
 const buildNotificationMessage = ({ type, message, location, metadata, timestamp }) => {
+  if (type === 'TASK' && metadata?.task) {
+    const task = metadata.task;
+    return [
+      `${metadata.senior?.name || 'Senior'} requested a task`,
+      `Task: ${task.title}`,
+      `Pickup: ${task.pickupLocation?.address || task.location?.address || 'Not specified'}`,
+      `Drop: ${task.dropLocation?.address || 'Not specified'}`,
+      `Priority: ${task.priority}`,
+      `Scheduled: ${task.scheduledTime ? new Date(task.scheduledTime).toLocaleString() : 'Not scheduled'}`
+    ].join('\n');
+  }
+
   const details = [
     message,
     `Alert type: ${type}`,
@@ -133,7 +145,7 @@ const createEmergencyNotification = async (payload = {}) => {
 
   const timestamp = new Date();
   const notificationType = type === 'TASK' ? 'task' : 'system';
-  const title = type === 'TASK' ? 'Nearby help request' : 'Emergency alert';
+  const title = type === 'TASK' ? `${senior.name} requested a task` : 'Emergency alert';
   const recipients = Array.from(recipientMap.values());
   const incident = await createIncidentIfNeeded({
     type,
@@ -169,6 +181,9 @@ const createEmergencyNotification = async (payload = {}) => {
       emergencyId: incident?._id || null,
       entityType: incident?._id ? 'emergency' : notificationType,
       entityId: incident?._id || metadata.taskId || null,
+      taskAction: type === 'TASK' ? 'created' : undefined,
+      task: metadata.task || null,
+      senior,
       location,
       alertType: type,
       alertMessage: message,

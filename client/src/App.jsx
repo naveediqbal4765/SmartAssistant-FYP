@@ -3,11 +3,9 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'r
 
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
-import TaskRequest from './pages/TaskRequest';
+import TaskRequests from './pages/TaskRequests';
 import Profile from './pages/Profile';
 import ForgotPassword from './pages/ForgotPassword';
-import RequestHelp from './pages/RequestHelp';
-import MyRequests from './pages/MyRequests';
 import SocialLoginHandler from './pages/SocialLoginHandler';
 import PrivacySettings from './pages/PrivacySettings';
 import ActivityLogs from './pages/ActivityLogs';
@@ -23,7 +21,9 @@ import { CallStateProvider } from './features/communication/calls/CallStateConte
 import GlobalCallHandler from './features/communication/calls/GlobalCallHandler';
 import { NotificationProvider, useNotificationState } from './features/communication/notifications/NotificationContext';
 import GlobalSeniorReminderPopups from './features/health/reminders/GlobalSeniorReminderPopups';
+import ActionableTaskNotifications from './features/tasks/ActionableTaskNotifications';
 import AppShell from './components/layout/AppShell';
+import { GlobalDialogProvider } from './components/ui/GlobalDialogProvider';
 
 function ScrollToTopOnRouteChange() {
   const location = useLocation();
@@ -50,6 +50,7 @@ function AuthenticatedGlobalOverlays({ userRole }) {
         callReminderPopups={notificationState.reminderPopups}
         onDismissCallReminder={notificationState.markRead}
       />
+      <ActionableTaskNotifications notificationState={notificationState} />
       <CallStateProvider>
         <GlobalCallHandler />
       </CallStateProvider>
@@ -188,27 +189,24 @@ function App() {
           
           <Route 
             path="/task-request" 
-            element={
-              <PrivateRoute>
-                <TaskRequest />
-              </PrivateRoute>
-            } 
+            element={<Navigate to="/task-requests" />} 
           />
           
           <Route 
             path="/request-help" 
-            element={
-              <PrivateRoute>
-                <RequestHelp />
-              </PrivateRoute>
-            } 
+            element={<Navigate to="/task-requests" />} 
           />
           
           <Route 
             path="/my-requests" 
+            element={<Navigate to="/task-requests" />} 
+          />
+
+          <Route 
+            path="/task-requests" 
             element={
               <PrivateRoute>
-                <MyRequests />
+                <TaskRequests />
               </PrivateRoute>
             } 
           />
@@ -336,17 +334,19 @@ function App() {
 
   return (
     <Router>
-      <ScrollToTopOnRouteChange />
-      <div className="min-h-screen bg-slate-50">
-        {shouldUseAuthenticatedProviders ? (
-          <NotificationProvider>
-            {appRoutes}
-            {isAuthenticated && <AuthenticatedGlobalOverlays userRole={userRole} />}
-          </NotificationProvider>
-        ) : (
-          appRoutes
-        )}
-      </div>
+      <GlobalDialogProvider>
+        <ScrollToTopOnRouteChange />
+        <div className="min-h-screen bg-slate-50">
+          {shouldUseAuthenticatedProviders ? (
+            <NotificationProvider>
+              {appRoutes}
+              {isAuthenticated && <AuthenticatedGlobalOverlays userRole={userRole} />}
+            </NotificationProvider>
+          ) : (
+            appRoutes
+          )}
+        </div>
+      </GlobalDialogProvider>
     </Router>
   );
 }

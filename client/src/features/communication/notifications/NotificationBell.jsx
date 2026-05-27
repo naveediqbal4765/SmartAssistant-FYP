@@ -55,6 +55,17 @@ export default function NotificationBell({
       return;
     }
 
+    if (notification.type === 'task' || notification.taskId || notification.entityType === 'task') {
+      markNotificationAsConsumed({
+        taskId: notification.taskId,
+        entityType: 'task',
+        entityId: notification.entityId || notification.taskId
+      }).catch(() => {});
+      setOpen(false);
+      navigate('/task-requests');
+      return;
+    }
+
     if (notification.type === 'chat_message') {
       try {
         const conversation = await resolveConversation({

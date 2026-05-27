@@ -4,6 +4,7 @@ import MedicationForm from './MedicationForm';
 import HealthPlaceholder from '../components/HealthPlaceholder';
 import { SENIOR_REMINDERS_REFRESH_EVENT } from '../reminders/GlobalSeniorReminderPopups';
 import { getChatSocket } from '../../communication/chat/services/socket';
+import { useDialog } from '../../../components/ui/GlobalDialogProvider';
 import {
   createMedication,
   deleteMedication,
@@ -53,6 +54,7 @@ const mergeMedicationReminderStatus = (medications, payload = {}) => {
 };
 
 export default function MedicationPage() {
+  const dialog = useDialog();
   const currentUser = useMemo(() => getCurrentUser(), []);
   const [medications, setMedications] = useState([]);
   const [editingMedication, setEditingMedication] = useState(null);
@@ -144,7 +146,13 @@ export default function MedicationPage() {
 
   const handleDelete = async (medication) => {
     if (!medication?._id) return;
-    if (!window.confirm(`Delete ${medication.name}?`)) return;
+    const confirmed = await dialog.showConfirm({
+      title: 'Delete medication?',
+      message: `Delete ${medication.name}?`,
+      confirmText: 'Delete',
+      cancelText: 'Cancel'
+    });
+    if (!confirmed) return;
 
     setDeletingId(medication._id);
     setError('');

@@ -58,6 +58,7 @@ const getProfile = async (user) => {
         phone: user.phone || '',
         address: user.address || '',
         dateOfBirth: user.dateOfBirth || null,
+        location: user.location || null,
         linkedSeniorId: user.linkedSeniorId || null,
         linkedSenior,
         linkedCaregivers,

@@ -128,6 +128,11 @@ const UserSchema = new mongoose.Schema({
     default: []
   },
   // ==========================================
+
+  hiddenHistoryTaskIds: {
+    type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Task' }],
+    default: []
+  },
   
   createdAt: { 
     type: Date, 

@@ -8,9 +8,11 @@ import FeatureCard from '../components/ui/FeatureCard';
 import FeaturePage from '../components/ui/FeaturePage';
 import LoadingState from '../components/ui/LoadingState';
 import StatusAlert from '../components/ui/StatusAlert';
+import { useDialog } from '../components/ui/GlobalDialogProvider';
 
 export default function DocumentVault() {
   const navigate = useNavigate();
+  const dialog = useDialog();
   const { targetUserId } = useParams();
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -144,7 +146,13 @@ export default function DocumentVault() {
   const deleteDocument = async (id) => {
     if (readOnly) return;
 
-    if (!window.confirm('Are you sure you want to delete this Digital Health Vault item?')) return;
+    const confirmed = await dialog.showConfirm({
+      title: 'Delete vault item?',
+      message: 'Are you sure you want to delete this Digital Health Vault item?',
+      confirmText: 'Delete',
+      cancelText: 'Cancel'
+    });
+    if (!confirmed) return;
 
     try {
       const token = localStorage.getItem('token');

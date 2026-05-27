@@ -31,6 +31,10 @@ const emitNotification = (userId, notification) => {
     entityId: notification.entityId,
     fromUserId: notification.fromUserId,
     toUserId: notification.toUserId,
+    alertType: notification.alertType,
+    taskAction: notification.taskAction,
+    task: notification.task,
+    senior: notification.senior,
     isRead: notification.isRead,
     createdAt: notification.createdAt
   });
@@ -138,6 +142,13 @@ const emitMedicationReminderStatusUpdated = ({ senior, medication, reminder }) =
   });
 };
 
+const emitTaskEvent = ({ userIds = [], event, task }) => {
+  if (!event || !task) return;
+  userIds.forEach((userId) => {
+    emitToUser(String(userId), event, { task });
+  });
+};
+
 const emitConversationDeleted = ({ userId, conversationId, chatType }) => {
   emitToUser(String(userId), 'conversation-deleted', {
     conversationId: String(conversationId),
@@ -159,5 +170,6 @@ module.exports = {
   emitSeniorLocationUpdated,
   emitSeniorTelemetryUpdated,
   emitMedicationReminderStatusUpdated,
+  emitTaskEvent,
   emitConversationDeleted
 };

@@ -1,3 +1,5 @@
+import { forwardRef } from 'react';
+
 const variants = {
   primary: 'bg-brand-primary text-white hover:bg-brand-secondary focus:ring-brand-primary',
   secondary: 'bg-gray-200 text-gray-900 hover:bg-gray-300 focus:ring-gray-400',
@@ -12,16 +14,17 @@ const sizes = {
   lg: 'px-5 py-3 text-base'
 };
 
-export default function Button({
+const Button = forwardRef(function Button({
   children,
   variant = 'primary',
   size = 'md',
   className = '',
   type = 'button',
   ...props
-}) {
+}, ref) {
   return (
     <button
+      ref={ref}
       type={type}
       className={`motion-interactive inline-flex items-center justify-center gap-2 rounded-xl font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${variants[variant] || variants.primary} ${sizes[size] || sizes.md} ${className}`}
       {...props}
@@ -29,4 +32,6 @@ export default function Button({
       {children}
     </button>
   );
-}
+});
+
+export default Button;
