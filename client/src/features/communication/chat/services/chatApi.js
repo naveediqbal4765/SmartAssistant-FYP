@@ -55,12 +55,16 @@ export const sendMessage = async ({
   message,
   messageType = 'text',
   mediaUrl = '',
+  fileName = '',
+  mimeType = '',
+  size = null,
   duration = null,
-  repliedToMessageId = ''
+  repliedToMessageId = '',
+  forwardedFrom = null
 }) => {
   const response = await axios.post(
     `${API_BASE_URL}/message`,
-    { receiverId, message, messageType, mediaUrl, duration, repliedToMessageId },
+    { receiverId, message, messageType, mediaUrl, fileName, mimeType, size, duration, repliedToMessageId, forwardedFrom },
     { headers: authHeaders() }
   );
   return response.data.message;
@@ -76,7 +80,7 @@ export const deleteMessage = async (messageId, deleteType = 'forEveryone') => {
 
 export const reactToMessage = async (messageId, reactionType) => {
   const response = await axios.post(
-    `http://localhost:5000/api/messages/${messageId}/reaction`,
+    `${API_BASE_URL}/message/${messageId}/reaction`,
     { reactionType },
     { headers: authHeaders() }
   );
@@ -84,12 +88,7 @@ export const reactToMessage = async (messageId, reactionType) => {
 };
 
 export const reactToVoiceNote = async (voiceNoteId, reactionType) => {
-  const response = await axios.post(
-    `http://localhost:5000/api/voice-notes/${voiceNoteId}/reaction`,
-    { reactionType },
-    { headers: authHeaders() }
-  );
-  return response.data;
+  return reactToMessage(voiceNoteId, reactionType);
 };
 
 export const deleteConversation = async (conversationId) => {
@@ -111,6 +110,20 @@ export const uploadAudio = async (audioBlob) => {
   });
 
   return response.data.audio;
+};
+
+export const uploadMedia = async (file) => {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const response = await axios.post(`${UPLOAD_BASE_URL}/media`, formData, {
+    headers: {
+      ...authHeaders(),
+      'Content-Type': 'multipart/form-data'
+    }
+  });
+
+  return response.data.media;
 };
 
 export const searchUsers = async (query) => {

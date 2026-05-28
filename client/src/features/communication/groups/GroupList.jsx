@@ -55,8 +55,8 @@ function GroupListItem({
   };
 
   return (
-    <div className="relative overflow-hidden border-b last:border-b-0">
-      <div className="absolute inset-y-0 right-0 flex w-48">
+    <div className="relative overflow-visible border-b border-gray-100 last:border-b-0">
+      <div className="absolute inset-y-1 right-0 flex w-48 overflow-hidden rounded-2xl shadow-sm">
         <button
           type="button"
           onClick={(event) => handleAction(event, onMuteGroup)}
@@ -79,9 +79,9 @@ function GroupListItem({
         onPointerUp={handlePointerUp}
         onPointerCancel={() => setSwipeStartX(null)}
         onClick={handleSelect}
-        className={`motion-interactive relative w-full touch-pan-y p-4 text-left hover:bg-gray-50 ${
+        className={`motion-interactive relative w-full touch-pan-y rounded-2xl p-4 text-left transition-all duration-200 ease-in-out hover:bg-gray-50 hover:shadow-md ${
           actionsOpen ? '-translate-x-48' : 'translate-x-0'
-        } ${active ? 'bg-green-50 ring-2 ring-inset ring-green-500' : 'bg-white'}`}
+        } ${active ? 'z-10 scale-[1.01] bg-gray-100 shadow-lg shadow-gray-200/70' : 'bg-white shadow-none'}`}
       >
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -106,13 +106,14 @@ export default function GroupList({
   currentUserId,
   onSelectGroup,
   onRequestJoin,
+  onCancelJoinRequest,
   onExitGroup,
   onMuteGroup
 }) {
   return (
     <div className="space-y-4">
-      <div className="motion-card rounded-xl bg-white">
-        <div className="border-b p-4 font-bold">My Groups</div>
+      <div className="motion-card rounded-xl bg-white p-2">
+        <div className="border-b border-gray-100 p-4 font-bold">My Groups</div>
         {!groups.length && <div className="p-4 text-gray-500">No groups yet.</div>}
         {groups.map((group) => (
           <GroupListItem
@@ -137,20 +138,31 @@ export default function GroupList({
             <div key={group._id} className="border-b p-4 last:border-b-0">
               <p className="font-semibold">{group.name}</p>
               <p className="text-sm text-gray-500">{group.description || 'No description'}</p>
-              <button
-                type="button"
-                onClick={() => {
-                  if (!requested) onRequestJoin(group._id);
-                }}
-                disabled={requested}
-                className={`mt-3 rounded-lg px-3 py-2 text-sm font-semibold ${
-                  requested
-                    ? 'bg-gray-200 text-gray-600'
-                    : 'bg-blue-600 text-white hover:bg-blue-700'
-                }`}
-              >
-                {requested ? 'Requested' : 'Join Request'}
-              </button>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!requested) onRequestJoin(group._id);
+                  }}
+                  disabled={requested}
+                  className={`rounded-lg px-3 py-2 text-sm font-semibold ${
+                    requested
+                      ? 'bg-gray-200 text-gray-600'
+                      : 'bg-blue-600 text-white hover:bg-blue-700'
+                  }`}
+                >
+                  {requested ? 'Requested' : 'Join Request'}
+                </button>
+                {requested && (
+                  <button
+                    type="button"
+                    onClick={() => onCancelJoinRequest(group._id)}
+                    className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                  >
+                    Cancel Request
+                  </button>
+                )}
+              </div>
             </div>
           );
         })}

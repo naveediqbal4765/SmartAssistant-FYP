@@ -1,4 +1,5 @@
 let ioInstance = null;
+const onlineUsers = new Map();
 
 const userRoom = (userId) => `user:${userId}`;
 
@@ -10,6 +11,30 @@ const emitToUser = (userId, event, payload) => {
   if (!ioInstance || !userId) return;
   ioInstance.to(userRoom(userId)).emit(event, payload);
 };
+
+const setUserOnline = (userId, socketId) => {
+  if (!userId || !socketId) return;
+  const key = String(userId);
+  const sockets = onlineUsers.get(key) || new Set();
+  sockets.add(socketId);
+  onlineUsers.set(key, sockets);
+};
+
+const setUserOffline = (userId, socketId) => {
+  if (!userId || !socketId) return false;
+  const key = String(userId);
+  const sockets = onlineUsers.get(key);
+  if (!sockets) return true;
+  sockets.delete(socketId);
+  if (sockets.size) {
+    onlineUsers.set(key, sockets);
+    return false;
+  }
+  onlineUsers.delete(key);
+  return true;
+};
+
+const isUserOnline = (userId) => onlineUsers.has(String(userId));
 
 const emitNewMessage = (message) => {
   emitToUser(String(message.receiverId), 'newMessage', message);
@@ -161,6 +186,9 @@ module.exports = {
   userRoom,
   setSocketServer,
   emitToUser,
+  setUserOnline,
+  setUserOffline,
+  isUserOnline,
   emitNewMessage,
   emitNotification,
   emitMessageDeleted,

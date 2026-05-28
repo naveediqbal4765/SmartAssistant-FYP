@@ -38,9 +38,9 @@ const toSnapshot = (payload) => {
   });
 };
 
-export default function useRealtimeVitals() {
+export default function useRealtimeVitals(targetSeniorIdOverride = '') {
   const currentUser = useMemo(() => getCurrentUser(), []);
-  const targetSeniorId = String(currentUser.linkedSeniorId || currentUser._id || currentUser.id || '');
+  const targetSeniorId = String(targetSeniorIdOverride || currentUser.linkedSeniorId || currentUser._id || currentUser.id || '');
   const [vitalsSnapshot, setVitalsSnapshot] = useState(null);
   const lastPayloadRef = useRef('');
 

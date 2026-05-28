@@ -21,7 +21,7 @@ const authenticateSocket = async (socket, next) => {
         process.env.JWT_SECRET || 'smart-senior-secret-2026'
       );
       const userId = decoded.userId || decoded.id;
-      const user = await User.findById(userId).select('_id role');
+      const user = await User.findById(userId).select('_id name role');
 
       if (!user) {
         return next(new Error('Socket authentication failed'));

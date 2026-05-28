@@ -4,6 +4,12 @@ const User = require('../../../shared/models/User');
 
 const MIN_GROUP_MEMBERS = 3;
 const VALID_REACTION_TYPES = new Set(['like', 'heart', 'haha', 'sad']);
+const REACTION_EMOJI_BY_TYPE = {
+  like: '\u{1F44D}',
+  heart: '\u2764\uFE0F',
+  haha: '\u{1F602}',
+  sad: '\u{1F622}'
+};
 
 const toId = (value) => String(value?._id || value || '');
 
@@ -197,14 +203,31 @@ const buildGroupReplyPreview = async ({ groupId, userId, replyToMessageId }) => 
     throw createServiceError(403, 'Only group members can reply to group messages');
   }
 
-  const preview = original.messageType === 'voice'
-    ? '🎤 Voice Message'
-    : (original.message || 'Attachment');
+  const getPreview = () => {
+    if (original.messageType === 'voice') return '🎤 Voice Message';
+    if (original.messageType === 'image') return `🖼️ ${original.fileName || original.message || 'Image'}`;
+    if (original.messageType === 'video') return `🎬 ${original.fileName || original.message || 'Video'}`;
+    if (['file', 'document'].includes(original.messageType)) return `📄 ${original.fileName || original.message || 'File'}`;
+    return original.message || 'Attachment';
+  };
+  const preview = getPreview();
 
   return {
     repliedToMessageId: original._id,
     repliedToPreview: preview.length > 120 ? `${preview.slice(0, 117)}...` : preview,
     repliedToSender: original.senderName || 'Member'
+  };
+};
+
+const normalizeForwardedFrom = (forwardedFrom) => {
+  if (!forwardedFrom) return {};
+  if (!forwardedFrom.messageId) return {};
+
+  return {
+    forwardedFrom: {
+      messageId: forwardedFrom.messageId,
+      senderId: forwardedFrom.senderId || null
+    }
   };
 };
 
@@ -234,6 +257,10 @@ const sendMessage = async (groupId, user, payload) => {
     message: payload.message || '',
     messageType: payload.messageType || 'text',
     mediaUrl: payload.mediaUrl || '',
+    fileName: payload.fileName || '',
+    mimeType: payload.mimeType || '',
+    size: payload.size || null,
+    ...normalizeForwardedFrom(payload.forwardedFrom),
     ...replyFields
   });
 
@@ -336,9 +363,15 @@ const applyGroupMessageReaction = async ({ messageId, userId, reactionType }) =>
     reactions.splice(existingIndex, 1);
   } else if (existingIndex >= 0) {
     reactions[existingIndex].type = reactionType;
+    reactions[existingIndex].emoji = REACTION_EMOJI_BY_TYPE[reactionType];
     reactions[existingIndex].createdAt = new Date();
   } else {
-    reactions.push({ userId, type: reactionType, createdAt: new Date() });
+    reactions.push({
+      userId,
+      type: reactionType,
+      emoji: REACTION_EMOJI_BY_TYPE[reactionType],
+      createdAt: new Date()
+    });
   }
 
   message.reactions = reactions;
@@ -350,6 +383,72 @@ const applyGroupMessageReaction = async ({ messageId, userId, reactionType }) =>
       .populate('reactions.userId', 'name email role'),
     group
   };
+};
+
+const markGroupMessagesDelivered = async ({ groupId, userId, messageIds = [] }) => {
+  const group = await getGroupOrThrow(groupId);
+  if (!isGroupMember(group, userId)) {
+    throw createServiceError(403, 'Only group members can update group message delivery');
+  }
+
+  const ids = [...new Set(messageIds.map(String).filter(Boolean))];
+  if (!ids.length) return [];
+
+  const deliveredAt = new Date();
+  const messages = await GroupMessage.find({
+    _id: { $in: ids },
+    groupId,
+    senderId: { $ne: userId },
+    'deliveredTo.userId': { $ne: userId }
+  }).select('_id groupId senderId deliveredTo seenBy');
+
+  if (!messages.length) return [];
+
+  await GroupMessage.updateMany(
+    { _id: { $in: messages.map((message) => message._id) } },
+    { $push: { deliveredTo: { userId, deliveredAt } } }
+  );
+
+  return messages.map((message) => ({
+    messageId: String(message._id),
+    groupId: String(message.groupId),
+    senderId: message.senderId,
+    userId,
+    deliveredAt
+  }));
+};
+
+const markGroupMessagesSeen = async ({ groupId, userId, messageIds = [] }) => {
+  const group = await getGroupOrThrow(groupId);
+  if (!isGroupMember(group, userId)) {
+    throw createServiceError(403, 'Only group members can update group message seen status');
+  }
+
+  const ids = [...new Set(messageIds.map(String).filter(Boolean))];
+  if (!ids.length) return [];
+
+  const seenAt = new Date();
+  const messages = await GroupMessage.find({
+    _id: { $in: ids },
+    groupId,
+    senderId: { $ne: userId },
+    'seenBy.userId': { $ne: userId }
+  }).select('_id groupId senderId deliveredTo seenBy');
+
+  if (!messages.length) return [];
+
+  await GroupMessage.updateMany(
+    { _id: { $in: messages.map((message) => message._id) } },
+    { $push: { seenBy: { userId, seenAt } } }
+  );
+
+  return messages.map((message) => ({
+    messageId: String(message._id),
+    groupId: String(message.groupId),
+    senderId: message.senderId,
+    userId,
+    seenAt
+  }));
 };
 
 const requestToJoin = async (groupId, user) => {
@@ -377,6 +476,26 @@ const requestToJoin = async (groupId, user) => {
   const populatedRequest = await request.populate('userId', 'name email role');
   populatedRequest.$locals.group = group;
   return populatedRequest;
+};
+
+const cancelJoinRequest = async (groupId, user) => {
+  if (user.role === 'caregiver') {
+    throw createServiceError(403, 'Caregivers cannot manage group join requests');
+  }
+
+  const group = await getGroupOrThrow(groupId);
+  const request = await GroupJoinRequest.findOneAndDelete({
+    groupId,
+    userId: user._id,
+    status: 'pending'
+  }).populate('userId', 'name email role');
+
+  if (!request) {
+    throw createServiceError(404, 'Pending join request not found');
+  }
+
+  request.$locals.group = group;
+  return request;
 };
 
 const getRequests = async (groupId, user) => {
@@ -560,7 +679,10 @@ module.exports = {
   getGroupForAdmin,
   deleteMessageForUser,
   applyGroupMessageReaction,
+  markGroupMessagesDelivered,
+  markGroupMessagesSeen,
   requestToJoin,
+  cancelJoinRequest,
   getRequests,
   updateRequest,
   directAddMember,

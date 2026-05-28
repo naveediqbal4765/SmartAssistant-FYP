@@ -3,16 +3,21 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { getChatSocket } from '../chat/services/socket';
 import AddMemberModal from './AddMemberModal';
 import CreateGroupModal from './CreateGroupModal';
+import ForwardMessageModal from '../chat/components/ForwardMessageModal';
+import GroupCallScreen from './GroupCallScreen';
 import GroupChat from './GroupChat';
 import GroupList from './GroupList';
 import GroupSettingsModal from './GroupSettingsModal';
+import useGroupCall from './useGroupCall';
 import Button from '../../../components/ui/Button';
 import FeaturePage from '../../../components/ui/FeaturePage';
 import { SkeletonBlock, SkeletonLine } from '../../../components/ui/Skeleton';
 import StatusAlert from '../../../components/ui/StatusAlert';
+import { fetchConversations, searchUsers as searchForwardUsers, sendMessage as sendDirectMessage } from '../chat/services/chatApi';
 import {
   addMemberToGroup,
   approveGroupRequest,
+  cancelJoinRequest,
   createGroup,
   deleteGroupMessage,
   discoverGroups,
@@ -27,7 +32,8 @@ import {
   removeGroupMember,
   requestToJoinGroup,
   updateGroup,
-  uploadGroupAudio
+  uploadGroupAudio,
+  uploadGroupMedia
 } from './groupApi';
 
 const mergeById = (items, nextItem) => {
@@ -41,6 +47,12 @@ const isDeletedForCurrentUser = (message, currentUserId) => {
 };
 
 const getUserId = (value) => String(value?._id || value || '');
+const reactionEmojiByType = {
+  like: '👍',
+  heart: '❤️',
+  haha: '😂',
+  sad: '😢'
+};
 
 const getNextReactions = (reactions = [], currentUserId, reactionType) => {
   const existing = reactions.find((reaction) => getUserId(reaction.userId) === String(currentUserId));
@@ -52,6 +64,7 @@ const getNextReactions = (reactions = [], currentUserId, reactionType) => {
   const nextReaction = {
     userId: currentUserId,
     type: reactionType,
+    emoji: reactionEmojiByType[reactionType],
     createdAt: new Date().toISOString()
   };
 
@@ -71,6 +84,11 @@ export default function GroupPage() {
   const user = useMemo(() => JSON.parse(localStorage.getItem('user') || '{}'), []);
   const currentUserId = user._id || user.id;
   const groupRequestRef = useRef(0);
+  const groupTypingActiveRef = useRef(false);
+  const groupTypingExpiryRef = useRef({});
+  const seenDebounceRef = useRef(null);
+  const deliveredGroupMessageIdsRef = useRef(new Set());
+  const seenGroupMessageIdsRef = useRef(new Set());
   const [groups, setGroups] = useState([]);
   const [discoverableGroups, setDiscoverableGroups] = useState([]);
   const [activeGroup, setActiveGroup] = useState(null);
@@ -78,6 +96,9 @@ export default function GroupPage() {
   const [requests, setRequests] = useState([]);
   const [error, setError] = useState('');
   const [loadingGroups, setLoadingGroups] = useState(true);
+  const [typingUsers, setTypingUsers] = useState({});
+  const [forwardMessage, setForwardMessage] = useState(null);
+  const [forwardConversations, setForwardConversations] = useState([]);
   const [createOpen, setCreateOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -85,6 +106,27 @@ export default function GroupPage() {
   const activeGroupIsAdmin = activeGroup?.members?.some((member) => {
     const memberId = String(member.userId?._id || member.userId);
     return memberId === String(currentUserId) && member.role === 'admin';
+  });
+  const {
+    activeCall: activeGroupCall,
+    callState: groupCallState,
+    callType: groupCallType,
+    localParticipant: groupCallLocalParticipant,
+    remoteStreams: groupCallRemoteStreams,
+    muted: groupCallMuted,
+    cameraOn: groupCallCameraOn,
+    durationSeconds: groupCallDurationSeconds,
+    error: groupCallError,
+    startGroupCall,
+    joinGroupCall,
+    syncActiveCall,
+    leaveGroupCall,
+    toggleMute: toggleGroupCallMute,
+    toggleCamera: toggleGroupCallCamera
+  } = useGroupCall({
+    group: activeGroup,
+    currentUserId,
+    currentUserName: user.name || 'You'
   });
 
   const loadGroups = useCallback(async () => {
@@ -120,7 +162,9 @@ export default function GroupPage() {
     }
 
     const socket = getChatSocket();
-    socket.emit('join-group-room', { groupId: group._id });
+    socket.emit('join-group-room', { groupId: group._id }, (response) => {
+      syncActiveCall(response?.activeCall || null);
+    });
     const groupMessages = await fetchGroupMessages(group._id);
     if (groupRequestRef.current !== requestId) return;
     setMessages(groupMessages.filter((message) => !isDeletedForCurrentUser(message, currentUserId)));
@@ -137,7 +181,7 @@ export default function GroupPage() {
     } else {
       setRequests([]);
     }
-  }, [currentUserId]);
+  }, [currentUserId, syncActiveCall]);
 
   useEffect(() => {
     loadGroups();
@@ -157,15 +201,75 @@ export default function GroupPage() {
   }, [activeGroup, loadActiveGroupData]);
 
   useEffect(() => {
+    if (!location.state?.acceptGroupCall) return;
+    if (!activeGroupCall?.groupId || String(activeGroupCall.groupId) !== String(activeGroup?._id)) return;
+    if (location.state.callId && String(activeGroupCall.callId || '') !== String(location.state.callId)) return;
+    if (groupCallState !== 'idle') return;
+
+    joinGroupCall();
+    navigate(location.pathname, { replace: true, state: {} });
+  }, [
+    activeGroup?._id,
+    activeGroupCall,
+    groupCallState,
+    joinGroupCall,
+    location.pathname,
+    location.state,
+    navigate
+  ]);
+
+  useEffect(() => {
     const socket = getChatSocket();
     const handleGroupMessage = (message) => {
       if (String(message.groupId) !== String(activeGroup?._id)) return;
       if (isDeletedForCurrentUser(message, currentUserId)) return;
+      setTypingUsers((current) => {
+        const next = { ...current };
+        delete next[String(message.senderId?._id || message.senderId)];
+        return next;
+      });
       setMessages((current) => mergeById(current, message));
+      if (String(message.senderId?._id || message.senderId) !== String(currentUserId)) {
+        socket.emit('group-message:delivered', { groupId: activeGroup._id, messageIds: [message._id] });
+        window.clearTimeout(seenDebounceRef.current);
+        seenDebounceRef.current = window.setTimeout(() => {
+          socket.emit('group-message:seen', { groupId: activeGroup._id, messageIds: [message._id] });
+        }, 600);
+      }
     };
     const handleMessageDeleted = (payload) => {
       if (payload.chatType !== 'group') return;
       setMessages((current) => current.filter((message) => String(message._id) !== String(payload.messageId)));
+    };
+    const handleGroupTypingStart = (payload = {}) => {
+      if (String(payload.groupId) !== String(activeGroup?._id)) return;
+      if (String(payload.fromUserId) === String(currentUserId)) return;
+
+      const userId = String(payload.fromUserId);
+      setTypingUsers((current) => ({
+        ...current,
+        [userId]: payload.fromName || 'Someone'
+      }));
+
+      if (groupTypingExpiryRef.current[userId]) {
+        window.clearTimeout(groupTypingExpiryRef.current[userId]);
+      }
+      groupTypingExpiryRef.current[userId] = window.setTimeout(() => {
+        setTypingUsers((current) => {
+          const next = { ...current };
+          delete next[userId];
+          return next;
+        });
+      }, 3500);
+    };
+    const handleGroupTypingStop = (payload = {}) => {
+      if (String(payload.groupId) !== String(activeGroup?._id)) return;
+      const userId = String(payload.fromUserId);
+      setTypingUsers((current) => {
+        const next = { ...current };
+        delete next[userId];
+        return next;
+      });
     };
     const handleGroupUpdated = (payload) => {
       const updatedGroup = payload?.group;
@@ -204,7 +308,7 @@ export default function GroupPage() {
         return;
       }
 
-      if (payload.status === 'rejected') {
+      if (payload.status === 'rejected' || payload.status === 'cancelled') {
         setDiscoverableGroups((current) => current.map((group) => (
           String(group._id) === String(payload.groupId)
             ? { ...group, joinRequestStatus: undefined, joinRequestId: undefined }
@@ -230,20 +334,55 @@ export default function GroupPage() {
         String(current?._id || '') === String(payload.conversationId) ? null : current
       ));
     };
+    const applyGroupLifecycleUpdate = (payload = {}, type) => {
+      if (String(payload.groupId) !== String(activeGroup?._id)) return;
+      setMessages((current) => current.map((message) => {
+        if (String(message._id) !== String(payload.messageId)) return message;
+        const userId = String(payload.userId || '');
+        const deliveredTo = message.deliveredTo || [];
+        const seenBy = message.seenBy || [];
+
+        if (type === 'delivered' && userId && !deliveredTo.some((item) => getUserId(item.userId) === userId)) {
+          return {
+            ...message,
+            deliveredTo: [...deliveredTo, { userId, deliveredAt: payload.deliveredAt }]
+          };
+        }
+
+        if (type === 'seen' && userId && !seenBy.some((item) => getUserId(item.userId) === userId)) {
+          return {
+            ...message,
+            seenBy: [...seenBy, { userId, seenAt: payload.seenAt }]
+          };
+        }
+
+        return message;
+      }));
+    };
+    const handleGroupDelivered = (payload) => applyGroupLifecycleUpdate(payload, 'delivered');
+    const handleGroupSeen = (payload) => applyGroupLifecycleUpdate(payload, 'seen');
 
     socket.on('group-message', handleGroupMessage);
+    socket.on('group:typing:start', handleGroupTypingStart);
+    socket.on('group:typing:stop', handleGroupTypingStop);
     socket.on('message-deleted', handleMessageDeleted);
     socket.on('group-updated', handleGroupUpdated);
     socket.on('group-request-updated', handleGroupRequestUpdated);
     socket.on('ITEM_REACTION_UPDATED', handleItemReactionUpdated);
     socket.on('conversation-deleted', handleConversationDeleted);
+    socket.on('group-message:delivered', handleGroupDelivered);
+    socket.on('group-message:seen', handleGroupSeen);
     return () => {
       socket.off('group-message', handleGroupMessage);
+      socket.off('group:typing:start', handleGroupTypingStart);
+      socket.off('group:typing:stop', handleGroupTypingStop);
       socket.off('message-deleted', handleMessageDeleted);
       socket.off('group-updated', handleGroupUpdated);
       socket.off('group-request-updated', handleGroupRequestUpdated);
       socket.off('ITEM_REACTION_UPDATED', handleItemReactionUpdated);
       socket.off('conversation-deleted', handleConversationDeleted);
+      socket.off('group-message:delivered', handleGroupDelivered);
+      socket.off('group-message:seen', handleGroupSeen);
     };
   }, [activeGroup?._id, currentUserId]);
 
@@ -273,8 +412,73 @@ export default function GroupPage() {
     navigate(`/groups/${group._id}`);
   };
 
+  const emitGroupTypingStart = useCallback(() => {
+    if (!activeGroup?._id || groupTypingActiveRef.current) return;
+    groupTypingActiveRef.current = true;
+    getChatSocket().emit('group:typing:start', {
+      groupId: activeGroup._id,
+      conversationId: activeGroup._id
+    });
+  }, [activeGroup?._id]);
+
+  const emitGroupTypingStop = useCallback(() => {
+    if (!activeGroup?._id || !groupTypingActiveRef.current) return;
+    groupTypingActiveRef.current = false;
+    getChatSocket().emit('group:typing:stop', {
+      groupId: activeGroup._id,
+      conversationId: activeGroup._id
+    });
+  }, [activeGroup?._id]);
+
+  useEffect(() => {
+    groupTypingActiveRef.current = false;
+    setTypingUsers({});
+  }, [activeGroup?._id]);
+
+  useEffect(() => () => {
+    Object.values(groupTypingExpiryRef.current).forEach((timerId) => window.clearTimeout(timerId));
+    if (seenDebounceRef.current) window.clearTimeout(seenDebounceRef.current);
+  }, []);
+
+  useEffect(() => {
+    if (!activeGroup?._id) return;
+    const incoming = messages.filter((message) => (
+      String(message.groupId) === String(activeGroup._id)
+      && getUserId(message.senderId) !== String(currentUserId)
+      && message._id
+    ));
+    const deliveredIds = incoming
+      .filter((message) => !(message.deliveredTo || []).some((item) => getUserId(item.userId) === String(currentUserId)))
+      .map((message) => String(message._id))
+      .filter((messageId) => {
+        if (deliveredGroupMessageIdsRef.current.has(messageId)) return false;
+        deliveredGroupMessageIdsRef.current.add(messageId);
+        return true;
+      });
+    const seenIds = incoming
+      .filter((message) => !(message.seenBy || []).some((item) => getUserId(item.userId) === String(currentUserId)))
+      .map((message) => String(message._id))
+      .filter((messageId) => {
+        if (seenGroupMessageIdsRef.current.has(messageId)) return false;
+        seenGroupMessageIdsRef.current.add(messageId);
+        return true;
+      });
+
+    const socket = getChatSocket();
+    if (deliveredIds.length) {
+      socket.emit('group-message:delivered', { groupId: activeGroup._id, messageIds: deliveredIds });
+    }
+    if (seenIds.length && document.visibilityState === 'visible') {
+      window.clearTimeout(seenDebounceRef.current);
+      seenDebounceRef.current = window.setTimeout(() => {
+        socket.emit('group-message:seen', { groupId: activeGroup._id, messageIds: seenIds });
+      }, 600);
+    }
+  }, [activeGroup?._id, currentUserId, messages]);
+
   const handleSendMessage = (text, replyTo) => {
     const socket = getChatSocket();
+    emitGroupTypingStop();
     socket.emit('group-message', {
       groupId: activeGroup._id,
       message: text,
@@ -306,6 +510,31 @@ export default function GroupPage() {
       });
     } catch (err) {
       setError(getGroupApiErrorMessage(err, 'Failed to send group voice note'));
+    }
+  };
+
+  const handleSendMedia = async (file, replyTo) => {
+    if (!activeGroup?._id || !file) return;
+
+    try {
+      const media = await uploadGroupMedia(file);
+      const socket = getChatSocket();
+      socket.emit('group-message', {
+        groupId: activeGroup._id,
+        message: media.fileName || file.name || 'Attachment',
+        messageType: media.messageType || 'file',
+        mediaUrl: media.mediaUrl,
+        fileName: media.fileName || file.name || '',
+        mimeType: media.mimeType || file.type || '',
+        size: media.size || file.size || null,
+        repliedToMessageId: replyTo?.messageId || ''
+      }, (response) => {
+        if (!response?.success) {
+          setError(response?.msg || 'Failed to send group attachment');
+        }
+      });
+    } catch (err) {
+      setError(getGroupApiErrorMessage(err, 'Failed to send group attachment'));
     }
   };
 
@@ -355,6 +584,71 @@ export default function GroupPage() {
       )));
     } catch (err) {
       setError(getGroupApiErrorMessage(err, 'Failed to request group access'));
+    }
+  };
+
+  const handleOpenForward = async (message) => {
+    setForwardMessage(message);
+    try {
+      const conversations = await fetchConversations();
+      setForwardConversations(conversations.filter((conversation) => conversation.participant));
+    } catch (err) {
+      setForwardConversations([]);
+    }
+  };
+
+  const handleForwardMessage = async ({ type, target }) => {
+    if (!forwardMessage) return;
+
+    const forwardedFrom = {
+      messageId: forwardMessage._id,
+      senderId: forwardMessage.senderId?._id || forwardMessage.senderId || currentUserId
+    };
+    const payload = {
+      message: forwardMessage.message || '',
+      messageType: forwardMessage.messageType || 'text',
+      mediaUrl: forwardMessage.mediaUrl || '',
+      fileName: forwardMessage.fileName || '',
+      mimeType: forwardMessage.mimeType || '',
+      size: forwardMessage.size || null,
+      forwardedFrom
+    };
+
+    try {
+      if (type === 'chat' || type === 'user') {
+        await sendDirectMessage({
+          receiverId: type === 'user' ? target._id : target.participant?._id,
+          ...payload
+        });
+      } else if (type === 'group') {
+        getChatSocket().emit('group-message', {
+          groupId: target._id,
+          ...payload
+        }, (response) => {
+          if (!response?.success) {
+            setError(response?.msg || 'Failed to forward message');
+          }
+        });
+      }
+      setForwardMessage(null);
+    } catch (err) {
+      setError(err.response?.data?.msg || 'Failed to forward message');
+    }
+  };
+
+  const handleCancelJoinRequest = async (groupId) => {
+    const previousGroups = discoverableGroups;
+    setDiscoverableGroups((current) => current.map((group) => (
+      String(group._id) === String(groupId)
+        ? { ...group, joinRequestStatus: undefined, joinRequestId: undefined }
+        : group
+    )));
+
+    try {
+      await cancelJoinRequest(groupId);
+    } catch (err) {
+      setDiscoverableGroups(previousGroups);
+      setError(getGroupApiErrorMessage(err, 'Failed to cancel group join request'));
     }
   };
 
@@ -452,6 +746,13 @@ export default function GroupPage() {
     }
   };
 
+  const typingNames = Object.values(typingUsers);
+  const typingLabel = typingNames.length === 1
+    ? `${typingNames[0]} is typing...`
+    : typingNames.length > 1
+      ? `${typingNames.length} people are typing...`
+      : '';
+
   return (
     <>
       <FeaturePage
@@ -479,6 +780,7 @@ export default function GroupPage() {
             currentUserId={currentUserId}
             onSelectGroup={handleSelectGroup}
             onRequestJoin={handleRequestJoin}
+            onCancelJoinRequest={handleCancelJoinRequest}
             onExitGroup={handleExitGroup}
             onMuteGroup={handleMuteGroup}
           />
@@ -486,10 +788,20 @@ export default function GroupPage() {
             group={activeGroup}
             currentUserId={currentUserId}
             messages={messages}
+            activeCall={activeGroupCall}
+            callState={groupCallState}
+            onStartGroupAudioCall={() => startGroupCall('audio')}
+            onStartGroupVideoCall={() => startGroupCall('video')}
+            onJoinGroupCall={joinGroupCall}
             onSendMessage={handleSendMessage}
             onSendVoice={handleSendVoice}
+            onSendMedia={handleSendMedia}
             onDeleteMessage={handleDeleteMessage}
             onReactToMessage={handleReactToMessage}
+            onForwardMessage={handleOpenForward}
+            onTypingStart={emitGroupTypingStart}
+            onTypingStop={emitGroupTypingStop}
+            typingLabel={typingLabel}
             targetMessageId={targetMessageId}
             onOpenSettings={() => setSettingsOpen(true)}
           />
@@ -497,6 +809,28 @@ export default function GroupPage() {
       </FeaturePage>
 
       <CreateGroupModal open={createOpen} onClose={() => setCreateOpen(false)} onCreate={handleCreateGroup} />
+      <GroupCallScreen
+        group={activeGroup}
+        callState={groupCallState}
+        callType={groupCallType}
+        localParticipant={groupCallLocalParticipant}
+        remoteStreams={groupCallRemoteStreams}
+        muted={groupCallMuted}
+        cameraOn={groupCallCameraOn}
+        durationSeconds={groupCallDurationSeconds}
+        error={groupCallError}
+        onMute={toggleGroupCallMute}
+        onToggleCamera={toggleGroupCallCamera}
+        onLeave={leaveGroupCall}
+      />
+      <ForwardMessageModal
+        open={Boolean(forwardMessage)}
+        conversations={forwardConversations}
+        groups={groups}
+        onSearchUsers={searchForwardUsers}
+        onClose={() => setForwardMessage(null)}
+        onForward={handleForwardMessage}
+      />
       <AddMemberModal open={addOpen} group={activeGroup} onClose={() => setAddOpen(false)} onAddMember={handleAddMember} />
       <GroupSettingsModal
         open={settingsOpen}

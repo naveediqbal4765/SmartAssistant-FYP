@@ -53,10 +53,10 @@ export default function ConversationItem({ conversation, active, onSelect, onDel
 
   return (
     <div
-      className="relative overflow-hidden border-b last:border-b-0"
+      className="relative overflow-visible border-b border-gray-100 last:border-b-0"
     >
       {canDelete && (
-        <div className="absolute inset-y-0 right-0 flex w-28 items-center justify-center bg-red-600">
+        <div className="absolute inset-y-1 right-0 flex w-28 items-center justify-center overflow-hidden rounded-2xl bg-red-600 shadow-sm">
           <button
             type="button"
             onClick={handleDelete}
@@ -72,9 +72,9 @@ export default function ConversationItem({ conversation, active, onSelect, onDel
         onPointerUp={handlePointerUp}
         onPointerCancel={() => setSwipeStartX(null)}
         onClick={handleSelect}
-        className={`motion-interactive relative w-full touch-pan-y p-4 text-left hover:bg-gray-50 ${
+        className={`motion-interactive relative w-full touch-pan-y rounded-2xl p-4 text-left transition-all duration-200 ease-in-out hover:bg-gray-50 hover:shadow-md ${
           deleteOpen ? '-translate-x-28' : 'translate-x-0'
-        } ${active ? 'bg-green-50 ring-2 ring-inset ring-green-500' : 'bg-white'}`}
+        } ${active ? 'z-10 scale-[1.01] bg-gray-100 shadow-lg shadow-gray-200/70' : 'bg-white shadow-none'}`}
       >
         <div className="flex items-start justify-between gap-3">
           <div>

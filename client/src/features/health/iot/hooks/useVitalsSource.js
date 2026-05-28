@@ -1,9 +1,9 @@
 import useRealtimeVitals from './useRealtimeVitals';
 import { isValidVitalsSnapshot, VITALS_SOURCE_MODE } from '../types/vitals.contract';
 
-export default function useVitalsSource() {
+export default function useVitalsSource(targetSeniorId = '') {
   // Single swap point for future sources: API, websocket stream, or hardware device feed.
-  const vitalsSnapshot = useRealtimeVitals();
+  const vitalsSnapshot = useRealtimeVitals(targetSeniorId);
   const isValid = isValidVitalsSnapshot(vitalsSnapshot);
 
   return {

@@ -75,10 +75,20 @@ export const fetchGroupMessages = async (groupId) => {
   return response.data.messages || [];
 };
 
-export const sendGroupMessage = async ({ groupId, message, messageType = 'text', mediaUrl = '', repliedToMessageId = '' }) => {
+export const sendGroupMessage = async ({
+  groupId,
+  message,
+  messageType = 'text',
+  mediaUrl = '',
+  fileName = '',
+  mimeType = '',
+  size = null,
+  repliedToMessageId = '',
+  forwardedFrom = null
+}) => {
   const response = await axios.post(
     `${API_BASE_URL}/${groupId}/messages`,
-    { message, messageType, mediaUrl, repliedToMessageId },
+    { message, messageType, mediaUrl, fileName, mimeType, size, repliedToMessageId, forwardedFrom },
     { headers: authHeaders() }
   );
   return response.data.message;
@@ -136,11 +146,32 @@ export const uploadGroupAudio = async (audioBlob) => {
   return response.data.audio;
 };
 
+export const uploadGroupMedia = async (file) => {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const response = await axios.post(`${UPLOAD_BASE_URL}/media`, formData, {
+    headers: {
+      ...authHeaders(),
+      'Content-Type': 'multipart/form-data'
+    }
+  });
+
+  return response.data.media;
+};
+
 export const requestToJoinGroup = async (groupId) => {
   const response = await axios.post(`${API_BASE_URL}/${groupId}/join-request`, null, {
     headers: authHeaders()
   });
   return response.data.request;
+};
+
+export const cancelJoinRequest = async (groupId) => {
+  const response = await axios.delete(`${API_BASE_URL}/${groupId}/join-request`, {
+    headers: authHeaders()
+  });
+  return response.data;
 };
 
 export const fetchGroupRequests = async (groupId) => {

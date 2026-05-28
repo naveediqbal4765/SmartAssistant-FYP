@@ -3,6 +3,22 @@ import MessageBubble from './MessageBubble';
 import CallButton from '../../calls/CallButton';
 import { ChatSkeleton } from '../../../../components/ui/Skeleton';
 
+const formatLastSeen = (value) => {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+
+  const now = new Date();
+  const today = now.toDateString();
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  const time = date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+
+  if (date.toDateString() === today) return `last seen today at ${time}`;
+  if (date.toDateString() === yesterday.toDateString()) return 'last seen yesterday';
+  return `last seen ${date.toLocaleDateString([], { month: 'short', day: 'numeric' })}`;
+};
+
 export default function ChatWindow({
   conversation,
   messages,
@@ -14,6 +30,8 @@ export default function ChatWindow({
   onDeleteMessage,
   onReactToMessage,
   onReplyToMessage,
+  onForwardMessage,
+  typingLabel,
   targetMessageId
 }) {
   const messagesEndRef = useRef(null);
@@ -26,9 +44,17 @@ export default function ChatWindow({
   const [hasNewMessages, setHasNewMessages] = useState(false);
 
   const scrollToBottom = (behavior = 'smooth') => {
-    messagesEndRef.current?.scrollIntoView({ behavior, block: 'end' });
-    nearBottomRef.current = true;
-    setHasNewMessages(false);
+    window.requestAnimationFrame(() => {
+      const container = scrollContainerRef.current;
+      if (!container) return;
+
+      container.scrollTo({
+        top: container.scrollHeight,
+        behavior
+      });
+      nearBottomRef.current = true;
+      setHasNewMessages(false);
+    });
   };
 
   const handleScroll = () => {
@@ -96,13 +122,19 @@ export default function ChatWindow({
     );
   }
 
+  const presenceLabel = conversation.participant?.isOnline
+    ? 'Online'
+    : formatLastSeen(conversation.participant?.lastSeenAt);
+
   return (
     <div className="flex h-full flex-col">
-      <div className="relative z-10 border-b bg-white p-4">
+      <div className="relative z-10 border-b border-gray-200 bg-gray-50 p-4 shadow-[inset_0_-10px_16px_-18px_rgba(15,23,42,0.45)]">
         <div className="flex items-center justify-between gap-4">
           <div>
             <h2 className="font-bold text-gray-900">{conversation.participant?.name || 'Conversation'}</h2>
-            <p className="text-sm text-gray-500 capitalize">{conversation.participant?.role || ''}</p>
+            <p className="text-sm text-gray-500">
+              {presenceLabel || conversation.participant?.role || ''}
+            </p>
           </div>
           <CallButton
             disabled={callDisabled}
@@ -115,7 +147,7 @@ export default function ChatWindow({
       <div
         ref={scrollContainerRef}
         onScroll={handleScroll}
-        className="relative flex-1 space-y-3 overflow-y-auto bg-gray-50 px-4 pb-16 pt-16"
+        className="relative flex-1 space-y-3 overflow-y-auto bg-gray-50 px-5 pb-16 pt-16"
       >
         {loading ? (
           <ChatSkeleton showHeader={false} />
@@ -136,6 +168,7 @@ export default function ChatWindow({
                     onDelete={onDeleteMessage}
                     onReact={onReactToMessage}
                     onReply={onReplyToMessage}
+                    onForward={onForwardMessage}
                     onJumpToMessage={handleJumpToMessage}
                     highlighted={highlightedMessageId === messageId}
                   />
@@ -157,6 +190,11 @@ export default function ChatWindow({
           </button>
         )}
       </div>
+      {typingLabel && (
+        <div className="border-t bg-white px-4 py-2 text-sm font-semibold text-green-700">
+          {typingLabel}
+        </div>
+      )}
     </div>
   );
 }

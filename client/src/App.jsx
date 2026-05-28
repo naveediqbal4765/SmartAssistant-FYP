@@ -9,14 +9,16 @@ import ForgotPassword from './pages/ForgotPassword';
 import SocialLoginHandler from './pages/SocialLoginHandler';
 import PrivacySettings from './pages/PrivacySettings';
 import ActivityLogs from './pages/ActivityLogs';
+import CommunicationHub from './features/communication/CommunicationHub';
 import ChatPage from './features/communication/chat/pages/ChatPage';
 import GroupPage from './features/communication/groups/GroupPage';
+import GroupCallInviteHandler from './features/communication/groups/GroupCallInviteHandler';
 import MedicationPage from './features/health/medications/MedicationPage';
 import HealthVaultPage from './features/health/vault/HealthVaultPage';
 import AppointmentPage from './features/health/appointments/AppointmentPage';
 import TelemetryDashboard from './features/health/telemetry/TelemetryDashboard';
 import DrugInteractionPage from './features/health/interactions/DrugInteractionPage';
-import { disconnectChatSocket } from './features/communication/chat/services/socket';
+import { disconnectChatSocket, getChatSocket } from './features/communication/chat/services/socket';
 import { CallStateProvider } from './features/communication/calls/CallStateContext';
 import GlobalCallHandler from './features/communication/calls/GlobalCallHandler';
 import { NotificationProvider, useNotificationState } from './features/communication/notifications/NotificationContext';
@@ -43,6 +45,18 @@ function AuthenticatedGlobalOverlays({ userRole }) {
   const notificationState = useNotificationState();
   const isSenior = userRole === 'elder' || userRole === 'senior';
 
+  useEffect(() => {
+    const socket = getChatSocket();
+    const handleVisibilityChange = () => {
+      socket.emit(
+        document.visibilityState === 'hidden' ? 'user:presence:inactive' : 'user:presence:active'
+      );
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, []);
+
   return (
     <>
       <GlobalSeniorReminderPopups
@@ -54,6 +68,7 @@ function AuthenticatedGlobalOverlays({ userRole }) {
       <CallStateProvider>
         <GlobalCallHandler />
       </CallStateProvider>
+      <GroupCallInviteHandler />
     </>
   );
 }
@@ -230,6 +245,15 @@ function App() {
             element={
               <PrivateRoute>
                 <ActivityLogs />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/communication"
+            element={
+              <PrivateRoute>
+                <CommunicationHub />
               </PrivateRoute>
             }
           />

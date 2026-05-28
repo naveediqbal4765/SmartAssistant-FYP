@@ -14,6 +14,7 @@ const {
   rejectRequest,
   reactToMessage,
   removeMember,
+  cancelJoinRequest,
   requestToJoin,
   searchAddableUsers,
   searchInitialMembers,
@@ -38,6 +39,7 @@ router.patch('/:groupId', auth, updateGroup);
 router.post('/:groupId/exit', auth, exitGroup);
 router.patch('/:groupId/mute', auth, muteGroup);
 router.post('/:groupId/join-request', auth, requestToJoin);
+router.delete('/:groupId/join-request', auth, cancelJoinRequest);
 router.get('/:groupId/requests', auth, getRequests);
 router.get('/:groupId/search-users', auth, searchAddableUsers);
 router.delete('/:groupId/members/:userId', auth, removeMember);

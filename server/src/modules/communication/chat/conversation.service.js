@@ -187,7 +187,7 @@ const getConversations = async (userId) => {
   }
 
   const conversations = await Conversation.find({ participants: userId, hiddenFor: { $ne: userId } })
-    .populate('participants', 'name email role phone linkedSeniorId linkedCaregivers')
+    .populate('participants', 'name email role phone linkedSeniorId linkedCaregivers isOnline lastSeenAt')
     .populate('lastMessage')
     .sort({ lastMessageAt: -1, updatedAt: -1 });
 
@@ -256,7 +256,7 @@ const getConversationById = async (userId, conversationId) => {
     participants: userId,
     hiddenFor: { $ne: userId }
   })
-    .populate('participants', 'name email role phone linkedSeniorId linkedCaregivers')
+    .populate('participants', 'name email role phone linkedSeniorId linkedCaregivers isOnline lastSeenAt')
     .populate('lastMessage');
 
   if (!conversation) {
@@ -287,7 +287,7 @@ const resolveConversation = async (userId, { conversationId, fromUserId, toUserI
 
   const conversation = await createConversation(userId, otherUserId);
   const populatedConversation = await Conversation.findById(conversation._id)
-    .populate('participants', 'name email role phone linkedSeniorId linkedCaregivers')
+    .populate('participants', 'name email role phone linkedSeniorId linkedCaregivers isOnline lastSeenAt')
     .populate('lastMessage');
 
   return formatConversationForUser(populatedConversation, userId);

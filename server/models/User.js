@@ -133,6 +133,14 @@ const UserSchema = new mongoose.Schema({
     type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Task' }],
     default: []
   },
+  isOnline: {
+    type: Boolean,
+    default: false
+  },
+  lastSeenAt: {
+    type: Date,
+    default: null
+  },
   
   createdAt: { 
     type: Date, 

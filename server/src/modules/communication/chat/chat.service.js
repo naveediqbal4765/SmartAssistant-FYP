@@ -3,6 +3,12 @@ const conversationService = require('./conversation.service');
 const User = require('../../../shared/models/User');
 
 const VALID_REACTION_TYPES = new Set(['like', 'heart', 'haha', 'sad']);
+const REACTION_EMOJI_BY_TYPE = {
+  like: '\u{1F44D}',
+  heart: '\u2764\uFE0F',
+  haha: '\u{1F602}',
+  sad: '\u{1F622}'
+};
 
 const getActionTypeForMessage = (messageType = 'text') => {
   if (messageType === 'voice') return 'voice';
@@ -21,14 +27,31 @@ const buildReplyPreview = async ({ replyToMessageId, senderId, receiverId }) => 
   if (!isParticipant || original.messageType === 'call') return {};
 
   const originalSender = await User.findById(original.senderId).select('name');
-  const preview = original.messageType === 'voice'
-    ? '🎤 Voice Message'
-    : (original.message || 'Attachment');
+  const getPreview = () => {
+    if (original.messageType === 'voice') return '🎤 Voice Message';
+    if (original.messageType === 'image') return `🖼️ ${original.fileName || original.message || 'Image'}`;
+    if (original.messageType === 'video') return `🎬 ${original.fileName || original.message || 'Video'}`;
+    if (['file', 'document'].includes(original.messageType)) return `📄 ${original.fileName || original.message || 'File'}`;
+    return original.message || 'Attachment';
+  };
+  const preview = getPreview();
 
   return {
     repliedToMessageId: original._id,
     repliedToPreview: preview.length > 120 ? `${preview.slice(0, 117)}...` : preview,
     repliedToSender: originalSender?.name || 'Member'
+  };
+};
+
+const normalizeForwardedFrom = (forwardedFrom) => {
+  if (!forwardedFrom) return {};
+  if (!forwardedFrom.messageId) return {};
+
+  return {
+    forwardedFrom: {
+      messageId: forwardedFrom.messageId,
+      senderId: forwardedFrom.senderId || null
+    }
   };
 };
 
@@ -52,7 +75,11 @@ const sendMessage = async (data) => {
     message: data.message || '',
     messageType,
     mediaUrl: data.mediaUrl || '',
+    fileName: data.fileName || '',
+    mimeType: data.mimeType || '',
+    size: data.size || null,
     duration: data.duration || null,
+    ...normalizeForwardedFrom(data.forwardedFrom),
     ...replyFields
   });
 
@@ -134,9 +161,15 @@ const applyMessageReaction = async ({ messageId, userId, reactionType, expectedM
     throw err;
   }
 
-  if (message.messageType !== expectedMessageType) {
+  if (expectedMessageType && message.messageType !== expectedMessageType) {
     const err = new Error(expectedMessageType === 'voice' ? 'Voice note not found' : 'Text message not found');
     err.status = 404;
+    throw err;
+  }
+
+  if (!expectedMessageType && message.messageType === 'call') {
+    const err = new Error('Cannot react to call logs');
+    err.status = 400;
     throw err;
   }
 
@@ -155,11 +188,13 @@ const applyMessageReaction = async ({ messageId, userId, reactionType, expectedM
     message.reactions.splice(existingIndex, 1);
   } else if (existingIndex >= 0) {
     message.reactions[existingIndex].type = reactionType;
+    message.reactions[existingIndex].emoji = REACTION_EMOJI_BY_TYPE[reactionType];
     message.reactions[existingIndex].createdAt = new Date();
   } else {
     message.reactions.push({
       userId,
       type: reactionType,
+      emoji: REACTION_EMOJI_BY_TYPE[reactionType],
       createdAt: new Date()
     });
   }
@@ -173,10 +208,71 @@ const markMessageAsRead = async () => {
   return null;
 };
 
+const markMessagesDelivered = async ({ userId, messageIds = [] }) => {
+  const ids = [...new Set(messageIds.map(String).filter(Boolean))];
+  if (!ids.length) return [];
+
+  const deliveredAt = new Date();
+  await ChatMessage.updateMany(
+    {
+      _id: { $in: ids },
+      receiverId: userId,
+      status: { $ne: 'seen' }
+    },
+    {
+      $set: {
+        status: 'delivered',
+        deliveredAt
+      }
+    }
+  );
+
+  return ChatMessage.find({ _id: { $in: ids }, receiverId: userId })
+    .select('_id senderId receiverId status deliveredAt seenAt');
+};
+
+const markMessagesSeen = async ({ userId, otherUserId, messageIds = [] }) => {
+  const filter = {
+    receiverId: userId,
+    senderId: otherUserId,
+    status: { $ne: 'seen' }
+  };
+
+  if (messageIds.length) {
+    filter._id = { $in: [...new Set(messageIds.map(String).filter(Boolean))] };
+  }
+
+  const seenAt = new Date();
+  const messages = await ChatMessage.find(filter).select('_id senderId receiverId');
+  if (!messages.length) return [];
+
+  await ChatMessage.updateMany(
+    { _id: { $in: messages.map((message) => message._id) } },
+    {
+      $set: {
+        status: 'seen',
+        deliveredAt: seenAt,
+        seenAt
+      }
+    }
+  );
+
+  return messages.map((message) => ({
+    _id: message._id,
+    senderId: message.senderId,
+    receiverId: message.receiverId,
+    status: 'seen',
+    deliveredAt: seenAt,
+    seenAt
+  }));
+};
+
 module.exports = {
   sendMessage,
   getMessages,
   deleteMessageForUser,
   applyMessageReaction,
-  markMessageAsRead
+  markMessageAsRead,
+  markMessagesDelivered,
+  markMessagesSeen
 };

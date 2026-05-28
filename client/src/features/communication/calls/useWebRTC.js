@@ -240,7 +240,7 @@ export default function useWebRTC({ onCallEnded, useGlobalIncomingCall = false }
       }
       const answer = await peer.createAnswer();
       await peer.setLocalDescription(answer);
-      emitCallAccepted({ toUserId: activeIncomingCall.fromUserId, answer });
+      emitCallAccepted({ toUserId: activeIncomingCall.fromUserId, answer, callType: nextCallType });
       if (useGlobalIncomingCall && globalMarkCallInProgress) {
         globalMarkCallInProgress();
       } else {
@@ -276,7 +276,11 @@ export default function useWebRTC({ onCallEnded, useGlobalIncomingCall = false }
     const endedCallType = callTypeRef.current;
 
     if (activePeerIdRef.current) {
-      emitEndCall({ toUserId: activePeerIdRef.current });
+      emitEndCall({
+        toUserId: activePeerIdRef.current,
+        callType: endedCallType,
+        durationSeconds: elapsed
+      });
     }
     cleanup();
 
@@ -318,6 +322,9 @@ export default function useWebRTC({ onCallEnded, useGlobalIncomingCall = false }
     videoTracks.forEach((track) => {
       track.enabled = nextCameraOn;
     });
+    if (nextCameraOn) {
+      await attachVideoTrackToPeer(videoTracks[0], localStreamRef.current);
+    }
     setCameraOn(nextCameraOn);
   }, [attachVideoTrackToPeer, cameraOn]);
 

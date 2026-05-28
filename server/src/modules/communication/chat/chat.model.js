@@ -19,12 +19,24 @@ const ChatMessageSchema = new mongoose.Schema({
   },
   messageType: {
     type: String,
-    enum: ['text', 'image', 'video', 'document', 'voice', 'call'],
+    enum: ['text', 'image', 'video', 'file', 'document', 'voice', 'call'],
     default: 'text'
   },
   mediaUrl: {
     type: String,
     default: ''
+  },
+  fileName: {
+    type: String,
+    default: ''
+  },
+  mimeType: {
+    type: String,
+    default: ''
+  },
+  size: {
+    type: Number,
+    default: null
   },
   duration: {
     type: Number,
@@ -42,6 +54,18 @@ const ChatMessageSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  forwardedFrom: {
+    messageId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'ChatMessage',
+      default: null
+    },
+    senderId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null
+    }
+  },
   deletedFor: {
     type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     default: []
@@ -58,12 +82,30 @@ const ChatMessageSchema = new mongoose.Schema({
         enum: ['like', 'heart', 'haha', 'sad'],
         required: true
       },
+      emoji: {
+        type: String,
+        default: ''
+      },
       createdAt: {
         type: Date,
         default: Date.now
       }
     }],
     default: []
+  },
+  status: {
+    type: String,
+    enum: ['sent', 'delivered', 'seen'],
+    default: 'sent',
+    index: true
+  },
+  deliveredAt: {
+    type: Date,
+    default: null
+  },
+  seenAt: {
+    type: Date,
+    default: null
   },
   createdAt: {
     type: Date,

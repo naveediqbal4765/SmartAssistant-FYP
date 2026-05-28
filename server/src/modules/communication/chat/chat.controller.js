@@ -30,7 +30,18 @@ const buildNotificationContent = async ({ chatMessage, senderName, receiverId, m
 
 const sendMessage = async (req, res) => {
   try {
-    const { receiverId, message, messageType, mediaUrl, duration, repliedToMessageId } = req.body;
+    const {
+      receiverId,
+      message,
+      messageType,
+      mediaUrl,
+      fileName,
+      mimeType,
+      size,
+      duration,
+      repliedToMessageId,
+      forwardedFrom
+    } = req.body;
 
     if (!receiverId || !isValidObjectId(receiverId)) {
       return res.status(400).json({ success: false, msg: 'Valid receiverId is required' });
@@ -46,8 +57,12 @@ const sendMessage = async (req, res) => {
       message,
       messageType,
       mediaUrl,
+      fileName,
+      mimeType,
+      size,
       duration,
-      repliedToMessageId
+      repliedToMessageId,
+      forwardedFrom
     });
 
     emitNewMessage(chatMessage);
@@ -159,8 +174,7 @@ const reactToMessage = async (req, res) => {
     const message = await chatService.applyMessageReaction({
       messageId,
       userId: req.user._id,
-      reactionType,
-      expectedMessageType: 'text'
+      reactionType
     });
 
     emitItemReactionUpdated({
@@ -169,7 +183,8 @@ const reactToMessage = async (req, res) => {
       updatedBy: req.user._id
     });
 
-    return res.json({ success: true, itemType: 'message', itemId: message._id, reactions: message.reactions });
+    const itemType = message.messageType === 'voice' ? 'voiceNote' : 'message';
+    return res.json({ success: true, itemType, itemId: message._id, reactions: message.reactions });
   } catch (err) {
     console.error('React to message error:', err);
     return res.status(err.status || 500).json({ success: false, msg: err.status ? err.message : 'Server error' });

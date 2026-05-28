@@ -10,8 +10,8 @@ const formatTimestamp = (timestamp) => {
   });
 };
 
-export default function IoTDashboard() {
-  const { vitalsSnapshot, connected, statusLabel } = useVitalsSource();
+export default function IoTDashboard({ targetSeniorId = '' }) {
+  const { vitalsSnapshot, connected, statusLabel } = useVitalsSource(targetSeniorId);
   const vitals = vitalsSnapshot?.vitals;
 
   return (

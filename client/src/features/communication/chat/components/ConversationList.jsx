@@ -36,7 +36,7 @@ export default function ConversationList({
   }
 
   return (
-    <div className="motion-card overflow-hidden rounded-xl bg-white">
+    <div className="motion-card rounded-xl bg-white p-2">
       {conversations.map((conversation) => (
         <ConversationItem
           key={conversation.id}

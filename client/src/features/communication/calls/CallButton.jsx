@@ -1,26 +1,26 @@
 import { Phone, Video } from 'lucide-react';
+import Button from '../../../components/ui/Button';
 
 export default function CallButton({ disabled, onStartAudioCall, onStartVideoCall }) {
   return (
     <div className="flex gap-2">
-      <button
-        type="button"
+      <Button
+        variant="success"
         disabled={disabled}
         onClick={onStartAudioCall}
-        className="flex items-center gap-2 rounded-xl bg-green-600 px-4 py-2 font-semibold text-white disabled:opacity-50"
+        className="transition-all duration-200 ease-in-out hover:-translate-y-0.5 hover:shadow-lg"
       >
         <Phone size={18} />
         Audio
-      </button>
-      <button
-        type="button"
+      </Button>
+      <Button
         disabled={disabled}
         onClick={onStartVideoCall}
-        className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 font-semibold text-white disabled:opacity-50"
+        className="transition-all duration-200 ease-in-out hover:-translate-y-0.5 hover:shadow-lg"
       >
         <Video size={18} />
         Video
-      </button>
+      </Button>
     </div>
   );
 }

@@ -18,6 +18,15 @@ export default function Dashboard({ role }) {
   const [linkedSenior, setLinkedSenior] = useState(null);
   const linkedSeniorId = String(linkedSenior?._id || linkedSenior?.id || '');
 
+  useEffect(() => {
+    if (normalizedRole !== 'caregiver') return;
+    console.debug('[Dashboard] caregiver module visibility', {
+      role,
+      normalizedRole,
+      resolvedModules: config?.modules?.map((module) => module.title) || []
+    });
+  }, [config, normalizedRole, role]);
+
   const loadDashboardContext = useCallback(async () => {
     if (normalizedRole !== 'caregiver') return;
 

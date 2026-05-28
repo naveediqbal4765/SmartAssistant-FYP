@@ -11,6 +11,18 @@ const uploadAudio = (req, res) => {
   });
 };
 
+const uploadMedia = (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ success: false, msg: 'Media file is required' });
+  }
+
+  return res.status(201).json({
+    success: true,
+    media: uploadService.buildMediaUploadResponse(req.file)
+  });
+};
+
 module.exports = {
-  uploadAudio
+  uploadAudio,
+  uploadMedia
 };

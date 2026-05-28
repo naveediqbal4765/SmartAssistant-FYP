@@ -110,6 +110,9 @@ const sendMessage = async (req, res) => {
     const message = await groupService.sendMessage(req.params.groupId, req.user, req.body);
     const group = message.$locals?.group;
     if (group) {
+      (group.members || []).forEach((member) => {
+        emitToUser(toId(member.userId), 'group-message', message);
+      });
       notifyGroupMembers({ group, message, sender: req.user }).catch((notificationErr) => {
         console.error('Group notification failed:', notificationErr.message);
       });
@@ -217,6 +220,35 @@ const requestToJoin = async (req, res) => {
     return res.status(201).json({ success: true, request });
   } catch (err) {
     return handleError(res, err, 'Group join request error:');
+  }
+};
+
+const cancelJoinRequest = async (req, res) => {
+  try {
+    const request = await groupService.cancelJoinRequest(req.params.groupId, req.user);
+    const group = request.$locals?.group;
+
+    if (group) {
+      (group.members || [])
+        .filter((member) => member.role === 'admin')
+        .forEach((member) => {
+          emitToUser(toId(member.userId), 'group-request-updated', {
+            groupId: String(group._id),
+            requestId: String(request._id),
+            status: 'cancelled'
+          });
+        });
+    }
+
+    emitToUser(req.user._id, 'group-request-updated', {
+      groupId: String(req.params.groupId),
+      requestId: String(request._id),
+      status: 'cancelled'
+    });
+
+    return res.json({ success: true, requestId: String(request._id), groupId: req.params.groupId });
+  } catch (err) {
+    return handleError(res, err, 'Cancel group join request error:');
   }
 };
 
@@ -345,6 +377,7 @@ module.exports = {
   deleteMessage,
   reactToMessage,
   requestToJoin,
+  cancelJoinRequest,
   getRequests,
   approveRequest,
   rejectRequest,

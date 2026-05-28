@@ -26,17 +26,39 @@ const GroupMessageSchema = new mongoose.Schema({
   senderId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   senderName: { type: String, required: true, trim: true },
   message: { type: String, default: '' },
-  messageType: { type: String, enum: ['text', 'voice'], default: 'text' },
+  messageType: { type: String, enum: ['text', 'image', 'video', 'file', 'document', 'voice', 'call'], default: 'text' },
   mediaUrl: { type: String, default: '' },
+  fileName: { type: String, default: '' },
+  mimeType: { type: String, default: '' },
+  size: { type: Number, default: null },
   repliedToMessageId: { type: mongoose.Schema.Types.ObjectId, ref: 'GroupMessage' },
   repliedToPreview: { type: String, default: '' },
   repliedToSender: { type: String, default: '' },
+  forwardedFrom: {
+    messageId: { type: mongoose.Schema.Types.ObjectId, default: null },
+    senderId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null }
+  },
   deletedFor: { type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }], default: [] },
   reactions: {
     type: [{
       userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
       type: { type: String, enum: ['like', 'heart', 'haha', 'sad'], required: true },
+      emoji: { type: String, default: '' },
       createdAt: { type: Date, default: Date.now }
+    }],
+    default: []
+  },
+  deliveredTo: {
+    type: [{
+      userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+      deliveredAt: { type: Date, default: Date.now }
+    }],
+    default: []
+  },
+  seenBy: {
+    type: [{
+      userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+      seenAt: { type: Date, default: Date.now }
     }],
     default: []
   },
