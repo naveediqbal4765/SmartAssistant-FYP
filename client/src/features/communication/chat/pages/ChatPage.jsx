@@ -896,8 +896,8 @@ export default function ChatPage() {
       <FeaturePage
         title="Chat"
         description="Secure conversations with your connected contacts."
-        backLabel="Back to Dashboard"
-        onBack={() => navigate('/dashboard')}
+        backLabel="Back to Care Connect"
+        onBack={() => navigate('/communication')}
       >
         <StatusAlert variant="error">{error}</StatusAlert>
 

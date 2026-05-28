@@ -22,7 +22,7 @@ export default function FeaturePage({
     : undefined;
 
   return (
-    <div className={`min-h-full bg-gray-50 pb-20 ${leaving ? 'motion-page-exit-backward' : ''}`}>
+    <div className={`min-h-[calc(100vh-80px)] bg-gray-50 pb-20 ${leaving ? 'motion-page-exit-backward' : ''}`}>
       <div className={`mx-auto px-6 py-8 ${maxWidth}`}>
         <FeatureHeader
           title={title}

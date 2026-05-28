@@ -758,8 +758,8 @@ export default function GroupPage() {
       <FeaturePage
         title="Group Chat"
         description="Secure group conversations for seniors, volunteers, and caregivers."
-        backLabel="Back to Dashboard"
-        onBack={() => navigate('/dashboard')}
+        backLabel="Back to Care Connect"
+        onBack={() => navigate('/communication')}
         actions={['elder', 'volunteer'].includes(user.role) && (
           <Button onClick={() => setCreateOpen(true)}>Create Group</Button>
         )}

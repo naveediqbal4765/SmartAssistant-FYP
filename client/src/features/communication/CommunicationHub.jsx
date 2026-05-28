@@ -7,8 +7,10 @@ export default function CommunicationHub() {
 
   return (
     <FeaturePage
-      title="Communication Hub"
-      description="Access conversations, groups, and call features from one dedicated communication module."
+      title="Care Connect"
+      description="Access conversations, groups, and call features from one dedicated collaboration space."
+      backLabel="Back to Dashboard"
+      onBack={() => navigate('/dashboard')}
     >
       <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
         <button
@@ -31,11 +33,15 @@ export default function CommunicationHub() {
           <p className="mt-2 text-sm text-gray-600">Open group chats and group audio/video calls.</p>
         </button>
 
-        <div className="motion-card rounded-2xl border border-gray-200 bg-white p-6 text-left shadow-sm">
+        <button
+          type="button"
+          onClick={() => navigate('/calls')}
+          className="motion-card motion-interactive rounded-2xl border border-gray-200 bg-white p-6 text-left shadow-sm hover:bg-gray-50"
+        >
           <Phone size={30} className="text-green-700" />
           <h3 className="mt-4 text-xl font-bold text-gray-900">Calls</h3>
-          <p className="mt-2 text-sm text-gray-600">Start calls from private chats or active group conversations.</p>
-        </div>
+          <p className="mt-2 text-sm text-gray-600">Review recent call activity and reopen related conversations.</p>
+        </button>
       </div>
     </FeaturePage>
   );

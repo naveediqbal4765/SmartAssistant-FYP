@@ -21,7 +21,6 @@ export const roleConfig = {
       { title: 'Medications', icon: Bell, tone: 'warning', route: '/health/medications' },
       { title: 'Digital Health Vault', icon: FileText, tone: 'indigo', vaultTarget: 'self' },
       { title: 'Appointments', icon: Calendar, tone: 'teal', route: '/health/appointments' },
-      { title: 'Health Telemetry', icon: Activity, tone: 'lime', route: '/health/telemetry' },
       { title: 'Drug Interaction Checker', icon: Heart, tone: 'danger', route: '/health/interactions' }
     ]
   },
@@ -59,7 +58,6 @@ export const roleConfig = {
       { title: "Senior's Medications", icon: Bell, tone: 'info', route: '/health/medications' },
       { title: "Senior's Health Vault", icon: FileText, tone: 'teal', vaultTarget: 'linkedSenior' },
       { title: "Senior's Appointments", icon: Calendar, tone: 'highlight', route: '/health/appointments' },
-      { title: "Senior's Health Telemetry", icon: Activity, tone: 'lime', route: '/health/telemetry' },
       { title: "Senior's Task Requests", icon: Clipboard, tone: 'warning', route: '/task-requests' }
     ]
   }

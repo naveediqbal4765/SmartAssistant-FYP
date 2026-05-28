@@ -199,7 +199,7 @@ export default function Login({ onLogin }) {
         
         <div className="w-full bg-brand-primary shadow-lg">
           <div className="px-4 py-4 sm:px-6 md:px-8 lg:px-12">
-            <BrandMark compact subtitle="Care, health, and communication hub" />
+            <BrandMark compact subtitle="Care, health, and Care Connect" />
           </div>
         </div>
 

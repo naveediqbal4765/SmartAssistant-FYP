@@ -5,7 +5,7 @@ import { useNotificationState } from '../../features/communication/notifications
 
 const routeDepth = (pathname) => {
   if (pathname === '/dashboard') return 0;
-  if (pathname.startsWith('/communication') || pathname.startsWith('/chat') || pathname.startsWith('/groups')) return 1;
+  if (pathname.startsWith('/communication') || pathname.startsWith('/chat') || pathname.startsWith('/groups') || pathname.startsWith('/calls')) return 1;
   if (pathname.startsWith('/health')) return 2;
   return 1;
 };

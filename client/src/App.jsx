@@ -13,6 +13,7 @@ import CommunicationHub from './features/communication/CommunicationHub';
 import ChatPage from './features/communication/chat/pages/ChatPage';
 import GroupPage from './features/communication/groups/GroupPage';
 import GroupCallInviteHandler from './features/communication/groups/GroupCallInviteHandler';
+import CallsPage from './features/communication/calls/CallsPage';
 import MedicationPage from './features/health/medications/MedicationPage';
 import HealthVaultPage from './features/health/vault/HealthVaultPage';
 import AppointmentPage from './features/health/appointments/AppointmentPage';
@@ -254,6 +255,15 @@ function App() {
             element={
               <PrivateRoute>
                 <CommunicationHub />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/calls"
+            element={
+              <PrivateRoute>
+                <CallsPage />
               </PrivateRoute>
             }
           />

@@ -45,7 +45,7 @@ export default function AppHeader({ role, onLogout, notificationState }) {
           onClick={() => navigate('/dashboard')}
           className="flex items-center gap-3 text-left"
         >
-          <BrandMark subtitle="Care, health, and communication hub" />
+          <BrandMark subtitle="Care, health, and Care Connect" />
         </button>
 
         <div className="flex items-center gap-3">
@@ -53,22 +53,19 @@ export default function AppHeader({ role, onLogout, notificationState }) {
             type="button"
             onClick={() => navigate('/communication')}
             className="motion-interactive hidden items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white hover:bg-white/20 sm:inline-flex"
-            aria-label="Open communication module"
+            aria-label="Open Care Connect"
           >
             <MessageCircle size={18} />
-            Communication
+            Care Connect
           </button>
           <button
             type="button"
             onClick={() => navigate('/communication')}
             className="motion-interactive flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 sm:hidden"
-            aria-label="Open communication module"
+            aria-label="Open Care Connect"
           >
             <MessageCircle size={22} />
           </button>
-          <span className="hidden rounded-full bg-white/10 px-3 py-1 text-sm font-semibold text-white sm:inline-flex">
-            {roleLabel}
-          </span>
           <NotificationBell
             className="relative right-auto top-auto z-auto"
             notificationState={notificationState}
