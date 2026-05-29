@@ -41,6 +41,12 @@ const assertMinimumGroupSize = (members) => {
   }
 };
 
+const getLinkedCaregiverIdsForSenior = async (userId) => {
+  const user = await User.findById(userId).select('role linkedCaregivers');
+  if (user?.role !== 'elder') return [];
+  return (user.linkedCaregivers || []).map(toId);
+};
+
 const getGroupOrThrow = async (groupId) => {
   assertObjectId(groupId, 'groupId');
   const group = await Group.findById(groupId);
@@ -613,18 +619,95 @@ const exitGroup = async (groupId, userId) => {
   }
 
   const exitingMember = group.members.find((member) => toId(member.userId) === toId(userId));
-  group.members = group.members.filter((member) => toId(member.userId) !== toId(userId));
-  group.hiddenFor = [...new Set([...(group.hiddenFor || []).map(toId), toId(userId)])];
-  group.mutedFor = (group.mutedFor || []).filter((id) => toId(id) !== toId(userId));
-
-  if (exitingMember?.role === 'admin' && group.members.length && !group.members.some((member) => member.role === 'admin')) {
-    group.members[0].role = 'admin';
+  if (exitingMember?.role === 'admin') {
+    throw createServiceError(400, 'Transfer admin or delete the group before leaving');
   }
+
+  const caregiverIds = await getLinkedCaregiverIdsForSenior(userId);
+  const memberIds = new Set(group.members.map((member) => toId(member.userId)));
+  const removedUserIds = [toId(userId), ...caregiverIds.filter((caregiverId) => memberIds.has(caregiverId))];
+  const removedUserIdSet = new Set(removedUserIds);
+
+  group.members = group.members.filter((member) => !removedUserIdSet.has(toId(member.userId)));
+  group.hiddenFor = [...new Set([...(group.hiddenFor || []).map(toId), ...removedUserIds])];
+  group.mutedFor = (group.mutedFor || []).filter((id) => !removedUserIdSet.has(toId(id)));
 
   group.updatedAt = new Date();
   await group.save();
 
-  return group;
+  return {
+    group: await populateGroup(Group.findById(group._id)),
+    removedUserIds
+  };
+};
+
+const transferAdminAndExit = async (groupId, admin, newAdminUserId) => {
+  const group = await getGroupOrThrow(groupId);
+  assertObjectId(newAdminUserId, 'newAdminUserId');
+
+  if (!isGroupAdmin(group, admin._id)) {
+    throw createServiceError(403, 'Only group admins can transfer ownership');
+  }
+
+  if (toId(newAdminUserId) === toId(admin._id)) {
+    throw createServiceError(400, 'Choose another member as the new admin');
+  }
+
+  const newAdminMember = group.members.find((member) => toId(member.userId) === toId(newAdminUserId));
+  if (!newAdminMember) {
+    throw createServiceError(404, 'Selected member is not in this group');
+  }
+
+  const caregiverIds = await getLinkedCaregiverIdsForSenior(admin._id);
+  const memberIds = new Set(group.members.map((member) => toId(member.userId)));
+  const linkedCaregiverIdsInGroup = caregiverIds.filter((caregiverId) => memberIds.has(caregiverId));
+  if (linkedCaregiverIdsInGroup.includes(toId(newAdminUserId))) {
+    throw createServiceError(400, 'Choose a member who will remain in the group as admin');
+  }
+
+  const removedUserIds = [toId(admin._id), ...linkedCaregiverIdsInGroup];
+  const removedUserIdSet = new Set(removedUserIds);
+
+  group.members = group.members
+    .filter((member) => !removedUserIdSet.has(toId(member.userId)))
+    .map((member) => (
+      {
+        userId: member.userId,
+        role: toId(member.userId) === toId(newAdminUserId) ? 'admin' : member.role
+      }
+    ));
+  group.hiddenFor = [...new Set([...(group.hiddenFor || []).map(toId), ...removedUserIds])];
+  group.mutedFor = (group.mutedFor || []).filter((id) => !removedUserIdSet.has(toId(id)));
+
+  group.updatedAt = new Date();
+  await group.save();
+
+  return {
+    group: await populateGroup(Group.findById(group._id)),
+    removedUserIds
+  };
+};
+
+const deleteGroup = async (groupId, admin) => {
+  const group = await getGroupOrThrow(groupId);
+  if (!isGroupAdmin(group, admin._id)) {
+    throw createServiceError(403, 'Only group admins can delete this group');
+  }
+
+  const removedUserIds = (group.members || []).map((member) => toId(member.userId));
+  const groupName = group.name;
+
+  await Promise.all([
+    GroupMessage.deleteMany({ groupId: group._id }),
+    GroupJoinRequest.deleteMany({ groupId: group._id }),
+    Group.deleteOne({ _id: group._id })
+  ]);
+
+  return {
+    groupId: toId(group._id),
+    groupName,
+    removedUserIds
+  };
 };
 
 const setGroupMutedForUser = async (groupId, userId, muted = true) => {
@@ -688,6 +771,8 @@ module.exports = {
   directAddMember,
   removeMember,
   exitGroup,
+  transferAdminAndExit,
+  deleteGroup,
   setGroupMutedForUser,
   hideGroupForUser,
   searchAddableUsers,

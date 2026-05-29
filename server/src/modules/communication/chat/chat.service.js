@@ -79,6 +79,7 @@ const sendMessage = async (data) => {
     mimeType: data.mimeType || '',
     size: data.size || null,
     duration: data.duration || null,
+    deletedFor: data.deletedFor || [],
     ...normalizeForwardedFrom(data.forwardedFrom),
     ...replyFields
   });

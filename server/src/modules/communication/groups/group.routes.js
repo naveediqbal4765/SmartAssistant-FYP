@@ -11,6 +11,7 @@ const {
   getRequests,
   exitGroup,
   muteGroup,
+  transferAdminAndExit,
   rejectRequest,
   reactToMessage,
   removeMember,
@@ -19,6 +20,7 @@ const {
   searchAddableUsers,
   searchInitialMembers,
   sendMessage,
+  deleteGroup,
   updateGroup
 } = require('./group.controller');
 
@@ -36,7 +38,9 @@ router.patch('/requests/:requestId/reject', auth, rejectRequest);
 router.get('/:groupId/messages', auth, getMessages);
 router.post('/:groupId/messages', auth, sendMessage);
 router.patch('/:groupId', auth, updateGroup);
+router.delete('/:groupId', auth, deleteGroup);
 router.post('/:groupId/exit', auth, exitGroup);
+router.post('/:groupId/transfer-admin-exit', auth, transferAdminAndExit);
 router.patch('/:groupId/mute', auth, muteGroup);
 router.post('/:groupId/join-request', auth, requestToJoin);
 router.delete('/:groupId/join-request', auth, cancelJoinRequest);

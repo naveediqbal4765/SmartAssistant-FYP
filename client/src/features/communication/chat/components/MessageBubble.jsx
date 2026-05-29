@@ -328,6 +328,7 @@ export default function MessageBubble({
   const mediaMetaClass = isMine ? 'text-white/80' : 'text-gray-500';
   const groupSeenCount = (message.seenBy || []).length;
   const groupDeliveredCount = (message.deliveredTo || []).length;
+  const isMissedCallMessage = message.messageType === 'call' && String(message.message || '').toLowerCase().includes('missed');
   const lifecycleLabel = isMine && message.messageType !== 'call'
     ? groupSeenCount
       ? `Seen by ${groupSeenCount} ${groupSeenCount === 1 ? 'member' : 'members'}`
@@ -591,11 +592,13 @@ export default function MessageBubble({
           )}
 
           {message.messageType === 'call' ? (
-            <div className="flex items-center gap-3 pr-10">
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100">☎</span>
+            <div className="flex items-center gap-1.5 pr-10 text-sm">
+              <span className={`text-sm leading-none ${isMissedCallMessage ? 'text-red-600' : ''}`}>☎</span>
               <div>
-                <p className="font-semibold">{message.message || 'Audio call'}</p>
-                <p className="text-sm text-blue-700">{formatDuration(message.duration)}</p>
+                <p className={isMissedCallMessage ? 'font-semibold text-red-600' : ''}>{message.message || 'Audio call'}</p>
+                {message.duration && !String(message.message || '').includes('—') && (
+                  <p className={`text-xs ${isMissedCallMessage ? 'text-red-600' : 'text-blue-700'}`}>{formatDuration(message.duration)}</p>
+                )}
               </div>
             </div>
           ) : message.messageType === 'voice' && message.mediaUrl ? (

@@ -55,7 +55,7 @@ function GroupListItem({
   };
 
   return (
-    <div className="relative overflow-visible border-b border-gray-100 last:border-b-0">
+    <div className="motion-interactive relative overflow-visible border-b border-gray-100 last:border-b-0">
       <div className="absolute inset-y-1 right-0 flex w-48 overflow-hidden rounded-2xl shadow-sm">
         <button
           type="button"
@@ -79,7 +79,7 @@ function GroupListItem({
         onPointerUp={handlePointerUp}
         onPointerCancel={() => setSwipeStartX(null)}
         onClick={handleSelect}
-        className={`motion-interactive relative w-full touch-pan-y rounded-2xl p-4 text-left transition-all duration-200 ease-in-out hover:bg-gray-50 hover:shadow-md ${
+        className={`relative w-full touch-pan-y rounded-2xl p-4 text-left transition-all duration-200 ease-in-out hover:bg-gray-50 hover:shadow-md ${
           actionsOpen ? '-translate-x-48' : 'translate-x-0'
         } ${active ? 'z-10 scale-[1.01] bg-gray-100 shadow-lg shadow-gray-200/70' : 'bg-white shadow-none'}`}
       >

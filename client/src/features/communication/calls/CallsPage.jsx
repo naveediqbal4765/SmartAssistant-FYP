@@ -48,6 +48,32 @@ const getCallType = (message = '') => (
   message.toLowerCase().includes('video') ? 'video' : 'audio'
 );
 
+const parseCleanCallLog = (message = '', fallbackDuration = 0) => {
+  const text = String(message || '').trim();
+  const lowerText = text.toLowerCase();
+  const missed = lowerText.includes('missed');
+  const durationMatch = text.match(/(\d{1,2}):(\d{2})\s*$/);
+  const duration = durationMatch
+    ? (Number(durationMatch[1]) * 60) + Number(durationMatch[2])
+    : Number(fallbackDuration || 0);
+  const subtitle = durationMatch
+    ? text.replace(/\s*[—-]\s*\d{1,2}:\d{2}\s*$/, '')
+    : text;
+
+  return {
+    subtitle: subtitle || (getCallType(text) === 'video' ? 'Video call' : 'Audio call'),
+    duration: missed ? 0 : duration,
+    missed
+  };
+};
+
+const parseGroupCallLog = (message = '') => {
+  const text = String(message || '');
+  const lowerText = text.toLowerCase();
+  if (lowerText.includes('joined') || lowerText === 'group call ended') return null;
+  return parseCleanCallLog(text);
+};
+
 const SWIPE_THRESHOLD_PX = 48;
 const wait = (ms) => new Promise((resolve) => window.setTimeout(resolve, ms));
 
@@ -61,6 +87,30 @@ const deleteCallLogMessages = async (log) => {
       ? deleteGroupMessage(ref.id, 'forMe')
       : deleteMessage(ref.id, 'forMe')
   )));
+};
+
+const uniqueBy = (items, getKey) => {
+  const seen = new Set();
+  return items.filter((item) => {
+    const key = getKey(item);
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+};
+
+const dedupeCallLogs = (logs) => {
+  const seen = new Set();
+  return logs.filter((log) => {
+    const refs = (log.messageRefs || [])
+      .map((ref) => `${ref.kind}:${ref.id}`)
+      .sort()
+      .join('|');
+    const key = refs || `${log.kind}:${log.id}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 };
 
 const buildPrivateCallLogs = ({ conversations, messagesByParticipant, currentUserId }) => {
@@ -96,6 +146,29 @@ const buildPrivateCallLogs = ({ conversations, messagesByParticipant, currentUse
       const text = message.message || '';
       const lowerText = text.toLowerCase();
       const senderIsCurrentUser = getUserId(message.senderId) === currentUserId;
+
+      if (!lowerText.includes('started') && !lowerText.includes('accepted') && !lowerText.includes('ended')) {
+        const parsedLog = parseCleanCallLog(text, message.duration);
+        const callType = getCallType(text);
+        const callLabel = `${callType === 'video' ? 'Video' : 'Audio'} Call`;
+        logs.push({
+          id: String(message._id),
+          kind: 'private',
+          name: participant?.name || 'Unknown user',
+          subtitle: parsedLog.missed
+            ? `Missed ${callLabel}`
+            : senderIsCurrentUser && !parsedLog.duration
+              ? `Outgoing ${callLabel}`
+              : parsedLog.subtitle,
+          callType,
+          direction: parsedLog.missed ? 'missed' : senderIsCurrentUser ? 'outgoing' : 'incoming',
+          duration: parsedLog.duration,
+          timestamp: message.createdAt,
+          route: `/chat/${conversation.id}`,
+          messageRefs: [{ kind: 'private', id: String(message._id) }]
+        });
+        return;
+      }
 
       if (lowerText.includes('started')) {
         pushActiveSession();
@@ -150,22 +223,35 @@ const buildPrivateCallLogs = ({ conversations, messagesByParticipant, currentUse
   return logs;
 };
 
-const buildGroupCallLogs = ({ groups, groupMessagesById }) => (
+const buildGroupCallLogs = ({ groups, groupMessagesById, currentUserId }) => (
   groups.flatMap((group) => (
     (groupMessagesById[group._id] || [])
       .filter((message) => message.messageType === 'call')
-      .map((message) => ({
-        id: String(message._id),
-        kind: 'group',
-        name: group.name || 'Group',
-        subtitle: message.message || 'Group call event',
-        callType: getCallType(message.message || ''),
-        direction: 'group',
-        duration: message.duration || 0,
-        timestamp: message.createdAt,
-        route: `/groups/${group._id}`,
-        messageRefs: [{ kind: 'group', id: String(message._id) }]
-      }))
+      .map((message) => {
+        const parsedLog = parseGroupCallLog(message.message);
+        if (!parsedLog) return null;
+        const callType = getCallType(message.message || '');
+        const senderIsCurrentUser = getUserId(message.senderId) === currentUserId;
+        const callLabel = `Group ${callType === 'video' ? 'Video' : 'Audio'} Call`;
+
+        return {
+          id: String(message._id),
+          kind: 'group',
+          name: group.name || 'Group',
+          subtitle: parsedLog.missed
+            ? `Missed ${callLabel}`
+            : senderIsCurrentUser && !parsedLog.duration
+              ? `Outgoing ${callLabel}`
+              : parsedLog.subtitle,
+          callType,
+          direction: parsedLog.missed ? 'missed' : senderIsCurrentUser && !parsedLog.duration ? 'outgoing' : 'group',
+          duration: parsedLog.duration || message.duration || 0,
+          timestamp: message.createdAt,
+          route: `/groups/${group._id}`,
+          messageRefs: [{ kind: 'group', id: String(message._id) }]
+        };
+      })
+      .filter(Boolean)
   ))
 );
 
@@ -176,13 +262,11 @@ function CallHistoryItem({ log, onOpen, onDelete, deleting }) {
   const Icon = missed ? PhoneMissed : log.callType === 'video' ? Video : Phone;
   const [actionOpen, setActionOpen] = useState(false);
   const [swipeStartX, setSwipeStartX] = useState(null);
-  const [swipeDelta, setSwipeDelta] = useState(0);
   const swipedRef = useRef(false);
 
-  const handlePointerMove = (event) => {
-    if (swipeStartX === null) return;
-    const deltaX = event.clientX - swipeStartX;
-    setSwipeDelta(Math.min(0, Math.max(-96, deltaX)));
+  const handlePointerDown = (event) => {
+    setSwipeStartX(event.clientX);
+    setActionOpen((current) => (current ? current : false));
   };
 
   const handlePointerUp = (event) => {
@@ -196,7 +280,6 @@ function CallHistoryItem({ log, onOpen, onDelete, deleting }) {
       swipedRef.current = false;
     }
     setSwipeStartX(null);
-    setSwipeDelta(0);
   };
 
   const handleSelect = () => {
@@ -213,10 +296,8 @@ function CallHistoryItem({ log, onOpen, onDelete, deleting }) {
     onOpen(log.route);
   };
 
-  const translateX = swipeStartX !== null ? swipeDelta : actionOpen ? -96 : 0;
-
   return (
-    <div className={`group relative overflow-hidden rounded-2xl transition-all duration-200 ease-in-out ${
+    <div className={`motion-interactive group relative overflow-hidden rounded-2xl transition-all duration-200 ease-in-out ${
       deleting ? '-translate-x-8 opacity-0' : 'translate-x-0 opacity-100'
     }`}>
       <button
@@ -231,16 +312,13 @@ function CallHistoryItem({ log, onOpen, onDelete, deleting }) {
       </button>
       <button
         type="button"
-        onPointerDown={(event) => setSwipeStartX(event.clientX)}
-        onPointerMove={handlePointerMove}
+        onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
-        onPointerCancel={() => {
-          setSwipeStartX(null);
-          setSwipeDelta(0);
-        }}
+        onPointerCancel={() => setSwipeStartX(null)}
         onClick={handleSelect}
-        className="relative z-10 flex w-full touch-pan-y items-center gap-3 rounded-2xl bg-white px-3 py-3 pr-14 text-left transition duration-200 ease-in-out hover:bg-gray-50"
-        style={{ transform: `translateX(${translateX}px)` }}
+        className={`relative z-10 flex w-full touch-pan-y items-center gap-3 rounded-2xl bg-white px-3 py-3 pr-14 text-left transition duration-150 ease-in-out hover:bg-gray-50 ${
+          actionOpen ? '-translate-x-24' : 'translate-x-0'
+        }`}
       >
         <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full font-bold ${
           missed ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700'
@@ -285,24 +363,27 @@ export default function CallsPage() {
         fetchConversations(),
         fetchMyGroups()
       ]);
+      const uniqueConversations = uniqueBy(
+        conversations.filter((conversation) => conversation.participant?._id),
+        (conversation) => getUserId(conversation.participant)
+      );
+      const uniqueGroups = uniqueBy(groups, (group) => String(group._id || group.id || ''));
       const privateMessages = await Promise.all(
-        conversations
-          .filter((conversation) => conversation.participant?._id)
-          .map(async (conversation) => {
-            const participantId = getUserId(conversation.participant);
-            return [participantId, await fetchMessages(participantId)];
-          })
+        uniqueConversations.map(async (conversation) => {
+          const participantId = getUserId(conversation.participant);
+          return [participantId, await fetchMessages(participantId)];
+        })
       );
       const groupMessages = await Promise.all(
-        groups.map(async (group) => [group._id, await fetchGroupMessages(group._id)])
+        uniqueGroups.map(async (group) => [group._id, await fetchGroupMessages(group._id)])
       );
 
       const messagesByParticipant = Object.fromEntries(privateMessages);
       const groupMessagesById = Object.fromEntries(groupMessages);
-      const logs = [
-        ...buildPrivateCallLogs({ conversations, messagesByParticipant, currentUserId }),
-        ...buildGroupCallLogs({ groups, groupMessagesById })
-      ].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+      const logs = dedupeCallLogs([
+        ...buildPrivateCallLogs({ conversations: uniqueConversations, messagesByParticipant, currentUserId }),
+        ...buildGroupCallLogs({ groups: uniqueGroups, groupMessagesById, currentUserId })
+      ]).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
       setCallLogs(logs);
     } catch (err) {
@@ -393,7 +474,7 @@ export default function CallsPage() {
           size="sm"
           onClick={handleClearHistory}
           disabled={loadingCalls || clearing || !callLogs.length}
-          className="bg-transparent text-red-600 hover:bg-red-50 hover:text-red-700 disabled:text-red-600 disabled:opacity-50"
+          className="bg-transparent text-red-600 transition-colors hover:bg-red-50 hover:text-red-700 disabled:text-red-600 disabled:opacity-50"
         >
           Clear Call History
         </Button>

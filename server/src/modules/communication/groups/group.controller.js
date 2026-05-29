@@ -1,6 +1,6 @@
 const groupService = require('./group.service');
 const { GroupMessage } = require('./group.model');
-const { emitConversationDeleted, emitGroupItemReactionUpdated, emitGroupUpdated, emitMessageDeleted, emitToUser } = require('../sockets/socket.manager');
+const { emitConversationDeleted, emitGroupItemReactionUpdated, emitGroupUpdated, emitMessageDeleted, emitNotification, emitToUser } = require('../sockets/socket.manager');
 const notificationService = require('../notifications/notification.service');
 const mongoose = require('mongoose');
 
@@ -323,15 +323,71 @@ const removeMember = async (req, res) => {
 
 const exitGroup = async (req, res) => {
   try {
-    const group = await groupService.exitGroup(req.params.groupId, req.user._id);
-    emitConversationDeleted({
-      userId: req.user._id,
-      conversationId: req.params.groupId,
-      chatType: 'group'
+    const { group, removedUserIds } = await groupService.exitGroup(req.params.groupId, req.user._id);
+    emitGroupUpdated({ group });
+    (removedUserIds || []).forEach((userId) => {
+      emitConversationDeleted({
+        userId,
+        conversationId: req.params.groupId,
+        chatType: 'group'
+      });
     });
-    return res.json({ success: true, groupId: req.params.groupId, group });
+    return res.json({ success: true, groupId: req.params.groupId, group, removedUserIds });
   } catch (err) {
     return handleError(res, err, 'Exit group error:');
+  }
+};
+
+const transferAdminAndExit = async (req, res) => {
+  try {
+    const { group, removedUserIds } = await groupService.transferAdminAndExit(
+      req.params.groupId,
+      req.user,
+      req.body?.newAdminUserId
+    );
+
+    emitGroupUpdated({ group });
+    (removedUserIds || []).forEach((userId) => {
+      emitConversationDeleted({
+        userId,
+        conversationId: req.params.groupId,
+        chatType: 'group'
+      });
+    });
+
+    return res.json({ success: true, groupId: req.params.groupId, group, removedUserIds });
+  } catch (err) {
+    return handleError(res, err, 'Transfer admin and exit group error:');
+  }
+};
+
+const deleteGroup = async (req, res) => {
+  try {
+    const { groupId, groupName, removedUserIds } = await groupService.deleteGroup(req.params.groupId, req.user);
+
+    await Promise.all((removedUserIds || []).map(async (userId) => {
+      emitConversationDeleted({
+        userId,
+        conversationId: groupId,
+        chatType: 'group'
+      });
+
+      if (toId(userId) === toId(req.user._id)) return;
+      const notification = await notificationService.createNotification({
+        userId,
+        type: 'system',
+        title: 'Group deleted',
+        message: `${req.user.name || 'The group admin'} deleted ${groupName}.`,
+        entityType: 'group',
+        entityId: groupId,
+        fromUserId: req.user._id
+      });
+      emitNotification(userId, notification);
+    }));
+
+    return res.json({ success: true, groupId, removedUserIds });
+  } catch (err) {
+    return handleError(res, err, 'Delete group error:');
   }
 };
 
@@ -384,6 +440,8 @@ module.exports = {
   addMember,
   removeMember,
   exitGroup,
+  transferAdminAndExit,
+  deleteGroup,
   muteGroup,
   searchAddableUsers,
   searchInitialMembers

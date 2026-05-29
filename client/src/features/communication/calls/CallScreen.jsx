@@ -12,7 +12,9 @@ export default function CallScreen({
   error,
   onMute,
   onToggleCamera,
-  onEnd
+  onEnd,
+  displayName = '',
+  embedded = false
 }) {
   const remoteVideoRef = useRef(null);
   const localVideoRef = useRef(null);
@@ -39,13 +41,16 @@ export default function CallScreen({
   const minutes = Math.floor((durationSeconds || 0) / 60);
   const seconds = (durationSeconds || 0) % 60;
   const durationLabel = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  const containerClassName = embedded
+    ? 'motion-panel-in flex h-full min-h-0 flex-col bg-gray-900 p-5 text-white'
+    : `motion-panel-in fixed inset-x-4 bottom-6 ${overlayLayers.call} mx-auto max-w-3xl rounded-2xl bg-gray-900 p-5 text-white shadow-2xl`;
 
   return (
-    <div className={`motion-panel-in fixed inset-x-4 bottom-6 ${overlayLayers.call} mx-auto max-w-3xl rounded-2xl bg-gray-900 p-5 text-white shadow-2xl`}>
+    <div className={containerClassName}>
       <audio ref={remoteAudioRef} autoPlay playsInline />
 
       {isVideoCall && (
-        <div className="relative mb-4 h-72 overflow-hidden rounded-2xl bg-black">
+        <div className="relative mb-4 min-h-0 flex-1 overflow-hidden rounded-2xl bg-black">
           <video ref={remoteVideoRef} autoPlay playsInline muted className="h-full w-full object-cover" />
           <div className="absolute bottom-4 right-4 h-28 w-36 overflow-hidden rounded-xl border-2 border-white bg-gray-800">
             <video ref={localVideoRef} autoPlay playsInline muted className="h-full w-full object-cover" />
@@ -60,7 +65,10 @@ export default function CallScreen({
 
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <p className="text-lg font-bold">{isVideoCall ? 'Video call' : 'Audio call'}</p>
+          {displayName && <p className="text-xl font-bold">{displayName}</p>}
+          <p className={displayName ? 'text-sm font-semibold text-white/80' : 'text-lg font-bold'}>
+            {isVideoCall ? 'Video call' : 'Audio call'}
+          </p>
           <p className="text-sm text-white/70">
             {callState === 'calling' ? 'Calling...' : callState === 'connecting' ? 'Connecting...' : 'In call'}
           </p>

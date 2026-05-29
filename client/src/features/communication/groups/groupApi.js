@@ -125,6 +125,22 @@ export const exitGroup = async (groupId) => {
   return response.data;
 };
 
+export const transferAdminAndExitGroup = async (groupId, newAdminUserId) => {
+  const response = await axios.post(
+    `${API_BASE_URL}/${groupId}/transfer-admin-exit`,
+    { newAdminUserId },
+    { headers: authHeaders() }
+  );
+  return response.data;
+};
+
+export const deleteGroup = async (groupId) => {
+  const response = await axios.delete(`${API_BASE_URL}/${groupId}`, {
+    headers: authHeaders()
+  });
+  return response.data;
+};
+
 export const muteGroup = async (groupId, muted = true) => {
   const response = await axios.patch(`${API_BASE_URL}/${groupId}/mute`, { muted }, {
     headers: authHeaders()

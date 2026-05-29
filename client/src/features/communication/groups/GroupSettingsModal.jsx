@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import ActionMenu from '../../../components/ui/ActionMenu';
 import Button from '../../../components/ui/Button';
 import { overlayLayers } from '../../../components/ui/overlayLayers';
@@ -30,12 +30,24 @@ export default function GroupSettingsModal({
 }) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const dialogRef = useRef(null);
 
   useEffect(() => {
     if (!open || !group) return;
     setName(group.name || '');
     setDescription(group.description || '');
   }, [group, open]);
+
+  useEffect(() => {
+    if (!open) return;
+    window.requestAnimationFrame(() => {
+      dialogRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+        inline: 'center'
+      });
+    });
+  }, [open]);
 
   if (!open || !group) return null;
 
@@ -54,6 +66,7 @@ export default function GroupSettingsModal({
       onPointerDown={onClose}
     >
       <div
+        ref={dialogRef}
         className="motion-modal-in max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-6 shadow-xl shadow-gray-900/15"
         onPointerDown={(event) => event.stopPropagation()}
       >

@@ -67,9 +67,9 @@ export default function NotificationDropdown({
         {!loading && !error && notifications.map((notification) => (
           <div
             key={notification._id}
-            className="relative overflow-hidden border-b last:border-b-0"
+            className="motion-interactive relative overflow-hidden border-b last:border-b-0"
           >
-            <div className="absolute inset-y-0 right-0 flex w-24 items-center justify-center bg-red-600">
+            <div className="absolute inset-y-0 right-0 flex w-28 items-center justify-center bg-red-600">
               <button
                 type="button"
                 onClick={(event) => handleDelete(event, notification._id)}
@@ -96,8 +96,8 @@ export default function NotificationDropdown({
                 }
                 onNotificationClick(notification);
               }}
-              className={`motion-interactive relative w-full touch-pan-y p-4 text-left hover:bg-gray-50 ${
-                openDeleteId === notification._id ? '-translate-x-24' : 'translate-x-0'
+              className={`relative w-full touch-pan-y p-4 text-left transition-all duration-200 ease-in-out hover:bg-gray-50 ${
+                openDeleteId === notification._id ? '-translate-x-28' : 'translate-x-0'
               } ${notification.isRead ? 'bg-white' : 'bg-green-50'}`}
             >
               <div className="flex items-start justify-between gap-3">

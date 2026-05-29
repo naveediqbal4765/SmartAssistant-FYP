@@ -54,7 +54,9 @@ export default function GroupCallScreen({
   error,
   onMute,
   onToggleCamera,
-  onLeave
+  onLeave,
+  displayName = '',
+  embedded = false
 }) {
   if (callState === 'idle') return null;
 
@@ -66,13 +68,21 @@ export default function GroupCallScreen({
     localParticipant,
     ...remoteStreams
   ].filter((participant) => participant?.userId);
+  const wrapperClassName = embedded
+    ? 'flex h-full min-h-0 items-stretch justify-stretch bg-gray-950'
+    : `fixed inset-4 ${overlayLayers.call} z-[999] flex items-center justify-center`;
+  const panelClassName = embedded
+    ? 'motion-panel-in flex h-full min-h-0 w-full flex-col bg-gray-950 p-5 text-white'
+    : 'motion-panel-in flex max-h-full w-full max-w-5xl flex-col rounded-3xl bg-gray-950 p-5 text-white shadow-2xl';
+  const callDisplayName = displayName || group?.name || 'Group';
 
   return (
-    <div className={`fixed inset-4 ${overlayLayers.call} z-[999] flex items-center justify-center`}>
-      <div className="motion-panel-in flex max-h-full w-full max-w-5xl flex-col rounded-3xl bg-gray-950 p-5 text-white shadow-2xl">
+    <div className={wrapperClassName}>
+      <div className={panelClassName}>
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-xl font-bold">{group?.name || 'Group'} {isVideoCall ? 'video' : 'audio'} call</p>
+            <p className="text-xl font-bold">{callDisplayName}</p>
+            <p className="text-sm font-semibold text-white/80">{isVideoCall ? 'Video call' : 'Audio call'}</p>
             <p className="text-sm text-white/70">
               {callState === 'joining' ? 'Connecting...' : `${participants.length} participant${participants.length === 1 ? '' : 's'} · ${durationLabel}`}
             </p>

@@ -936,6 +936,23 @@ export default function ChatPage() {
             callDisabled={!activeParticipantId || callState !== 'idle'}
             onStartAudioCall={handleStartAudioCall}
             onStartVideoCall={handleStartVideoCall}
+            callScreen={callState !== 'idle' ? (
+              <CallScreen
+                callState={callState}
+                callType={callType}
+                localStream={localStream}
+                remoteStream={remoteStream}
+                durationSeconds={durationSeconds}
+                muted={muted}
+                cameraOn={cameraOn}
+                error={callError}
+                displayName={activeConversation?.participant?.name || 'Contact'}
+                onMute={toggleMute}
+                onToggleCamera={toggleCamera}
+                onEnd={endCurrentCall}
+                embedded
+              />
+            ) : null}
           />
         </div>
       </FeaturePage>
@@ -949,19 +966,6 @@ export default function ChatPage() {
         onForward={handleForwardMessage}
       />
 
-      <CallScreen
-        callState={callState}
-        callType={callType}
-        localStream={localStream}
-        remoteStream={remoteStream}
-        durationSeconds={durationSeconds}
-        muted={muted}
-        cameraOn={cameraOn}
-        error={callError}
-        onMute={toggleMute}
-        onToggleCamera={toggleCamera}
-        onEnd={endCurrentCall}
-      />
     </>
   );
 }

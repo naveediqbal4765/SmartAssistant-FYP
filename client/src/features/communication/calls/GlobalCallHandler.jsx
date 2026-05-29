@@ -1,8 +1,10 @@
+import { useEffect, useState } from 'react';
 import CallScreen from './CallScreen';
 import IncomingCallModal from './IncomingCallModal';
 import useWebRTC from './useWebRTC';
 
 export default function GlobalCallHandler() {
+  const [callDisplayName, setCallDisplayName] = useState('');
   const {
     incomingCall,
     localStream,
@@ -20,6 +22,18 @@ export default function GlobalCallHandler() {
     toggleCamera
   } = useWebRTC({ useGlobalIncomingCall: true });
 
+  useEffect(() => {
+    if (incomingCall?.fromName) {
+      setCallDisplayName(incomingCall.fromName);
+    }
+  }, [incomingCall]);
+
+  useEffect(() => {
+    if (callState === 'idle') {
+      setCallDisplayName('');
+    }
+  }, [callState]);
+
   return (
     <>
       <IncomingCallModal
@@ -36,6 +50,7 @@ export default function GlobalCallHandler() {
         muted={muted}
         cameraOn={cameraOn}
         error={error}
+        displayName={callDisplayName}
         onMute={toggleMute}
         onToggleCamera={toggleCamera}
         onEnd={endCurrentCall}

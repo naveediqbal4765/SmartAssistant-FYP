@@ -7,27 +7,40 @@ import { getChatSocket } from '../chat/services/socket';
 export default function GroupCallInviteHandler() {
   const navigate = useNavigate();
   const [invite, setInvite] = useState(null);
+  const [dismissing, setDismissing] = useState(false);
 
   useEffect(() => {
     const socket = getChatSocket();
 
     const handleInvite = (payload = {}) => {
       if (!payload.groupId || !payload.callId) return;
+      setDismissing(false);
       setInvite(payload);
     };
 
-    const handleCallEnded = (payload = {}) => {
-      setInvite((current) => (
-        current && String(current.groupId) === String(payload.groupId) ? null : current
-      ));
+    const dismissInvite = (payload = {}) => {
+      setInvite((current) => {
+        if (!current || String(current.groupId) !== String(payload.groupId)) return current;
+
+        setDismissing(true);
+        window.setTimeout(() => {
+          setInvite((latest) => (
+            latest && String(latest.groupId) === String(payload.groupId) ? null : latest
+          ));
+          setDismissing(false);
+        }, 180);
+        return current;
+      });
     };
 
     socket.on('group-call:invite', handleInvite);
-    socket.on('group-call:end', handleCallEnded);
+    socket.on('group-call:end', dismissInvite);
+    socket.on('group-call:cancelled', dismissInvite);
 
     return () => {
       socket.off('group-call:invite', handleInvite);
-      socket.off('group-call:end', handleCallEnded);
+      socket.off('group-call:end', dismissInvite);
+      socket.off('group-call:cancelled', dismissInvite);
     };
   }, []);
 
@@ -69,7 +82,9 @@ export default function GroupCallInviteHandler() {
   };
 
   return (
-    <div className="fixed right-6 top-24 z-[1000] w-80 rounded-2xl border border-green-100 bg-white p-4 shadow-2xl">
+    <div className={`fixed right-6 top-24 z-[1000] w-80 rounded-2xl border border-green-100 bg-white p-4 shadow-2xl transition-all duration-200 ${
+      dismissing ? 'translate-x-4 opacity-0' : 'translate-x-0 opacity-100'
+    }`}>
       <p className="text-sm font-semibold uppercase tracking-wide text-green-700">Group Call Started</p>
       <h3 className="mt-1 text-lg font-bold text-gray-900">{invite.groupName || 'Group call'}</h3>
       <p className="mt-1 text-sm text-gray-600">

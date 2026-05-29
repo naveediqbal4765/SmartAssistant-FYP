@@ -9,6 +9,16 @@ const activeGroupCalls = new Map();
 
 const toId = (value) => String(value?._id || value || '');
 
+const formatCallDuration = (durationStartedAt) => {
+  const elapsedSeconds = Math.max(
+    0,
+    Math.floor((Date.now() - new Date(durationStartedAt).getTime()) / 1000)
+  );
+  const minutes = Math.floor(elapsedSeconds / 60);
+  const seconds = elapsedSeconds % 60;
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+};
+
 const buildMessagePreview = (message) => {
   const preview = message.messageType === 'voice'
     ? 'Voice note'
@@ -30,7 +40,11 @@ const ensureActiveGroupCall = ({ groupId, callType = 'audio', starter }) => {
     startedBy: toId(starter?._id || starter),
     startedByName: starter?.name || 'Member',
     startedAt: new Date().toISOString(),
-    participants: new Map()
+    durationStartedAt: null,
+    participants: new Map(),
+    joinedMemberIds: new Set(),
+    invitedMemberIds: new Set(),
+    logSaved: false
   };
   activeGroupCalls.set(normalizedGroupId, call);
   return call;
@@ -57,6 +71,10 @@ const addCallParticipant = (call, socket) => {
     name: socket.user?.name || 'Member'
   };
   call.participants.set(socket.userId, participant);
+  if (socket.userId !== call.startedBy && !call.durationStartedAt) {
+    call.durationStartedAt = new Date().toISOString();
+  }
+  call.joinedMemberIds.add(socket.userId);
   return participant;
 };
 
@@ -68,18 +86,111 @@ const getGroupMemberIds = async (groupId) => {
   };
 };
 
-const emitGroupCallLog = async ({ io, groupId, user, message }) => {
+const emitGroupCallCancelled = async ({ io, groupId, call, memberIds = null }) => {
+  const payload = {
+    groupId: toId(groupId),
+    callId: call?.callId
+  };
+  const targetMemberIds = memberIds || (await getGroupMemberIds(groupId)).memberIds;
+
+  io.to(groupRoom(groupId)).emit('group-call:cancelled', payload);
+  targetMemberIds.forEach((memberId) => {
+    emitToUser(memberId, 'group-call:cancelled', payload);
+  });
+};
+
+const emitGroupCallLog = async ({ io, groupId, user, message, visibleToIds = null }) => {
   const groupMessage = await groupService.sendMessage(groupId, user, {
     message,
     messageType: 'call'
   });
   const group = groupMessage.$locals?.group;
+  const visibleSet = visibleToIds ? new Set(visibleToIds.map(toId)) : null;
+  const hiddenIds = visibleSet
+    ? (group?.members || [])
+      .map((member) => toId(member.userId))
+      .filter((memberId) => !visibleSet.has(memberId))
+    : [];
+
+  if (hiddenIds.length) {
+    await GroupMessage.updateOne(
+      { _id: groupMessage._id },
+      { $addToSet: { deletedFor: { $each: hiddenIds } } },
+      { runValidators: false }
+    );
+    groupMessage.deletedFor = hiddenIds;
+  }
 
   (group?.members || []).forEach((member) => {
-    io.to(userRoom(toId(member.userId))).emit('group-message', groupMessage);
+    const memberId = toId(member.userId);
+    if (!visibleSet || visibleSet.has(memberId)) {
+      io.to(userRoom(memberId)).emit('group-message', groupMessage);
+    }
   });
 
   return groupMessage;
+};
+
+const saveGroupCallLogOnce = async ({ io, groupId, socket, call }) => {
+  if (!call || call.logSaved) return;
+  call.logSaved = true;
+  const { memberIds } = await getGroupMemberIds(groupId);
+  const joinedMemberIds = Array.from(call.joinedMemberIds || []);
+  const missedMemberIds = Array.from(call.invitedMemberIds || [])
+    .filter((memberId) => !call.joinedMemberIds?.has(memberId));
+  const callLabel = `Group ${call.callType === 'video' ? 'video' : 'audio'} call`;
+  const callTitleLabel = `Group ${call.callType === 'video' ? 'Video' : 'Audio'} Call`;
+
+  if (!call.durationStartedAt) {
+    await emitGroupCallLog({
+      io,
+      groupId,
+      user: socket.user,
+      message: callTitleLabel,
+      visibleToIds: [call.startedBy]
+    }).catch((err) => {
+      console.error('Group starter call log failed:', err.message);
+    });
+
+    await Promise.all(missedMemberIds.map((memberId) => emitGroupCallLog({
+      io,
+      groupId,
+      user: socket.user,
+      message: `Missed ${callTitleLabel}`,
+      visibleToIds: [memberId]
+    }).catch((err) => {
+      console.error('Group missed call log failed:', err.message);
+    })));
+
+    if (missedMemberIds.length) {
+      await emitGroupCallCancelled({ io, groupId, call, memberIds: missedMemberIds });
+    }
+    return;
+  }
+
+  await emitGroupCallLog({
+    io,
+    groupId,
+    user: socket.user,
+    message: `${callLabel} — ${formatCallDuration(call.durationStartedAt)}`,
+    visibleToIds: joinedMemberIds.length ? joinedMemberIds : memberIds
+  }).catch((err) => {
+    console.error('Group call log failed:', err.message);
+  });
+
+  await Promise.all(missedMemberIds.map((memberId) => emitGroupCallLog({
+    io,
+    groupId,
+    user: socket.user,
+    message: `${callLabel} — Missed`,
+    visibleToIds: [memberId]
+  }).catch((err) => {
+    console.error('Group missed call log failed:', err.message);
+  })));
+
+  if (missedMemberIds.length) {
+    await emitGroupCallCancelled({ io, groupId, call, memberIds: missedMemberIds });
+  }
 };
 
 const removeCallParticipant = async ({ io, groupId, socket }) => {
@@ -94,15 +205,11 @@ const removeCallParticipant = async ({ io, groupId, socket }) => {
   });
 
   if (!call.participants.size) {
+    await saveGroupCallLogOnce({ io, groupId, socket, call });
+    if (!call.durationStartedAt && socket.userId === call.startedBy) {
+      await emitGroupCallCancelled({ io, groupId, call });
+    }
     activeGroupCalls.delete(toId(groupId));
-    await emitGroupCallLog({
-      io,
-      groupId,
-      user: socket.user,
-      message: 'Group call ended'
-    }).catch((err) => {
-      console.error('Group call log failed:', err.message);
-    });
     io.to(groupRoom(groupId)).emit('group-call:end', {
       groupId: toId(groupId)
     });
@@ -241,13 +348,7 @@ const registerGroupSocketHandlers = (io, socket) => {
       addCallParticipant(call, socket);
       const serializedCall = serializeCall(call);
       const { groupName, memberIds } = await getGroupMemberIds(groupId);
-
-      await emitGroupCallLog({
-        io,
-        groupId,
-        user: socket.user,
-        message: `Group ${callType === 'video' ? 'video' : 'audio'} call started by ${socket.user?.name || 'Member'}`
-      });
+      call.invitedMemberIds = new Set(memberIds.filter((memberId) => memberId !== socket.userId));
 
       memberIds
         .filter((memberId) => memberId !== socket.userId)
@@ -285,13 +386,6 @@ const registerGroupSocketHandlers = (io, socket) => {
       const existingParticipants = Array.from(call.participants.values()).map(serializeParticipant);
       socket.join(groupCallRoom(groupId));
       const participant = addCallParticipant(call, socket);
-
-      await emitGroupCallLog({
-        io,
-        groupId,
-        user: socket.user,
-        message: `Group call joined by ${socket.user?.name || 'Member'}`
-      });
 
       socket.to(groupCallRoom(groupId)).emit('group-call:user-joined', {
         groupId: toId(groupId),
@@ -372,15 +466,11 @@ const registerGroupSocketHandlers = (io, socket) => {
     const call = getActiveGroupCall(groupId);
     if (!call) return;
 
+    await saveGroupCallLogOnce({ io, groupId, socket, call });
+    if (!call.durationStartedAt && socket.userId === call.startedBy) {
+      await emitGroupCallCancelled({ io, groupId, call });
+    }
     activeGroupCalls.delete(toId(groupId));
-    await emitGroupCallLog({
-      io,
-      groupId,
-      user: socket.user,
-      message: 'Group call ended'
-    }).catch((err) => {
-      console.error('Group call log failed:', err.message);
-    });
     io.to(groupCallRoom(groupId)).emit('group-call:end', { groupId: toId(groupId) });
     io.to(groupRoom(groupId)).emit('group-call:end', { groupId: toId(groupId) });
   });

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { getChatSocket } from '../chat/services/socket';
 import AddMemberModal from './AddMemberModal';
+import AdminLeaveGroupModal from './AdminLeaveGroupModal';
 import CreateGroupModal from './CreateGroupModal';
 import ForwardMessageModal from '../chat/components/ForwardMessageModal';
 import GroupCallScreen from './GroupCallScreen';
@@ -11,6 +12,7 @@ import GroupSettingsModal from './GroupSettingsModal';
 import useGroupCall from './useGroupCall';
 import Button from '../../../components/ui/Button';
 import FeaturePage from '../../../components/ui/FeaturePage';
+import { useDialog } from '../../../components/ui/GlobalDialogProvider';
 import { SkeletonBlock, SkeletonLine } from '../../../components/ui/Skeleton';
 import StatusAlert from '../../../components/ui/StatusAlert';
 import { fetchConversations, searchUsers as searchForwardUsers, sendMessage as sendDirectMessage } from '../chat/services/chatApi';
@@ -19,6 +21,7 @@ import {
   approveGroupRequest,
   cancelJoinRequest,
   createGroup,
+  deleteGroup as deleteGroupById,
   deleteGroupMessage,
   discoverGroups,
   exitGroup,
@@ -31,6 +34,7 @@ import {
   rejectGroupRequest,
   removeGroupMember,
   requestToJoinGroup,
+  transferAdminAndExitGroup,
   updateGroup,
   uploadGroupAudio,
   uploadGroupMedia
@@ -47,6 +51,10 @@ const isDeletedForCurrentUser = (message, currentUserId) => {
 };
 
 const getUserId = (value) => String(value?._id || value || '');
+const isGroupAdminForUser = (group, userId) => (
+  group?.members?.some((member) => getUserId(member.userId) === String(userId) && member.role === 'admin')
+);
+
 const reactionEmojiByType = {
   like: '👍',
   heart: '❤️',
@@ -80,6 +88,7 @@ const getNextReactions = (reactions = [], currentUserId, reactionType) => {
 export default function GroupPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const dialog = useDialog();
   const { groupId } = useParams();
   const user = useMemo(() => JSON.parse(localStorage.getItem('user') || '{}'), []);
   const currentUserId = user._id || user.id;
@@ -102,11 +111,10 @@ export default function GroupPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [adminLeaveGroup, setAdminLeaveGroup] = useState(null);
+  const [adminLeaveSubmitting, setAdminLeaveSubmitting] = useState(false);
   const targetMessageId = location.state?.messageId || '';
-  const activeGroupIsAdmin = activeGroup?.members?.some((member) => {
-    const memberId = String(member.userId?._id || member.userId);
-    return memberId === String(currentUserId) && member.role === 'admin';
-  });
+  const activeGroupIsAdmin = isGroupAdminForUser(activeGroup, currentUserId);
   const {
     activeCall: activeGroupCall,
     callState: groupCallState,
@@ -656,6 +664,11 @@ export default function GroupPage() {
     const groupId = group?._id;
     if (!groupId) return;
 
+    if (isGroupAdminForUser(group, currentUserId)) {
+      setAdminLeaveGroup(group);
+      return;
+    }
+
     setGroups((current) => current.filter((item) => String(item._id) !== String(groupId)));
     setActiveGroup((current) => (
       String(current?._id || '') === String(groupId) ? null : current
@@ -666,6 +679,52 @@ export default function GroupPage() {
     } catch (err) {
       setError(getGroupApiErrorMessage(err, 'Failed to exit group'));
       loadGroups();
+    }
+  };
+
+  const handleTransferAdminAndLeave = async (newAdminUserId) => {
+    const groupId = adminLeaveGroup?._id;
+    if (!groupId || !newAdminUserId) return;
+
+    setAdminLeaveSubmitting(true);
+    try {
+      await transferAdminAndExitGroup(groupId, newAdminUserId);
+      setGroups((current) => current.filter((item) => String(item._id) !== String(groupId)));
+      setActiveGroup((current) => (
+        String(current?._id || '') === String(groupId) ? null : current
+      ));
+      setAdminLeaveGroup(null);
+    } catch (err) {
+      setError(getGroupApiErrorMessage(err, 'Failed to transfer admin and leave group'));
+    } finally {
+      setAdminLeaveSubmitting(false);
+    }
+  };
+
+  const handleDeleteAdminGroup = async () => {
+    const groupId = adminLeaveGroup?._id;
+    if (!groupId) return;
+
+    const confirmed = await dialog.showConfirm({
+      title: 'Delete group?',
+      message: 'Are you sure? This cannot be undone.',
+      confirmText: 'Delete Group',
+      cancelText: 'Cancel'
+    });
+    if (!confirmed) return;
+
+    setAdminLeaveSubmitting(true);
+    try {
+      await deleteGroupById(groupId);
+      setGroups((current) => current.filter((item) => String(item._id) !== String(groupId)));
+      setActiveGroup((current) => (
+        String(current?._id || '') === String(groupId) ? null : current
+      ));
+      setAdminLeaveGroup(null);
+    } catch (err) {
+      setError(getGroupApiErrorMessage(err, 'Failed to delete group'));
+    } finally {
+      setAdminLeaveSubmitting(false);
     }
   };
 
@@ -784,45 +843,52 @@ export default function GroupPage() {
             onExitGroup={handleExitGroup}
             onMuteGroup={handleMuteGroup}
           />
-          <GroupChat
-            group={activeGroup}
-            currentUserId={currentUserId}
-            messages={messages}
-            activeCall={activeGroupCall}
-            callState={groupCallState}
-            onStartGroupAudioCall={() => startGroupCall('audio')}
-            onStartGroupVideoCall={() => startGroupCall('video')}
-            onJoinGroupCall={joinGroupCall}
-            onSendMessage={handleSendMessage}
-            onSendVoice={handleSendVoice}
-            onSendMedia={handleSendMedia}
-            onDeleteMessage={handleDeleteMessage}
-            onReactToMessage={handleReactToMessage}
-            onForwardMessage={handleOpenForward}
-            onTypingStart={emitGroupTypingStart}
-            onTypingStop={emitGroupTypingStop}
-            typingLabel={typingLabel}
-            targetMessageId={targetMessageId}
-            onOpenSettings={() => setSettingsOpen(true)}
-          />
+          {groupCallState !== 'idle' ? (
+            <div className="motion-panel-in motion-card h-[70vh] overflow-hidden rounded-[2rem] bg-white shadow-xl shadow-gray-200/70 ring-1 ring-gray-200/70">
+              <GroupCallScreen
+                group={activeGroup}
+                callState={groupCallState}
+                callType={groupCallType}
+                localParticipant={groupCallLocalParticipant}
+                remoteStreams={groupCallRemoteStreams}
+                muted={groupCallMuted}
+                cameraOn={groupCallCameraOn}
+                durationSeconds={groupCallDurationSeconds}
+                error={groupCallError}
+                displayName={activeGroup?.name || 'Group'}
+                onMute={toggleGroupCallMute}
+                onToggleCamera={toggleGroupCallCamera}
+                onLeave={leaveGroupCall}
+                embedded
+              />
+            </div>
+          ) : (
+            <GroupChat
+              group={activeGroup}
+              currentUserId={currentUserId}
+              messages={messages}
+              activeCall={activeGroupCall}
+              callState={groupCallState}
+              onStartGroupAudioCall={() => startGroupCall('audio')}
+              onStartGroupVideoCall={() => startGroupCall('video')}
+              onJoinGroupCall={joinGroupCall}
+              onSendMessage={handleSendMessage}
+              onSendVoice={handleSendVoice}
+              onSendMedia={handleSendMedia}
+              onDeleteMessage={handleDeleteMessage}
+              onReactToMessage={handleReactToMessage}
+              onForwardMessage={handleOpenForward}
+              onTypingStart={emitGroupTypingStart}
+              onTypingStop={emitGroupTypingStop}
+              typingLabel={typingLabel}
+              targetMessageId={targetMessageId}
+              onOpenSettings={() => setSettingsOpen(true)}
+            />
+          )}
         </div>
       </FeaturePage>
 
       <CreateGroupModal open={createOpen} onClose={() => setCreateOpen(false)} onCreate={handleCreateGroup} />
-      <GroupCallScreen
-        group={activeGroup}
-        callState={groupCallState}
-        callType={groupCallType}
-        localParticipant={groupCallLocalParticipant}
-        remoteStreams={groupCallRemoteStreams}
-        muted={groupCallMuted}
-        cameraOn={groupCallCameraOn}
-        durationSeconds={groupCallDurationSeconds}
-        error={groupCallError}
-        onMute={toggleGroupCallMute}
-        onToggleCamera={toggleGroupCallCamera}
-        onLeave={leaveGroupCall}
-      />
       <ForwardMessageModal
         open={Boolean(forwardMessage)}
         conversations={forwardConversations}
@@ -832,6 +898,15 @@ export default function GroupPage() {
         onForward={handleForwardMessage}
       />
       <AddMemberModal open={addOpen} group={activeGroup} onClose={() => setAddOpen(false)} onAddMember={handleAddMember} />
+      <AdminLeaveGroupModal
+        open={Boolean(adminLeaveGroup)}
+        group={adminLeaveGroup}
+        currentUserId={currentUserId}
+        submitting={adminLeaveSubmitting}
+        onClose={() => setAdminLeaveGroup(null)}
+        onTransferAndLeave={handleTransferAdminAndLeave}
+        onDeleteGroup={handleDeleteAdminGroup}
+      />
       <GroupSettingsModal
         open={settingsOpen}
         group={activeGroup}
