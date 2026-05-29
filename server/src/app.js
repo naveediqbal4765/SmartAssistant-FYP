@@ -1,6 +1,5 @@
 const express = require('express');
 const cors = require('cors');
-const path = require('path');
 const session = require('express-session');
 const passport = require('./config/passport');
 
@@ -29,9 +28,6 @@ app.use(
 
 app.use(passport.initialize());
 app.use(passport.session());
-
-app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use('/api/auth', require('./modules/auth/auth.routes'));
 app.use('/api/user', require('./modules/profile/profile.routes'));

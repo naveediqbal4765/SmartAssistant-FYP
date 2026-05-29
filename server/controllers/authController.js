@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { sendOTPEmail, sendResetOTPEmail } = require('../src/shared/email/sendEmail');
 const {
+  ensureSeniorCaregiverLinkCode,
   findSeniorByLinkCode,
   refreshSeniorCaregiverLinkCode
 } = require('../src/shared/links/seniorCaregiverLink');
@@ -53,7 +54,7 @@ const register = async (req, res) => {
       if (!linkedSenior) {
         return res.status(400).json({
           success: false,
-          msg: "Invalid or expired senior link code. Ask your senior to generate a new caregiver invitation code."
+          msg: "Invalid senior link code. Ask your senior to confirm their caregiver invitation code."
         });
       }
     }
@@ -568,17 +569,9 @@ const resetPassword = async (req, res) => {
 };
 
 const buildCaregiverLinkCodeResponse = (caregiverLinkCode) => {
-  const expiresAt = caregiverLinkCode?.expiresAt || null;
-  const isActive = Boolean(
-    caregiverLinkCode?.code &&
-    expiresAt &&
-    new Date(expiresAt) > new Date()
-  );
-
   return {
     code: caregiverLinkCode?.code || null,
-    expiresAt,
-    status: isActive ? 'active' : 'expired'
+    status: caregiverLinkCode?.code ? 'active' : 'missing'
   };
 };
 
@@ -590,6 +583,8 @@ const getCaregiverLinkCode = async (req, res) => {
         msg: 'Only seniors can view caregiver invitation codes'
       });
     }
+
+    await ensureSeniorCaregiverLinkCode(req.user);
 
     return res.json({
       success: true,

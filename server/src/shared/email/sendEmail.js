@@ -74,7 +74,7 @@ const sendSeniorWelcomeLinkEmail = async (email, name, linkCode) => {
         <div style="background-color: #BAE4C7; padding: 20px; text-align: center; font-size: 36px; letter-spacing: 8px; font-weight: bold; border-radius: 8px; margin: 24px 0; color: #1C382A;">
           ${linkCode}
         </div>
-        <p>This code is valid until your next login or for <strong>7 days</strong>, whichever comes first.</p>
+        <p>This code stays active until you manually regenerate it from your profile.</p>
         <p style="color: #6b7280; font-size: 14px;">For your security, do not share this code publicly. Only give it to caregivers you trust.</p>
         <hr style="margin: 20px 0;" />
         <p style="color: #6b7280; font-size: 12px;">Smart Assistant for Senior Citizens — Care for Seniors, By Community.</p>

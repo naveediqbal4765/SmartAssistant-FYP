@@ -115,8 +115,7 @@ const UserSchema = new mongoose.Schema({
   // ========== SENIOR ↔ CAREGIVER LINKING ==========
   // Invitation code generated on senior signup or manual regeneration.
   caregiverLinkCode: {
-    code: { type: String, default: null },
-    expiresAt: { type: Date, default: null }
+    code: { type: String, default: null }
   },
   linkedSeniorId: {
     type: mongoose.Schema.Types.ObjectId,

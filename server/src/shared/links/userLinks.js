@@ -1,5 +1,4 @@
 const User = require('../models/User');
-const { resolveUploadFilePath } = require('../helpers/uploadPaths');
 
 const unlinkUserRelationships = async (user) => {
   if (!user) return;
@@ -31,7 +30,6 @@ const normalizeUserDocuments = async () => {
 };
 
 module.exports = {
-  resolveUploadFilePath,
   unlinkUserRelationships,
   normalizeUserDocuments
 };

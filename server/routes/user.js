@@ -3,13 +3,9 @@ const User = require('../models/User');
 const ActivityLog = require('../models/ActivityLog');
 const Document = require('../models/Document');
 const multer = require('multer');
-const fs = require('fs');
 const Task = require('../models/Task');
 const auth = require('../src/shared/jwt/authMiddleware');
-const {
-  resolveUploadFilePath,
-  unlinkUserRelationships
-} = require('../src/shared/links/userLinks');
+const { unlinkUserRelationships } = require('../src/shared/links/userLinks');
 const { createCloudinaryStorage, deleteCloudinaryFile } = require('../src/shared/cloudinary');
 const locationService = require('../src/modules/location/location.service');
 const router = express.Router();
@@ -354,14 +350,7 @@ router.delete('/documents/:id', auth, async (req, res) => {
       return res.status(404).json({ success: false, msg: 'Document not found' });
     }
     
-    if (/^https?:\/\//i.test(document.fileUrl || '')) {
-      await deleteCloudinaryFile({ filename: document.fileName });
-    } else {
-      const filePath = resolveUploadFilePath(document.fileUrl);
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-      }
-    }
+    await deleteCloudinaryFile({ filename: document.fileName });
     
     await Document.deleteOne({ _id: req.params.id });
     
@@ -389,14 +378,7 @@ router.delete('/account', auth, async (req, res) => {
 
     const documents = await Document.find({ userId });
     for (const doc of documents) {
-      if (/^https?:\/\//i.test(doc.fileUrl || '')) {
-        await deleteCloudinaryFile({ filename: doc.fileName });
-      } else {
-        const filePath = resolveUploadFilePath(doc.fileUrl);
-        if (fs.existsSync(filePath)) {
-          fs.unlinkSync(filePath);
-        }
-      }
+      await deleteCloudinaryFile({ filename: doc.fileName });
     }
     await Document.deleteMany({ userId });
     await ActivityLog.deleteMany({ userId });

@@ -4,6 +4,7 @@ const User = require('./user.model');
 const ActivityLog = require('../../shared/models/ActivityLog');
 const { sendOTPEmail, sendResetOTPEmail } = require('../../shared/email/sendEmail');
 const {
+  ensureSeniorCaregiverLinkCode,
   findSeniorByLinkCode,
   refreshSeniorCaregiverLinkCode
 } = require('../../shared/links/seniorCaregiverLink');
@@ -27,6 +28,17 @@ const signUserToken = (user) =>
   );
 
 const generateOtp = () => Math.floor(100000 + Math.random() * 900000).toString();
+
+const getLinkedSeniorForLogin = async (user) => {
+  if (user.role !== 'caregiver' || !user.linkedSeniorId) return null;
+
+  try {
+    return await User.findById(user.linkedSeniorId).select('name email phone location');
+  } catch (err) {
+    console.error('Linked senior lookup failed during caregiver login:', err.message);
+    return null;
+  }
+};
 
 const register = async (payload) => {
   let { name, email, password, role, phone, address, dateOfBirth, seniorLinkCode } = payload;
@@ -66,7 +78,7 @@ const register = async (payload) => {
         status: 400,
         body: {
           success: false,
-          msg: 'Invalid or expired senior link code. Ask your senior to generate a new caregiver invitation code.'
+          msg: 'Invalid senior link code. Ask your senior to confirm their caregiver invitation code.'
         }
       };
     }
@@ -239,10 +251,7 @@ const login = async ({ email, password }) => {
     console.error('Login activity log failed:', logErr.message);
   }
 
-  let linkedSenior = null;
-  if (user.role === 'caregiver' && user.linkedSeniorId) {
-    linkedSenior = await User.findById(user.linkedSeniorId).select('name email phone location');
-  }
+  const linkedSenior = await getLinkedSeniorForLogin(user);
 
   return {
     status: 200,
@@ -431,17 +440,9 @@ const resetPassword = async ({ resetToken, newPassword }) => {
 };
 
 const buildCaregiverLinkCodeResponse = (caregiverLinkCode) => {
-  const expiresAt = caregiverLinkCode?.expiresAt || null;
-  const isActive = Boolean(
-    caregiverLinkCode?.code &&
-    expiresAt &&
-    new Date(expiresAt) > new Date()
-  );
-
   return {
     code: caregiverLinkCode?.code || null,
-    expiresAt,
-    status: isActive ? 'active' : 'expired'
+    status: caregiverLinkCode?.code ? 'active' : 'missing'
   };
 };
 
@@ -449,6 +450,8 @@ const getCaregiverLinkCode = async (user) => {
   if (!user || user.role !== 'elder') {
     return { status: 403, body: { success: false, msg: 'Only seniors can view caregiver invitation codes' } };
   }
+
+  await ensureSeniorCaregiverLinkCode(user);
 
   return {
     status: 200,

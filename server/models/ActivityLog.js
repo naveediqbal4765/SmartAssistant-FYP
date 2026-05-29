@@ -11,7 +11,7 @@ const ActivityLogSchema = new mongoose.Schema({
     required: true,
     enum: ['login', 'logout', 'profile_view', 'profile_update', 'privacy_update',
            'contact_added', 'contact_deleted', 'document_uploaded', 'document_deleted',
-           'task_requested', 'task_completed', 'medication_added']
+           'task_requested', 'task_completed', 'medication_added', 'volunteer_profile_view']
   },
   details: {
     type: String,
