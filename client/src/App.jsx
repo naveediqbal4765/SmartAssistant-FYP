@@ -23,6 +23,7 @@ import { disconnectChatSocket, getChatSocket } from './features/communication/ch
 import { CallStateProvider } from './features/communication/calls/CallStateContext';
 import GlobalCallHandler from './features/communication/calls/GlobalCallHandler';
 import { NotificationProvider, useNotificationState } from './features/communication/notifications/NotificationContext';
+import AutoNotificationConsumer from './features/communication/notifications/AutoNotificationConsumer';
 import GlobalSeniorReminderPopups from './features/health/reminders/GlobalSeniorReminderPopups';
 import ActionableTaskNotifications from './features/tasks/ActionableTaskNotifications';
 import AppShell from './components/layout/AppShell';
@@ -66,6 +67,7 @@ function AuthenticatedGlobalOverlays({ userRole }) {
         onDismissCallReminder={notificationState.markRead}
       />
       <ActionableTaskNotifications notificationState={notificationState} />
+      <AutoNotificationConsumer notificationState={notificationState} />
       <CallStateProvider>
         <GlobalCallHandler />
       </CallStateProvider>

@@ -53,12 +53,6 @@ export const roleConfig = {
       icon: '🏥',
       description: "Monitor your loved one's health, location, and get instant alerts in case of emergency."
     },
-    modules: [
-      { title: 'Linked Senior', icon: Users, tone: 'highlight', relationshipTarget: 'linkedSenior' },
-      { title: "Senior's Medications", icon: Bell, tone: 'info', route: '/health/medications' },
-      { title: "Senior's Health Vault", icon: FileText, tone: 'teal', vaultTarget: 'linkedSenior' },
-      { title: "Senior's Appointments", icon: Calendar, tone: 'highlight', route: '/health/appointments' },
-      { title: "Senior's Task Requests", icon: Clipboard, tone: 'warning', route: '/task-requests' }
-    ]
+    modules: []
   }
 };

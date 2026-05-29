@@ -167,6 +167,22 @@ const emitMedicationReminderStatusUpdated = ({ senior, medication, reminder }) =
   });
 };
 
+const emitSeniorReminderChanged = ({ senior, reminderType, action, item }) => {
+  if (!senior || !reminderType || !action) return;
+
+  const payload = {
+    seniorId: String(senior._id),
+    reminderType,
+    action,
+    item
+  };
+
+  emitToUser(String(senior._id), 'SENIOR_REMINDER_CHANGED', payload);
+  (senior.linkedCaregivers || []).forEach((caregiverId) => {
+    emitToUser(String(caregiverId), 'SENIOR_REMINDER_CHANGED', payload);
+  });
+};
+
 const emitTaskEvent = ({ userIds = [], event, task }) => {
   if (!event || !task) return;
   userIds.forEach((userId) => {
@@ -198,6 +214,7 @@ module.exports = {
   emitSeniorLocationUpdated,
   emitSeniorTelemetryUpdated,
   emitMedicationReminderStatusUpdated,
+  emitSeniorReminderChanged,
   emitTaskEvent,
   emitConversationDeleted
 };

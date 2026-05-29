@@ -15,8 +15,10 @@ import {
   markMedicationReminderTaken,
   skipMedicationReminder
 } from '../medications/medicationApi';
+import { getChatSocket } from '../../communication/chat/services/socket';
 
 export const SENIOR_REMINDERS_REFRESH_EVENT = 'senior-reminders:refresh';
+const SENIOR_REMINDER_CHANGED_EVENT = 'SENIOR_REMINDER_CHANGED';
 
 const REFRESH_INTERVAL_MS = 60000;
 const APPOINTMENT_POPUP_VISIBLE_MS = 60000;
@@ -82,6 +84,16 @@ export default function GlobalSeniorReminderPopups({
       window.clearInterval(intervalId);
       window.removeEventListener(SENIOR_REMINDERS_REFRESH_EVENT, handleRefresh);
     };
+  }, [enabled, loadReminderSources]);
+
+  useEffect(() => {
+    if (!enabled) return undefined;
+
+    const socket = getChatSocket();
+    const handleReminderChanged = () => loadReminderSources();
+
+    socket.on(SENIOR_REMINDER_CHANGED_EVENT, handleReminderChanged);
+    return () => socket.off(SENIOR_REMINDER_CHANGED_EVENT, handleReminderChanged);
   }, [enabled, loadReminderSources]);
 
   const markSoundPlayed = useCallback((reminderKey) => {

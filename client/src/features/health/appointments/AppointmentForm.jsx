@@ -7,6 +7,28 @@ const emptyForm = {
   notes: ''
 };
 
+const toDateInputValue = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const toTimeInputValue = (date) => (
+  `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
+);
+
+const getAppointmentDateTime = ({ date, time }) => {
+  if (!date || !time) return null;
+  const value = new Date(`${date}T${time}:00`);
+  return Number.isNaN(value.getTime()) ? null : value;
+};
+
+const isAppointmentInFuture = (form) => {
+  const appointmentTime = getAppointmentDateTime(form);
+  return appointmentTime && appointmentTime > new Date();
+};
+
 export default function AppointmentForm({
   selectedDate,
   editingAppointment = null,
@@ -15,6 +37,10 @@ export default function AppointmentForm({
   submitting = false
 }) {
   const [form, setForm] = useState({ ...emptyForm, date: selectedDate || '' });
+  const [dateTimeError, setDateTimeError] = useState('');
+  const now = new Date();
+  const minDate = toDateInputValue(now);
+  const minTime = form.date === minDate ? toTimeInputValue(now) : undefined;
 
   useEffect(() => {
     if (editingAppointment) {
@@ -32,11 +58,17 @@ export default function AppointmentForm({
 
   const handleChange = (field, value) => {
     setForm((current) => ({ ...current, [field]: value }));
+    setDateTimeError('');
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     if (submitting) return;
+
+    if (!isAppointmentInFuture(form)) {
+      setDateTimeError('Appointment must be set in the future');
+      return;
+    }
 
     const saved = await onSubmit?.(form);
     if (saved && !editingAppointment) {
@@ -68,6 +100,7 @@ export default function AppointmentForm({
             value={form.date}
             onChange={(event) => handleChange('date', event.target.value)}
             disabled={submitting}
+            min={minDate}
             className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 font-normal text-gray-900 focus:border-green-600 focus:outline-none disabled:bg-gray-100"
           />
         </label>
@@ -78,10 +111,15 @@ export default function AppointmentForm({
             value={form.time}
             onChange={(event) => handleChange('time', event.target.value)}
             disabled={submitting}
+            min={minTime}
             className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 font-normal text-gray-900 focus:border-green-600 focus:outline-none disabled:bg-gray-100"
           />
         </label>
       </div>
+
+      {dateTimeError && (
+        <p className="mt-2 text-sm font-semibold text-red-600">{dateTimeError}</p>
+      )}
 
       <textarea
         value={form.notes}

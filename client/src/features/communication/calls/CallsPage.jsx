@@ -5,6 +5,7 @@ import FeaturePage from '../../../components/ui/FeaturePage';
 import Button from '../../../components/ui/Button';
 import { useDialog } from '../../../components/ui/GlobalDialogProvider';
 import { deleteMessage, fetchConversations, fetchMessages } from '../chat/services/chatApi';
+import { getChatSocket } from '../chat/services/socket';
 import { deleteGroupMessage, fetchGroupMessages, fetchMyGroups } from '../groups/groupApi';
 
 const getUserId = (value) => String(value?._id || value || '');
@@ -353,6 +354,7 @@ export default function CallsPage() {
   const [callError, setCallError] = useState('');
   const [deletingLogIds, setDeletingLogIds] = useState(new Set());
   const [clearing, setClearing] = useState(false);
+  const refreshTimerRef = useRef(null);
 
   const loadCallHistory = useCallback(async ({ silent = false } = {}) => {
     if (!silent) setLoadingCalls(true);
@@ -403,6 +405,26 @@ export default function CallsPage() {
 
     return () => {
       cancelled = true;
+    };
+  }, [loadCallHistory]);
+
+  useEffect(() => {
+    const socket = getChatSocket();
+    const scheduleRefresh = (message = {}) => {
+      if (message.messageType !== 'call') return;
+      window.clearTimeout(refreshTimerRef.current);
+      refreshTimerRef.current = window.setTimeout(() => {
+        loadCallHistory({ silent: true });
+      }, 150);
+    };
+
+    socket.on('newMessage', scheduleRefresh);
+    socket.on('group-message', scheduleRefresh);
+
+    return () => {
+      window.clearTimeout(refreshTimerRef.current);
+      socket.off('newMessage', scheduleRefresh);
+      socket.off('group-message', scheduleRefresh);
     };
   }, [loadCallHistory]);
 

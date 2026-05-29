@@ -1,7 +1,10 @@
 const mongoose = require('mongoose');
 const Medication = require('./medication.model');
 const User = require('../../../shared/models/User');
-const { emitMedicationReminderStatusUpdated } = require('../../communication/sockets/socket.manager');
+const {
+  emitMedicationReminderStatusUpdated,
+  emitSeniorReminderChanged
+} = require('../../communication/sockets/socket.manager');
 const ACTIVE_WINDOW_MS = 2 * 60 * 60 * 1000;
 const LOOKBACK_MS = 24 * 60 * 60 * 1000;
 const VALID_SCHEDULE_TYPES = ['once_daily', 'multiple_times_daily', 'interval_hours', 'weekly', 'as_needed'];
@@ -251,11 +254,15 @@ const createMedication = async (user, payload) => {
   assertSenior(user);
   const medicationPayload = validateMedicationPayload(payload);
 
-  return Medication.create({
+  const medication = await Medication.create({
     seniorId: user._id,
     ...medicationPayload,
     reminderOccurrences: []
   });
+
+  const senior = await User.findById(user._id).select('linkedCaregivers');
+  emitSeniorReminderChanged({ senior, reminderType: 'medication', action: 'created', item: medication });
+  return medication;
 };
 
 const getMedications = async (user) => {
@@ -283,6 +290,8 @@ const updateMedication = async (user, medicationId, payload) => {
     throw createError(404, 'Medication not found');
   }
 
+  const senior = await User.findById(user._id).select('linkedCaregivers');
+  emitSeniorReminderChanged({ senior, reminderType: 'medication', action: 'updated', item: medication });
   return medication;
 };
 
@@ -336,6 +345,7 @@ const updateReminderStatus = async (user, medicationId, occurrenceKey, status) =
   const reminder = normalizeReminder(medication, occurrence);
   const senior = await User.findById(user._id).select('linkedCaregivers');
   emitMedicationReminderStatusUpdated({ senior, medication, reminder });
+  emitSeniorReminderChanged({ senior, reminderType: 'medication', action: 'completed', item: medication });
   return reminder;
 };
 
@@ -352,6 +362,8 @@ const deleteMedication = async (user, medicationId) => {
     throw createError(404, 'Medication not found');
   }
 
+  const senior = await User.findById(user._id).select('linkedCaregivers');
+  emitSeniorReminderChanged({ senior, reminderType: 'medication', action: 'deleted', item: medication });
   return medication;
 };
 

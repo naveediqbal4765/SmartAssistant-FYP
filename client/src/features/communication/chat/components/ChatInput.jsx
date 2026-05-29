@@ -13,7 +13,8 @@ export default function ChatInput({
   onTypingStart,
   onTypingStop,
   replyTo,
-  onCancelReply
+  onCancelReply,
+  onOpenCapture
 }) {
   const [text, setText] = useState('');
   const [activePanel, setActivePanel] = useState(null);
@@ -80,6 +81,10 @@ export default function ChatInput({
       return;
     }
     setActivePanel(null);
+    if (onOpenCapture) {
+      onOpenCapture(mode);
+      return;
+    }
     setCaptureMode(mode);
   };
 
@@ -182,13 +187,15 @@ export default function ChatInput({
           {sending ? 'Sending...' : 'Send'}
         </button>
       </form>
-      <MediaCaptureModal
-        open={Boolean(captureMode)}
-        mode={captureMode}
-        onClose={() => setCaptureMode('')}
-        onCapture={handleCapturedMedia}
-        onFallback={() => mediaInputRef.current?.click()}
-      />
+      {!onOpenCapture && (
+        <MediaCaptureModal
+          open={Boolean(captureMode)}
+          mode={captureMode}
+          onClose={() => setCaptureMode('')}
+          onCapture={handleCapturedMedia}
+          onFallback={() => mediaInputRef.current?.click()}
+        />
+      )}
     </div>
   );
 }

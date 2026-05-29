@@ -204,6 +204,22 @@ export default function GroupChat({
     highlightTimerRef.current = window.setTimeout(() => setHighlightedMessageId(''), 1600);
   };
 
+  if (captureMode) {
+    return (
+      <div className="motion-panel-in motion-card h-[70vh] overflow-hidden rounded-[2rem] bg-white shadow-xl shadow-gray-200/70 ring-1 ring-gray-200/70">
+        <input ref={mediaInputRef} type="file" accept="image/*,video/*" className="hidden" onChange={handleMediaChange} />
+        <MediaCaptureModal
+          open
+          mode={captureMode}
+          onClose={() => setCaptureMode('')}
+          onCapture={handleCapturedMedia}
+          onFallback={() => mediaInputRef.current?.click()}
+          fillContainer
+        />
+      </div>
+    );
+  };
+
   return (
     <div className="motion-panel-in motion-card flex h-[70vh] flex-col overflow-hidden rounded-[2rem] bg-white shadow-xl shadow-gray-200/70 ring-1 ring-gray-200/70">
       <div className="relative z-10 border-b border-gray-200 bg-gray-50 p-4 shadow-[inset_0_-10px_16px_-18px_rgba(15,23,42,0.45)]">

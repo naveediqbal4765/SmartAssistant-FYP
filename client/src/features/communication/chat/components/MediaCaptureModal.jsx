@@ -13,7 +13,8 @@ export default function MediaCaptureModal({
   mode,
   onClose,
   onCapture,
-  onFallback
+  onFallback,
+  fillContainer = false
 }) {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -165,67 +166,73 @@ export default function MediaCaptureModal({
     onFallback?.();
   };
 
+  const wrapperClassName = fillContainer
+    ? 'h-full w-full'
+    : 'absolute inset-x-0 bottom-full z-[90] px-3 pb-3';
+  const panelClassName = fillContainer
+    ? 'flex h-full w-full flex-col overflow-hidden bg-gray-950'
+    : 'mx-auto flex h-[calc(70vh-10rem)] min-h-[260px] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-gray-950 shadow-2xl shadow-gray-900/20 ring-1 ring-black/10';
+
   return (
-    <div className="absolute inset-x-3 bottom-20 z-[90]">
-      <div className="mx-auto flex max-h-[65vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl shadow-gray-900/20 ring-1 ring-black/10">
-        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-gray-100 bg-gray-50 px-4 py-3">
+    <div className={wrapperClassName}>
+      <div className={panelClassName}>
+        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-white/10 bg-gray-950/90 px-4 py-3 text-white">
           <div className="min-w-0">
-            <h2 className="truncate text-base font-bold text-gray-900">{isPhotoMode ? 'Take Photo' : 'Record Video'}</h2>
-            <p className="truncate text-xs text-gray-600">
+            <h2 className="truncate text-base font-bold">{isPhotoMode ? 'Take Photo' : 'Record Video'}</h2>
+            <p className="truncate text-xs text-white/70">
               {isPhotoMode ? 'Capture a photo before sending.' : 'Record and preview before sending.'}
             </p>
           </div>
-          <button type="button" onClick={onClose} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold text-gray-500 transition hover:bg-gray-200">
+          <button type="button" onClick={onClose} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white/80 transition hover:bg-white/15">
             X
           </button>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-auto bg-gray-950 p-3">
-          <div className="flex min-h-[180px] items-center justify-center overflow-hidden rounded-2xl bg-black">
+        <div className="relative min-h-0 flex-1 overflow-hidden bg-black">
+          <div className="absolute inset-0 flex items-center justify-center overflow-hidden bg-black">
             {capturedFile && previewUrl ? (
               isPhotoMode ? (
-                <img src={previewUrl} alt="Captured preview" className="max-h-[42vh] w-full object-contain" />
+                <img src={previewUrl} alt="Captured preview" className="h-full w-full object-cover" />
               ) : (
-                <video src={previewUrl} controls className="max-h-[42vh] w-full object-contain" />
+                <video src={previewUrl} controls className="h-full w-full object-cover" />
               )
             ) : (
-              <video ref={videoRef} autoPlay playsInline muted className="max-h-[42vh] w-full object-contain" />
+              <video ref={videoRef} autoPlay playsInline muted className="h-full w-full object-cover" />
+            )}
+          </div>
+          {error && <p className="absolute inset-x-4 top-4 rounded-xl bg-red-50 p-3 text-sm font-semibold text-red-700 shadow-lg">{error}</p>}
+          <div className="absolute inset-x-0 bottom-0 flex flex-wrap items-center justify-end gap-2 bg-gradient-to-t from-black/80 via-black/45 to-transparent px-4 pb-4 pt-10">
+            {error && (
+              <button type="button" onClick={useFallback} className="rounded-xl bg-white/90 px-4 py-2 text-sm font-semibold text-gray-900 transition hover:bg-white">
+                Choose From Files
+              </button>
+            )}
+            {capturedFile ? (
+              <>
+                <button type="button" onClick={resetCapture} className="rounded-xl bg-white/90 px-4 py-2 text-sm font-semibold text-gray-900 transition hover:bg-white">
+                  Retake
+                </button>
+                <button type="button" onClick={sendCapture} className="rounded-xl bg-green-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-green-700">
+                  Send
+                </button>
+              </>
+            ) : isPhotoMode ? (
+              <button type="button" onClick={capturePhoto} disabled={Boolean(error)} className="rounded-xl bg-green-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-green-700 disabled:opacity-50">
+                Capture
+              </button>
+            ) : recording ? (
+              <button type="button" onClick={stopRecording} className="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700">
+                Stop Recording
+              </button>
+            ) : (
+              <button type="button" onClick={startRecording} disabled={Boolean(error)} className="rounded-xl bg-green-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-green-700 disabled:opacity-50">
+                Start Recording
+              </button>
             )}
           </div>
         </div>
 
         <canvas ref={canvasRef} className="hidden" />
-        {error && <p className="mx-4 mt-3 shrink-0 rounded-xl bg-red-50 p-3 text-sm font-semibold text-red-700">{error}</p>}
-
-        <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-gray-100 bg-white px-4 py-3">
-          {error && (
-            <button type="button" onClick={useFallback} className="rounded-xl bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-900 transition hover:bg-gray-300">
-              Choose From Files
-            </button>
-          )}
-          {capturedFile ? (
-            <>
-              <button type="button" onClick={resetCapture} className="rounded-xl bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-900 transition hover:bg-gray-300">
-                Retake
-              </button>
-              <button type="button" onClick={sendCapture} className="rounded-xl bg-green-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-green-700">
-                Send
-              </button>
-            </>
-          ) : isPhotoMode ? (
-            <button type="button" onClick={capturePhoto} disabled={Boolean(error)} className="rounded-xl bg-green-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-green-700 disabled:opacity-50">
-              Capture
-            </button>
-          ) : recording ? (
-            <button type="button" onClick={stopRecording} className="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700">
-              Stop Recording
-            </button>
-          ) : (
-            <button type="button" onClick={startRecording} disabled={Boolean(error)} className="rounded-xl bg-green-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-green-700 disabled:opacity-50">
-              Start Recording
-            </button>
-          )}
-        </div>
       </div>
     </div>
   );

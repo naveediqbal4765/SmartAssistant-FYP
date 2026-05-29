@@ -4,6 +4,7 @@ import AppointmentCalendar, { toDateKey } from './AppointmentCalendar';
 import AppointmentForm from './AppointmentForm';
 import AppointmentList from './AppointmentList';
 import { SENIOR_REMINDERS_REFRESH_EVENT } from '../reminders/GlobalSeniorReminderPopups';
+import { getChatSocket } from '../../communication/chat/services/socket';
 import { useDialog } from '../../../components/ui/GlobalDialogProvider';
 import {
   createAppointment,
@@ -12,6 +13,8 @@ import {
   getAppointmentErrorMessage,
   updateAppointment
 } from './appointmentApi';
+
+const SENIOR_REMINDER_CHANGED_EVENT = 'SENIOR_REMINDER_CHANGED';
 
 const getCurrentUser = () => {
   try {
@@ -38,8 +41,8 @@ export default function AppointmentPage() {
   const isSenior = role === 'elder';
   const isCaregiver = role === 'caregiver';
 
-  const loadAppointments = useCallback(async () => {
-    setLoading(true);
+  const loadAppointments = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) setLoading(true);
     setError('');
 
     try {
@@ -48,7 +51,7 @@ export default function AppointmentPage() {
     } catch (err) {
       setError(getAppointmentErrorMessage(err, 'Failed to load appointments'));
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, []);
 
@@ -60,6 +63,19 @@ export default function AppointmentPage() {
 
     loadAppointments();
   }, [loadAppointments, role]);
+
+  useEffect(() => {
+    const socket = getChatSocket();
+    const handleReminderChanged = (payload = {}) => {
+      if (payload.reminderType === 'appointment') {
+        loadAppointments({ silent: true });
+        window.dispatchEvent(new Event(SENIOR_REMINDERS_REFRESH_EVENT));
+      }
+    };
+
+    socket.on(SENIOR_REMINDER_CHANGED_EVENT, handleReminderChanged);
+    return () => socket.off(SENIOR_REMINDER_CHANGED_EVENT, handleReminderChanged);
+  }, [loadAppointments]);
 
   const selectedAppointments = appointments.filter((appointment) => appointment.date === selectedDate);
 

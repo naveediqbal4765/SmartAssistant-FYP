@@ -43,14 +43,14 @@ const getMediaMessageType = (file) => {
 const isAllowedMediaFile = (file) => Boolean(getMediaMessageType(file));
 
 const buildAudioUploadResponse = (file) => ({
-  mediaUrl: `/uploads/audio/${file.filename}`,
+  mediaUrl: file.path,
   filename: file.filename,
   mimetype: file.mimetype,
   size: file.size
 });
 
 const buildMediaUploadResponse = (file) => ({
-  mediaUrl: `/uploads/media/${file.filename}`,
+  mediaUrl: file.path,
   filename: file.filename,
   fileName: file.originalname || file.filename,
   mimetype: file.mimetype,

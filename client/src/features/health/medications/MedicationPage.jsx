@@ -22,7 +22,7 @@ const getCurrentUser = () => {
 };
 
 const MEDICATION_STATUS_UPDATED_EVENT = 'MEDICATION_REMINDER_STATUS_UPDATED';
-const CAREGIVER_MEDICATION_POLL_MS = 15000;
+const SENIOR_REMINDER_CHANGED_EVENT = 'SENIOR_REMINDER_CHANGED';
 
 const mergeMedicationReminderStatus = (medications, payload = {}) => {
   const medicationId = String(payload.medicationId || payload.reminder?.medicationId || '');
@@ -68,8 +68,8 @@ export default function MedicationPage() {
   const isSenior = role === 'elder';
   const isCaregiver = role === 'caregiver';
 
-  const loadMedications = useCallback(async () => {
-    setLoading(true);
+  const loadMedications = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) setLoading(true);
     setError('');
 
     try {
@@ -78,7 +78,7 @@ export default function MedicationPage() {
     } catch (err) {
       setError(getMedicationErrorMessage(err, 'Failed to load medications'));
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, []);
 
@@ -92,31 +92,25 @@ export default function MedicationPage() {
   }, [loadMedications, role]);
 
   useEffect(() => {
-    if (!isCaregiver) return undefined;
-
     const socket = getChatSocket();
     const handleMedicationStatusUpdated = (payload) => {
       setMedications((current) => mergeMedicationReminderStatus(current, payload));
     };
+    const handleReminderChanged = (payload = {}) => {
+      if (payload.reminderType === 'medication') {
+        loadMedications({ silent: true });
+        window.dispatchEvent(new Event(SENIOR_REMINDERS_REFRESH_EVENT));
+      }
+    };
 
     socket.on(MEDICATION_STATUS_UPDATED_EVENT, handleMedicationStatusUpdated);
-    return () => socket.off(MEDICATION_STATUS_UPDATED_EVENT, handleMedicationStatusUpdated);
-  }, [isCaregiver]);
+    socket.on(SENIOR_REMINDER_CHANGED_EVENT, handleReminderChanged);
 
-  useEffect(() => {
-    if (!isCaregiver) return undefined;
-
-    const intervalId = window.setInterval(async () => {
-      try {
-        const data = await fetchMedications();
-        setMedications(data);
-      } catch (err) {
-        console.error('Failed to refresh caregiver medication status:', err);
-      }
-    }, CAREGIVER_MEDICATION_POLL_MS);
-
-    return () => window.clearInterval(intervalId);
-  }, [isCaregiver]);
+    return () => {
+      socket.off(MEDICATION_STATUS_UPDATED_EVENT, handleMedicationStatusUpdated);
+      socket.off(SENIOR_REMINDER_CHANGED_EVENT, handleReminderChanged);
+    };
+  }, [loadMedications]);
 
   const handleSubmit = async (payload) => {
     setSubmitting(true);

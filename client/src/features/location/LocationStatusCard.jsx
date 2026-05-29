@@ -29,6 +29,29 @@ const getGoogleMapsUrl = (location) => {
   return `https://www.google.com/maps?q=${Number(lat)},${Number(lng)}`;
 };
 
+const getOpenStreetMapEmbedUrl = (location) => {
+  const [lng, lat] = location?.coordinates || [];
+  const latitude = Number(lat);
+  const longitude = Number(lng);
+
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+    return '';
+  }
+
+  if (latitude === 0 && longitude === 0) {
+    return '';
+  }
+
+  const bbox = [
+    longitude - 0.002,
+    latitude - 0.002,
+    longitude + 0.002,
+    latitude + 0.002
+  ].join(',');
+
+  return `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${latitude},${longitude}`;
+};
+
 const formatUpdatedAt = (value) => {
   if (!value) return 'Not updated yet';
   return new Date(value).toLocaleString();
@@ -38,7 +61,8 @@ export default function LocationStatusCard({
   title = 'Location Status',
   description = 'Keep your location updated so emergency and task routing can work accurately.',
   readOnly = false,
-  location: readOnlyLocation = null
+  location: readOnlyLocation = null,
+  showEmbeddedMap = false
 }) {
   const [autoSyncEnabled, setAutoSyncEnabled] = useState(() => !readOnly);
   const {
@@ -60,6 +84,7 @@ export default function LocationStatusCard({
 
   const activeLocation = readOnly ? readOnlyLocation : (syncedLocation || location);
   const googleMapsUrl = getGoogleMapsUrl(activeLocation);
+  const openStreetMapUrl = getOpenStreetMapEmbedUrl(activeLocation);
   const isDefaultLocation =
     !activeLocation?.coordinates ||
     (Number(activeLocation.coordinates[0]) === 0 && Number(activeLocation.coordinates[1]) === 0);
@@ -86,6 +111,24 @@ export default function LocationStatusCard({
         </span>
       </div>
 
+      {showEmbeddedMap && (
+        <div className="mt-5">
+          {openStreetMapUrl ? (
+            <iframe
+              title={`${title} map`}
+              src={openStreetMapUrl}
+              className="h-[180px] w-full rounded-2xl border border-emerald-100"
+              loading="lazy"
+              scrolling="no"
+            />
+          ) : (
+            <div className="flex h-[180px] w-full items-center justify-center rounded-2xl bg-gray-100 text-sm font-semibold text-gray-500">
+              Location not available yet
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <p className="text-sm font-medium text-gray-700">Google Maps Location</p>
@@ -94,9 +137,9 @@ export default function LocationStatusCard({
               href={googleMapsUrl}
               target="_blank"
               rel="noreferrer"
-              className="mt-1 block break-all font-semibold text-emerald-700 underline-offset-4 hover:underline"
+              className="mt-2 inline-flex rounded-xl bg-emerald-700 px-4 py-2 font-semibold text-white no-underline transition hover:bg-emerald-800"
             >
-              {googleMapsUrl}
+              Open in Maps
             </a>
           ) : (
             <p className="mt-1 text-gray-900">{formatCoordinates(activeLocation)}</p>

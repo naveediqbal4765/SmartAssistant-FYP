@@ -169,7 +169,10 @@ export default function DocumentVault() {
   };
 
   const viewDocument = (fileUrl) => {
-    window.open(`http://localhost:5000${fileUrl}`, '_blank');
+    const documentUrl = fileUrl?.startsWith('http')
+      ? fileUrl
+      : `http://localhost:5000${fileUrl}`;
+    window.open(documentUrl, '_blank');
   };
 
   const getTypeLabel = (type) => {

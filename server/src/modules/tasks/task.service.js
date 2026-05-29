@@ -185,6 +185,8 @@ const createTaskRequest = async (user, payload) => {
     task
   });
 
+  const audienceTask = await emitTaskToAudience(task, 'task_created');
+
   try {
     const routingResult = await emergencyRoutingService.createEmergencyNotification({
       type: 'TASK',
@@ -200,7 +202,7 @@ const createTaskRequest = async (user, payload) => {
     });
     const populatedTask = await getPopulatedTask(task._id);
     const recipientIds = (routingResult.notifications || []).map((notification) => notification.userId);
-    emitTaskEvent({ userIds: recipientIds, event: 'task_created', task: populatedTask || task });
+    emitTaskEvent({ userIds: recipientIds, event: 'task_created', task: populatedTask || audienceTask || task });
   } catch (routingErr) {
     console.error('Task routing notification failed:', routingErr.message);
   }
@@ -210,7 +212,7 @@ const createTaskRequest = async (user, payload) => {
     body: {
       success: true,
       msg: 'Help request submitted successfully!',
-      task
+      task: audienceTask || task
     }
   };
 };
@@ -350,8 +352,9 @@ const updateTaskRequest = async (taskId, user, payload = {}) => {
 
   Object.assign(task, nextPayload);
   await task.save();
+  const updatedTask = await emitTaskToAudience(task, 'task_updated');
 
-  return { status: 200, body: { success: true, msg: 'Task updated', task } };
+  return { status: 200, body: { success: true, msg: 'Task updated', task: updatedTask } };
 };
 
 const deleteTaskRequest = async (taskId, user) => {
@@ -369,9 +372,10 @@ const deleteTaskRequest = async (taskId, user) => {
     return { status: 400, body: { success: false, msg: 'Only pending tasks can be deleted' } };
   }
 
+  const deletedTask = await emitTaskToAudience(task, 'task_deleted');
   await task.deleteOne();
 
-  return { status: 200, body: { success: true, msg: 'Task deleted' } };
+  return { status: 200, body: { success: true, msg: 'Task deleted', task: deletedTask } };
 };
 
 const acceptTask = async (taskId, user) => {
@@ -457,6 +461,7 @@ const startTask = async (taskId, user) => {
   };
   await task.save();
   const updatedTask = await emitTaskToAudience(task, 'task_accepted');
+  await emitTaskToAudience(task, 'task_updated');
 
   return { status: 200, body: { success: true, msg: 'Task started', task: updatedTask } };
 };

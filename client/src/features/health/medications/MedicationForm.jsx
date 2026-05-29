@@ -30,6 +30,38 @@ const weekdays = [
   { value: 6, label: 'Sat' }
 ];
 
+const toDateInputValue = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const toTimeInputValue = (date) => (
+  `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
+);
+
+const getMedicationStartTimes = (form) => (
+  (form.reminderTimes?.length ? form.reminderTimes : [])
+    .map((time) => String(time || '').trim())
+    .filter(Boolean)
+);
+
+const isMedicationStartInFuture = (form) => {
+  if (form.scheduleType === 'as_needed') {
+    const startDate = new Date(`${form.startDate}T23:59:59`);
+    return !Number.isNaN(startDate.getTime()) && startDate > new Date();
+  }
+
+  const startTimes = getMedicationStartTimes(form);
+  if (!form.startDate || !startTimes.length) return false;
+
+  return startTimes.every((time) => {
+    const value = new Date(`${form.startDate}T${time}:00`);
+    return !Number.isNaN(value.getTime()) && value > new Date();
+  });
+};
+
 const normalizeForm = (medication = {}) => ({
   name: medication.name || '',
   dosage: medication.dosage || '',
@@ -50,6 +82,10 @@ export default function MedicationForm({
   submitting = false
 }) {
   const [form, setForm] = useState(emptyForm);
+  const [dateTimeError, setDateTimeError] = useState('');
+  const now = new Date();
+  const minDate = toDateInputValue(now);
+  const minTime = form.startDate === minDate ? toTimeInputValue(now) : undefined;
 
   useEffect(() => {
     if (!editingMedication) {
@@ -62,11 +98,17 @@ export default function MedicationForm({
 
   const handleChange = (field, value) => {
     setForm((current) => ({ ...current, [field]: value }));
+    setDateTimeError('');
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     if (disabled || submitting) return;
+
+    if (!isMedicationStartInFuture(form)) {
+      setDateTimeError('Medication start time must be in the future');
+      return;
+    }
 
     const saved = await onSubmit?.(form);
     if (saved && !editingMedication) {
@@ -81,6 +123,7 @@ export default function MedicationForm({
         timeIndex === index ? value : time
       ))
     }));
+    setDateTimeError('');
   };
 
   const addReminderTime = () => {
@@ -156,6 +199,7 @@ export default function MedicationForm({
             value={form.startDate}
             onChange={(event) => handleChange('startDate', event.target.value)}
             disabled={disabled || submitting}
+            min={minDate}
             className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 font-normal text-gray-900 focus:border-green-600 focus:outline-none disabled:bg-gray-100"
           />
         </label>
@@ -183,6 +227,7 @@ export default function MedicationForm({
                   value={time}
                   onChange={(event) => updateReminderTime(index, event.target.value)}
                   disabled={disabled || submitting}
+                  min={minTime}
                   className="flex-1 rounded-xl border border-gray-300 px-4 py-3 focus:border-green-600 focus:outline-none disabled:bg-gray-100"
                 />
                 {form.reminderTimes.length > 1 && (
@@ -221,6 +266,7 @@ export default function MedicationForm({
                 value={form.reminderTimes[0] || ''}
                 onChange={(event) => updateReminderTime(0, event.target.value)}
                 disabled={disabled || submitting}
+                min={minTime}
                 className="mt-2 w-full rounded-xl border border-gray-300 px-3 py-2 focus:border-green-600 focus:outline-none disabled:bg-gray-100"
               />
             </label>
@@ -264,6 +310,10 @@ export default function MedicationForm({
             ))}
           </div>
         </div>
+      )}
+
+      {dateTimeError && (
+        <p className="mt-2 text-sm font-semibold text-red-600">{dateTimeError}</p>
       )}
 
       <textarea

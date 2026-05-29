@@ -8,6 +8,7 @@ const {
   resolveUploadFilePath,
   unlinkUserRelationships
 } = require('../../shared/links/userLinks');
+const { deleteCloudinaryFile } = require('../../shared/cloudinary');
 
 const defaultPrivacySettings = {
   showPhone: true,
@@ -311,7 +312,7 @@ const uploadDocument = async (user, payload, file) => {
     type: type || 'other',
     notes: notes || '',
     fileName: file.filename,
-    fileUrl: `/uploads/${file.filename}`
+    fileUrl: file.path
   });
 
   await newDocument.save();
@@ -331,9 +332,13 @@ const deleteDocument = async (user, documentId) => {
     return { status: 404, body: { success: false, msg: 'Document not found' } };
   }
 
-  const filePath = resolveUploadFilePath(document.fileUrl);
-  if (fs.existsSync(filePath)) {
-    fs.unlinkSync(filePath);
+  if (/^https?:\/\//i.test(document.fileUrl || '')) {
+    await deleteCloudinaryFile({ filename: document.fileName });
+  } else {
+    const filePath = resolveUploadFilePath(document.fileUrl);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
   }
 
   await Document.deleteOne({ _id: documentId });
@@ -353,9 +358,13 @@ const deleteAccount = async (user) => {
 
   const documents = await Document.find({ userId });
   for (const doc of documents) {
-    const filePath = resolveUploadFilePath(doc.fileUrl);
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
+    if (/^https?:\/\//i.test(doc.fileUrl || '')) {
+      await deleteCloudinaryFile({ filename: doc.fileName });
+    } else {
+      const filePath = resolveUploadFilePath(doc.fileUrl);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
     }
   }
   await Document.deleteMany({ userId });

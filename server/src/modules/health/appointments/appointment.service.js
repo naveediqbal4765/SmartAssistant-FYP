@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
 const Appointment = require('./appointment.model');
+const User = require('../../../shared/models/User');
+const { emitSeniorReminderChanged } = require('../../communication/sockets/socket.manager');
 const PRE_ALERT_MINUTES = 30;
 const EXPIRE_AFTER_MINUTES = 60;
 const POPUP_VISIBLE_MINUTES = 1;
@@ -190,11 +192,15 @@ const createAppointment = async (user, payload) => {
   assertSenior(user);
   const appointmentPayload = validateAppointmentPayload(payload);
 
-  return Appointment.create({
+  const appointment = await Appointment.create({
     seniorId: user._id,
     ...appointmentPayload,
     ...buildReminderLifecycle(appointmentPayload)
   });
+
+  const senior = await User.findById(user._id).select('linkedCaregivers');
+  emitSeniorReminderChanged({ senior, reminderType: 'appointment', action: 'created', item: appointment });
+  return appointment;
 };
 
 const getAppointments = async (user) => {
@@ -221,6 +227,8 @@ const updateAppointment = async (user, appointmentId, payload) => {
     throw createError(404, 'Appointment not found');
   }
 
+  const senior = await User.findById(user._id).select('linkedCaregivers');
+  emitSeniorReminderChanged({ senior, reminderType: 'appointment', action: 'updated', item: appointment });
   return appointment;
 };
 
@@ -308,6 +316,8 @@ const dismissReminder = async (user, appointmentId, reminderVersion) => {
     throw createError(404, 'Active appointment reminder not found');
   }
 
+  const senior = await User.findById(user._id).select('linkedCaregivers');
+  emitSeniorReminderChanged({ senior, reminderType: 'appointment', action: 'completed', item: appointment });
   return normalizeAppointmentForReminder(appointment);
 };
 
@@ -324,6 +334,8 @@ const deleteAppointment = async (user, appointmentId) => {
     throw createError(404, 'Appointment not found');
   }
 
+  const senior = await User.findById(user._id).select('linkedCaregivers');
+  emitSeniorReminderChanged({ senior, reminderType: 'appointment', action: 'deleted', item: appointment });
   return appointment;
 };
 

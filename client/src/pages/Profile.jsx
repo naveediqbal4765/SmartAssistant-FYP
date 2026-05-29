@@ -486,6 +486,13 @@ export default function Profile() {
     navigate(targetUserId ? `/health/vault/${targetUserId}` : '/health/vault');
   };
 
+  const openLinkedSeniorProfile = () => {
+    const seniorId = linkedSenior?._id || linkedSenior?.id;
+    if (seniorId) {
+      navigate(`/profile/${seniorId}`);
+    }
+  };
+
   if (loading) {
     return <LoadingState label="Loading profile..." />;
   }
@@ -681,11 +688,21 @@ export default function Profile() {
             {userRole === 'caregiver' && (
               linkedSenior ? (
                 <div className="space-y-5">
-                  <div className="bg-white rounded-xl p-4 border border-green-200">
-                    <p className="font-semibold text-lg">{linkedSenior.name}</p>
-                    <p className="text-gray-700">{linkedSenior.email}</p>
-                    {linkedSenior.phone && <p className="text-gray-700">📞 {linkedSenior.phone}</p>}
-                  </div>
+                  <button
+                    type="button"
+                    onClick={openLinkedSeniorProfile}
+                    className="group flex w-full items-center justify-between gap-4 rounded-xl border border-green-200 bg-white p-4 text-left transition hover:border-green-300 hover:bg-green-50 focus:outline-none focus:ring-2 focus:ring-green-500"
+                    aria-label={`View ${linkedSenior.name || 'linked senior'} profile`}
+                  >
+                    <div>
+                      <p className="font-semibold text-lg text-gray-900">{linkedSenior.name}</p>
+                      <p className="text-gray-700">{linkedSenior.email}</p>
+                      {linkedSenior.phone && <p className="text-gray-700">📞 {linkedSenior.phone}</p>}
+                    </div>
+                    <span className="shrink-0 rounded-full bg-green-100 px-3 py-1 text-sm font-semibold text-green-700 transition group-hover:bg-green-200">
+                      View
+                    </span>
+                  </button>
                   <LocationStatusCard
                     readOnly
                     title="Senior Live Location"

@@ -19,6 +19,21 @@ const formatTime = (value) => {
   });
 };
 
+const toDateTimeLocalValue = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hour = String(date.getHours()).padStart(2, '0');
+  const minute = String(date.getMinutes()).padStart(2, '0');
+  return `${year}-${month}-${day}T${hour}:${minute}`;
+};
+
+const isScheduledTimeInFuture = (value) => {
+  if (!value) return false;
+  const scheduledAt = new Date(value);
+  return !Number.isNaN(scheduledAt.getTime()) && scheduledAt > new Date();
+};
+
 export default function CallReminderPanel() {
   const dialog = useDialog();
   const [reminders, setReminders] = useState([]);
@@ -28,6 +43,8 @@ export default function CallReminderPanel() {
   const [scheduledTime, setScheduledTime] = useState('');
   const [clearingAll, setClearingAll] = useState(false);
   const [error, setError] = useState('');
+  const [scheduledTimeError, setScheduledTimeError] = useState('');
+  const minScheduledTime = toDateTimeLocalValue(new Date());
 
   const upcomingReminders = useMemo(() => {
     return reminders
@@ -51,6 +68,12 @@ export default function CallReminderPanel() {
   const handleCreate = async (e) => {
     e.preventDefault();
     setError('');
+    setScheduledTimeError('');
+
+    if (!isScheduledTimeInFuture(scheduledTime)) {
+      setScheduledTimeError('Call reminder must be set in the future');
+      return;
+    }
 
     try {
       const response = await axios.post(
@@ -62,6 +85,7 @@ export default function CallReminderPanel() {
       setTitle('');
       setTargetUserName('');
       setScheduledTime('');
+      setScheduledTimeError('');
       setShowForm(false);
     } catch (err) {
       setError(err.response?.data?.msg || 'Failed to create reminder');
@@ -160,9 +184,16 @@ export default function CallReminderPanel() {
           <input
             type="datetime-local"
             value={scheduledTime}
-            onChange={(e) => setScheduledTime(e.target.value)}
+            onChange={(e) => {
+              setScheduledTime(e.target.value);
+              setScheduledTimeError('');
+            }}
+            min={minScheduledTime}
             className="rounded-xl border px-4 py-3"
           />
+          {scheduledTimeError && (
+            <p className="text-sm font-semibold text-red-600 md:col-start-3">{scheduledTimeError}</p>
+          )}
           <button
             type="submit"
             disabled={!title.trim() || !targetUserName.trim() || !scheduledTime}

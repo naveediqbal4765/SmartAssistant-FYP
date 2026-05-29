@@ -159,7 +159,7 @@ export default function MedicationList({
               {medication.notes && (
                 <p className="mt-3 rounded-xl bg-gray-50 p-3 text-sm text-gray-700">{medication.notes}</p>
               )}
-              {readOnly && (() => {
+              {(() => {
                 const reminderStatus = getLatestReminderStatus(medication);
                 const reminderTimeline = getReminderStatusTimeline(medication);
                 return (

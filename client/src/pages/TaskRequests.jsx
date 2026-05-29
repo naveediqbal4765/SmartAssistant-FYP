@@ -575,6 +575,20 @@ export default function TaskRequests() {
     setTasks((current) => upsertById(current, normalizedTask));
   };
 
+  const removeRealtimeTask = (task) => {
+    const taskId = String(task?._id || task?.id || '');
+    if (!taskId) return;
+
+    if (isVolunteer) {
+      setAvailableTasks((current) => removeById(current, taskId));
+      setVolunteerTasks((current) => removeById(current, taskId));
+      setHistoryTasks((current) => removeById(current, taskId));
+      return;
+    }
+
+    setTasks((current) => removeById(current, taskId));
+  };
+
   const loadTasks = async () => {
     setLoading(true);
     setError('');
@@ -625,6 +639,9 @@ export default function TaskRequests() {
         mergeRealtimeTask(payload.task);
       }
     };
+    const handleTaskDeleted = (payload = {}) => {
+      removeRealtimeTask(payload.task);
+    };
     const handleTaskIgnored = (payload = {}) => {
       const taskId = String(payload.task?._id || payload.taskId || '');
       if (!taskId) return;
@@ -634,16 +651,20 @@ export default function TaskRequests() {
     };
 
     socket.on('task_created', handleTaskEvent);
+    socket.on('task_updated', handleTaskEvent);
     socket.on('task_accepted', handleTaskEvent);
     socket.on('task_completed', handleTaskEvent);
     socket.on('task_verified', handleTaskEvent);
+    socket.on('task_deleted', handleTaskDeleted);
     socket.on('task_ignored', handleTaskIgnored);
 
     return () => {
       socket.off('task_created', handleTaskEvent);
+      socket.off('task_updated', handleTaskEvent);
       socket.off('task_accepted', handleTaskEvent);
       socket.off('task_completed', handleTaskEvent);
       socket.off('task_verified', handleTaskEvent);
+      socket.off('task_deleted', handleTaskDeleted);
       socket.off('task_ignored', handleTaskIgnored);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
