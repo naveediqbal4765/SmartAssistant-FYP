@@ -10,7 +10,7 @@ export const roleConfig = {
     roleLabel: 'Senior',
     greetingName: 'Dear Senior',
     greetingSubtitle: 'How can we help you today?',
-    panels: ['callReminders', 'seniorReadiness'],
+    panels: ['seniorReadiness', 'callReminders'],
     summary: {
       title: 'Your Personal Safety Assistant',
       icon: '🛡️',

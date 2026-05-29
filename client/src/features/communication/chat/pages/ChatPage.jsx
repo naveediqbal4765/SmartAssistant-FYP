@@ -40,6 +40,8 @@ const sortConversations = (items) => {
   return [...items].sort((a, b) => getConversationTime(b) - getConversationTime(a));
 };
 
+const MOBILE_PANEL_TRANSITION_MS = 240;
+
 const mergeConversations = (items) => {
   const byParticipant = new Map();
 
@@ -126,10 +128,14 @@ export default function ChatPage() {
   const seenDebounceRef = useRef(null);
   const deliveredMessageIdsRef = useRef(new Set());
   const seenMessageIdsRef = useRef(new Set());
+  const mobileListScrollRef = useRef(0);
+  const mobileCloseTimerRef = useRef(null);
   const [conversations, setConversations] = useState([]);
   const [selectedConversationId, setSelectedConversationId] = useState(() => (
     routeConversationId || localStorage.getItem(lastConversationKey) || ''
   ));
+  const [mobileChatOpen, setMobileChatOpen] = useState(Boolean(routeConversationId));
+  const [mobileChatClosing, setMobileChatClosing] = useState(false);
   const [activeConversation, setActiveConversation] = useState(null);
   const [messages, setMessages] = useState([]);
   const [loadingConversations, setLoadingConversations] = useState(true);
@@ -189,6 +195,9 @@ export default function ChatPage() {
 
   useEffect(() => {
     if (!routeConversationId) return;
+    window.clearTimeout(mobileCloseTimerRef.current);
+    setMobileChatClosing(false);
+    setMobileChatOpen(true);
 
     let cancelled = false;
 
@@ -220,6 +229,30 @@ export default function ChatPage() {
       cancelled = true;
     };
   }, [routeConversationId]);
+
+  const openMobileChatPanel = () => {
+    window.clearTimeout(mobileCloseTimerRef.current);
+    mobileListScrollRef.current = window.scrollY;
+    setMobileChatClosing(false);
+    setMobileChatOpen(true);
+    window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'smooth' }));
+  };
+
+  const closeMobileChatPanel = () => {
+    if (!mobileChatOpen || mobileChatClosing) return;
+    setMobileChatClosing(true);
+    mobileCloseTimerRef.current = window.setTimeout(() => {
+      setMobileChatOpen(false);
+      setMobileChatClosing(false);
+      window.requestAnimationFrame(() => {
+        window.scrollTo({ top: mobileListScrollRef.current || 0, behavior: 'smooth' });
+      });
+    }, MOBILE_PANEL_TRANSITION_MS);
+  };
+
+  useEffect(() => () => {
+    window.clearTimeout(mobileCloseTimerRef.current);
+  }, []);
 
   useEffect(() => {
     if (routeConversationId) return;
@@ -550,6 +583,7 @@ export default function ChatPage() {
         setConversations((current) => mergeConversations([normalizedConversation, ...current]));
         const normalizedConversationId = getConversationId(normalizedConversation);
         setSelectedConversationId(normalizedConversationId);
+        openMobileChatPanel();
         navigate(`/chat/${normalizedConversationId}`);
       } catch (err) {
         setError(err.response?.data?.msg || 'Failed to open conversation');
@@ -559,6 +593,7 @@ export default function ChatPage() {
 
     if (conversationId) {
       setSelectedConversationId(conversationId);
+      openMobileChatPanel();
       navigate(`/chat/${conversationId}`);
     }
   };
@@ -579,6 +614,7 @@ export default function ChatPage() {
     if (existingConversation) {
       const existingConversationId = getConversationId(existingConversation);
       setSelectedConversationId(existingConversationId);
+      openMobileChatPanel();
       navigate(`/chat/${existingConversationId}`);
       return;
     }
@@ -589,6 +625,7 @@ export default function ChatPage() {
       setConversations((current) => mergeConversations([normalizedConversation, ...current]));
       const normalizedConversationId = getConversationId(normalizedConversation);
       setSelectedConversationId(normalizedConversationId);
+      openMobileChatPanel();
       navigate(`/chat/${normalizedConversationId}`);
     } catch (err) {
       setError(err.response?.data?.msg || 'Failed to open conversation');
@@ -852,6 +889,7 @@ export default function ChatPage() {
       String(current?.id || '') === String(conversationId) ? null : current
     ));
     if (wasActiveConversation) {
+      setMobileChatOpen(false);
       navigate('/chat');
     }
 
@@ -901,8 +939,8 @@ export default function ChatPage() {
       >
         <StatusAlert variant="error">{error}</StatusAlert>
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[360px_1fr]">
-          <div>
+        <div className="grid grid-cols-1 gap-6 overflow-hidden lg:grid-cols-[360px_1fr] lg:overflow-visible">
+          <div className={`[grid-area:1/1] transition-all duration-200 ease-out lg:[grid-area:auto] ${mobileChatOpen && !mobileChatClosing ? 'hidden -translate-x-4 opacity-0 lg:block lg:translate-x-0 lg:opacity-100' : 'block translate-x-0 opacity-100'}`}>
             <SearchUsers onSelectUser={handleSelectUser} />
             <ConversationList
               conversations={conversations}
@@ -914,46 +952,50 @@ export default function ChatPage() {
             />
           </div>
 
-          <ChatBox
-            conversation={activeConversation}
-            messages={messages}
-            currentUserId={currentUserId}
-            loadingMessages={loadingMessages}
-            sending={pendingSends > 0}
-            onSendMessage={handleSendMessage}
-            onSendVoice={handleSendVoice}
-            onSendMedia={handleSendMedia}
-            onTypingStart={emitTypingStart}
-            onTypingStop={emitTypingStop}
-            onDeleteMessage={handleDeleteMessage}
-            onReactToMessage={handleReactToMessage}
-            onReplyToMessage={handleReplyToMessage}
-            onForwardMessage={handleOpenForward}
-            typingLabel={typingUser ? `${typingUser.name} is typing...` : ''}
-            replyTo={replyTo}
-            onCancelReply={() => setReplyTo(null)}
-            targetMessageId={targetMessageId}
-            callDisabled={!activeParticipantId || callState !== 'idle'}
-            onStartAudioCall={handleStartAudioCall}
-            onStartVideoCall={handleStartVideoCall}
-            callScreen={callState !== 'idle' ? (
-              <CallScreen
-                callState={callState}
-                callType={callType}
-                localStream={localStream}
-                remoteStream={remoteStream}
-                durationSeconds={durationSeconds}
-                muted={muted}
-                cameraOn={cameraOn}
-                error={callError}
-                displayName={activeConversation?.participant?.name || 'Contact'}
-                onMute={toggleMute}
-                onToggleCamera={toggleCamera}
-                onEnd={endCurrentCall}
-                embedded
-              />
-            ) : null}
-          />
+          <div className={`[grid-area:1/1] transition-all duration-200 ease-out lg:[grid-area:auto] ${mobileChatOpen ? 'block opacity-100' : 'hidden opacity-0 lg:block lg:opacity-100'} ${mobileChatClosing ? 'translate-x-full' : mobileChatOpen ? 'translate-x-0' : 'translate-x-3 lg:translate-x-0'}`}>
+            <ChatBox
+              conversation={activeConversation}
+              messages={messages}
+              currentUserId={currentUserId}
+              loadingMessages={loadingMessages}
+              sending={pendingSends > 0}
+              onSendMessage={handleSendMessage}
+              onSendVoice={handleSendVoice}
+              onSendMedia={handleSendMedia}
+              onTypingStart={emitTypingStart}
+              onTypingStop={emitTypingStop}
+              onDeleteMessage={handleDeleteMessage}
+              onReactToMessage={handleReactToMessage}
+              onReplyToMessage={handleReplyToMessage}
+              onForwardMessage={handleOpenForward}
+              typingLabel={typingUser ? `${typingUser.name} is typing...` : ''}
+              replyTo={replyTo}
+              onCancelReply={() => setReplyTo(null)}
+              targetMessageId={targetMessageId}
+              callDisabled={!activeParticipantId || callState !== 'idle'}
+              onStartAudioCall={handleStartAudioCall}
+              onStartVideoCall={handleStartVideoCall}
+              onMobileBack={closeMobileChatPanel}
+              className="h-[calc(100vh-9rem)] rounded-2xl lg:h-[70vh] lg:rounded-[2rem]"
+              callScreen={callState !== 'idle' ? (
+                <CallScreen
+                  callState={callState}
+                  callType={callType}
+                  localStream={localStream}
+                  remoteStream={remoteStream}
+                  durationSeconds={durationSeconds}
+                  muted={muted}
+                  cameraOn={cameraOn}
+                  error={callError}
+                  displayName={activeConversation?.participant?.name || 'Contact'}
+                  onMute={toggleMute}
+                  onToggleCamera={toggleCamera}
+                  onEnd={endCurrentCall}
+                  embedded
+                />
+              ) : null}
+            />
+          </div>
         </div>
       </FeaturePage>
 

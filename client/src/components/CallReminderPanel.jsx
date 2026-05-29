@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
-import { Bell, Plus, Trash2, X } from 'lucide-react';
+import { Bell, ChevronRight, Plus, Trash2, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useDialog } from './ui/GlobalDialogProvider';
+import { getChatSocket } from '../features/communication/chat/services/socket';
 
 const API_BASE_URL = 'http://localhost:5000/api/reminders';
 
@@ -34,7 +36,8 @@ const isScheduledTimeInFuture = (value) => {
   return !Number.isNaN(scheduledAt.getTime()) && scheduledAt > new Date();
 };
 
-export default function CallReminderPanel() {
+export default function CallReminderPanel({ preview = false }) {
+  const navigate = useNavigate();
   const dialog = useDialog();
   const [reminders, setReminders] = useState([]);
   const [showForm, setShowForm] = useState(false);
@@ -42,6 +45,7 @@ export default function CallReminderPanel() {
   const [targetUserName, setTargetUserName] = useState('');
   const [scheduledTime, setScheduledTime] = useState('');
   const [clearingAll, setClearingAll] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [scheduledTimeError, setScheduledTimeError] = useState('');
   const minScheduledTime = toDateTimeLocalValue(new Date());
@@ -52,18 +56,33 @@ export default function CallReminderPanel() {
       .sort((a, b) => new Date(a.scheduledAt || a.scheduledTime) - new Date(b.scheduledAt || b.scheduledTime));
   }, [reminders]);
 
-  const loadReminders = async () => {
+  const loadReminders = useCallback(async () => {
+    setLoading(true);
     try {
       const response = await axios.get(API_BASE_URL, { headers: authHeaders() });
       setReminders(response.data.reminders || []);
     } catch (err) {
       setError(err.response?.data?.msg || 'Failed to load reminders');
+    } finally {
+      setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadReminders();
-  }, []);
+  }, [loadReminders]);
+
+  useEffect(() => {
+    const socket = getChatSocket();
+    const handleCallReminderTriggered = (notification = {}) => {
+      if (notification.entityType === 'call_reminder') {
+        loadReminders();
+      }
+    };
+
+    socket.on('newNotification', handleCallReminderTriggered);
+    return () => socket.off('newNotification', handleCallReminderTriggered);
+  }, [loadReminders]);
 
   const handleCreate = async (e) => {
     e.preventDefault();
@@ -130,6 +149,51 @@ export default function CallReminderPanel() {
       setClearingAll(false);
     }
   };
+
+  if (preview) {
+    const previewReminders = upcomingReminders.slice(0, 3);
+
+    return (
+      <button
+        type="button"
+        onClick={() => navigate('/reminders')}
+        className="group motion-card mb-8 block w-full rounded-2xl border border-gray-200 bg-white/90 p-6 text-left backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
+      >
+        <div className="mb-5 flex items-start justify-between gap-3">
+          <div className="flex items-start gap-3">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
+              <Bell size={24} />
+            </span>
+            <div>
+              <h3 className="text-2xl font-bold text-brand-primary">Upcoming Call Reminders</h3>
+              <p className="mt-1 text-gray-700">Next reminders only. Open the full page to manage all call alerts.</p>
+            </div>
+          </div>
+          <ChevronRight size={22} className="shrink-0 text-emerald-700 transition group-hover:translate-x-1" />
+        </div>
+
+        {error && <div className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+
+        <div className="mt-4 space-y-2">
+          {!previewReminders.length && (
+            <p className="rounded-xl bg-gray-50 p-3 text-sm font-semibold text-gray-500">
+              {loading ? 'Loading reminders...' : 'No upcoming call reminders'}
+            </p>
+          )}
+          {previewReminders.map((reminder) => (
+            <div key={reminder._id} className="rounded-xl bg-emerald-50 p-3">
+              <p className="font-semibold text-gray-900">{reminder.title}</p>
+              <p className="mt-1 text-sm text-emerald-700">
+                Call {reminder.targetUserName} at {formatTime(reminder.scheduledAt || reminder.scheduledTime)}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        <p className="mt-4 text-sm font-bold text-emerald-700">View all reminders</p>
+      </button>
+    );
+  }
 
   return (
     <div className="motion-card mb-10 rounded-2xl border border-gray-200 bg-white/90 p-6">

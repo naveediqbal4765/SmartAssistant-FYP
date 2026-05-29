@@ -110,62 +110,100 @@ export default function GroupList({
   onExitGroup,
   onMuteGroup
 }) {
-  return (
-    <div className="space-y-4">
-      <div className="motion-card rounded-xl bg-white p-2">
-        <div className="border-b border-gray-100 p-4 font-bold">My Groups</div>
-        {!groups.length && <div className="p-4 text-gray-500">No groups yet.</div>}
-        {groups.map((group) => (
-          <GroupListItem
-            key={group._id}
-            group={group}
-            active={activeGroupId === group._id}
-            currentUserId={currentUserId}
-            onSelectGroup={onSelectGroup}
-            onExitGroup={onExitGroup}
-            onMuteGroup={onMuteGroup}
-          />
-        ))}
-      </div>
+  const [activeMobileTab, setActiveMobileTab] = useState('my-groups');
+  const renderMyGroups = () => (
+    <div className="motion-card rounded-xl bg-white p-2">
+      <div className="border-b border-gray-100 p-4 font-bold">My Groups</div>
+      {!groups.length && <div className="p-4 text-gray-500">No groups yet.</div>}
+      {groups.map((group) => (
+        <GroupListItem
+          key={group._id}
+          group={group}
+          active={activeGroupId === group._id}
+          currentUserId={currentUserId}
+          onSelectGroup={onSelectGroup}
+          onExitGroup={onExitGroup}
+          onMuteGroup={onMuteGroup}
+        />
+      ))}
+    </div>
+  );
 
-      <div className="motion-card rounded-xl bg-white">
-        <div className="border-b p-4 font-bold">Discover Groups</div>
-        {!discoverableGroups.length && <div className="p-4 text-gray-500">No groups to join.</div>}
-        {discoverableGroups.map((group) => {
-          const requested = group.joinRequestStatus === 'pending';
+  const renderDiscoverGroups = () => (
+    <div className="motion-card rounded-xl bg-white">
+      <div className="border-b p-4 font-bold">Discover Groups</div>
+      {!discoverableGroups.length && <div className="p-4 text-gray-500">No groups to join.</div>}
+      {discoverableGroups.map((group) => {
+        const requested = group.joinRequestStatus === 'pending';
 
-          return (
-            <div key={group._id} className="border-b p-4 last:border-b-0">
-              <p className="font-semibold">{group.name}</p>
-              <p className="text-sm text-gray-500">{group.description || 'No description'}</p>
-              <div className="mt-3 flex flex-wrap items-center gap-2">
+        return (
+          <div key={group._id} className="border-b p-4 last:border-b-0">
+            <p className="font-semibold">{group.name}</p>
+            <p className="text-sm text-gray-500">{group.description || 'No description'}</p>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  if (!requested) onRequestJoin(group._id);
+                }}
+                disabled={requested}
+                className={`rounded-lg px-3 py-2 text-sm font-semibold ${
+                  requested
+                    ? 'bg-gray-200 text-gray-600'
+                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                }`}
+              >
+                {requested ? 'Requested' : 'Join Request'}
+              </button>
+              {requested && (
                 <button
                   type="button"
-                  onClick={() => {
-                    if (!requested) onRequestJoin(group._id);
-                  }}
-                  disabled={requested}
-                  className={`rounded-lg px-3 py-2 text-sm font-semibold ${
-                    requested
-                      ? 'bg-gray-200 text-gray-600'
-                      : 'bg-blue-600 text-white hover:bg-blue-700'
-                  }`}
+                  onClick={() => onCancelJoinRequest(group._id)}
+                  className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
                 >
-                  {requested ? 'Requested' : 'Join Request'}
+                  Cancel Request
                 </button>
-                {requested && (
-                  <button
-                    type="button"
-                    onClick={() => onCancelJoinRequest(group._id)}
-                    className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
-                  >
-                    Cancel Request
-                  </button>
-                )}
-              </div>
+              )}
             </div>
-          );
-        })}
+          </div>
+        );
+      })}
+    </div>
+  );
+
+  return (
+    <div className="space-y-4">
+      <div className="lg:hidden">
+        <div className="mb-3 grid grid-cols-2 rounded-2xl bg-gray-100 p-1">
+          <button
+            type="button"
+            onClick={() => setActiveMobileTab('my-groups')}
+            className={`rounded-xl px-3 py-2 text-sm font-bold transition ${
+              activeMobileTab === 'my-groups'
+                ? 'bg-white text-brand-primary shadow-sm'
+                : 'text-gray-600'
+            }`}
+          >
+            My Groups
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveMobileTab('discover')}
+            className={`rounded-xl px-3 py-2 text-sm font-bold transition ${
+              activeMobileTab === 'discover'
+                ? 'bg-white text-brand-primary shadow-sm'
+                : 'text-gray-600'
+            }`}
+          >
+            Discover Groups
+          </button>
+        </div>
+        {activeMobileTab === 'my-groups' ? renderMyGroups() : renderDiscoverGroups()}
+      </div>
+
+      <div className="hidden space-y-4 lg:block">
+        {renderMyGroups()}
+        {renderDiscoverGroups()}
       </div>
     </div>
   );

@@ -20,7 +20,6 @@ import { getChatSocket } from '../../communication/chat/services/socket';
 export const SENIOR_REMINDERS_REFRESH_EVENT = 'senior-reminders:refresh';
 const SENIOR_REMINDER_CHANGED_EVENT = 'SENIOR_REMINDER_CHANGED';
 
-const REFRESH_INTERVAL_MS = 60000;
 const APPOINTMENT_POPUP_VISIBLE_MS = 60000;
 const PLAYED_REMINDERS_STORAGE_KEY = 'senior-reminders:played-alerts';
 
@@ -77,11 +76,9 @@ export default function GlobalSeniorReminderPopups({
     if (!enabled) return undefined;
 
     const handleRefresh = () => loadReminderSources();
-    const intervalId = window.setInterval(loadReminderSources, REFRESH_INTERVAL_MS);
 
     window.addEventListener(SENIOR_REMINDERS_REFRESH_EVENT, handleRefresh);
     return () => {
-      window.clearInterval(intervalId);
       window.removeEventListener(SENIOR_REMINDERS_REFRESH_EVENT, handleRefresh);
     };
   }, [enabled, loadReminderSources]);

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ArrowLeft } from 'lucide-react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { getChatSocket } from '../chat/services/socket';
 import AddMemberModal from './AddMemberModal';
@@ -62,6 +63,8 @@ const reactionEmojiByType = {
   sad: '😢'
 };
 
+const MOBILE_PANEL_TRANSITION_MS = 240;
+
 const getNextReactions = (reactions = [], currentUserId, reactionType) => {
   const existing = reactions.find((reaction) => getUserId(reaction.userId) === String(currentUserId));
 
@@ -98,9 +101,13 @@ export default function GroupPage() {
   const seenDebounceRef = useRef(null);
   const deliveredGroupMessageIdsRef = useRef(new Set());
   const seenGroupMessageIdsRef = useRef(new Set());
+  const mobileListScrollRef = useRef(0);
+  const mobileCloseTimerRef = useRef(null);
   const [groups, setGroups] = useState([]);
   const [discoverableGroups, setDiscoverableGroups] = useState([]);
   const [activeGroup, setActiveGroup] = useState(null);
+  const [mobileGroupOpen, setMobileGroupOpen] = useState(Boolean(groupId));
+  const [mobileGroupClosing, setMobileGroupClosing] = useState(false);
   const [messages, setMessages] = useState([]);
   const [requests, setRequests] = useState([]);
   const [error, setError] = useState('');
@@ -198,8 +205,37 @@ export default function GroupPage() {
   useEffect(() => {
     if (!groupId || !groups.length) return;
     const routedGroup = groups.find((group) => String(group._id) === String(groupId));
-    if (routedGroup) setActiveGroup(routedGroup);
+    if (routedGroup) {
+      setActiveGroup(routedGroup);
+      window.clearTimeout(mobileCloseTimerRef.current);
+      setMobileGroupClosing(false);
+      setMobileGroupOpen(true);
+    }
   }, [groupId, groups]);
+
+  const openMobileGroupPanel = () => {
+    window.clearTimeout(mobileCloseTimerRef.current);
+    mobileListScrollRef.current = window.scrollY;
+    setMobileGroupClosing(false);
+    setMobileGroupOpen(true);
+    window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'smooth' }));
+  };
+
+  const closeMobileGroupPanel = () => {
+    if (!mobileGroupOpen || mobileGroupClosing) return;
+    setMobileGroupClosing(true);
+    mobileCloseTimerRef.current = window.setTimeout(() => {
+      setMobileGroupOpen(false);
+      setMobileGroupClosing(false);
+      window.requestAnimationFrame(() => {
+        window.scrollTo({ top: mobileListScrollRef.current || 0, behavior: 'smooth' });
+      });
+    }, MOBILE_PANEL_TRANSITION_MS);
+  };
+
+  useEffect(() => () => {
+    window.clearTimeout(mobileCloseTimerRef.current);
+  }, []);
 
   useEffect(() => {
     loadActiveGroupData(activeGroup).catch((err) => {
@@ -417,6 +453,7 @@ export default function GroupPage() {
 
   const handleSelectGroup = (group) => {
     setActiveGroup(group);
+    openMobileGroupPanel();
     navigate(`/groups/${group._id}`);
   };
 
@@ -673,6 +710,7 @@ export default function GroupPage() {
     setActiveGroup((current) => (
       String(current?._id || '') === String(groupId) ? null : current
     ));
+    setMobileGroupOpen(false);
 
     try {
       await exitGroup(groupId);
@@ -693,6 +731,7 @@ export default function GroupPage() {
       setActiveGroup((current) => (
         String(current?._id || '') === String(groupId) ? null : current
       ));
+      setMobileGroupOpen(false);
       setAdminLeaveGroup(null);
     } catch (err) {
       setError(getGroupApiErrorMessage(err, 'Failed to transfer admin and leave group'));
@@ -720,6 +759,7 @@ export default function GroupPage() {
       setActiveGroup((current) => (
         String(current?._id || '') === String(groupId) ? null : current
       ));
+      setMobileGroupOpen(false);
       setAdminLeaveGroup(null);
     } catch (err) {
       setError(getGroupApiErrorMessage(err, 'Failed to delete group'));
@@ -831,60 +871,74 @@ export default function GroupPage() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[360px_1fr]">
-          <GroupList
-            groups={groups}
-            discoverableGroups={discoverableGroups}
-            activeGroupId={activeGroup?._id}
-            currentUserId={currentUserId}
-            onSelectGroup={handleSelectGroup}
-            onRequestJoin={handleRequestJoin}
-            onCancelJoinRequest={handleCancelJoinRequest}
-            onExitGroup={handleExitGroup}
-            onMuteGroup={handleMuteGroup}
-          />
-          {groupCallState !== 'idle' ? (
-            <div className="motion-panel-in motion-card h-[70vh] overflow-hidden rounded-[2rem] bg-white shadow-xl shadow-gray-200/70 ring-1 ring-gray-200/70">
-              <GroupCallScreen
-                group={activeGroup}
-                callState={groupCallState}
-                callType={groupCallType}
-                localParticipant={groupCallLocalParticipant}
-                remoteStreams={groupCallRemoteStreams}
-                muted={groupCallMuted}
-                cameraOn={groupCallCameraOn}
-                durationSeconds={groupCallDurationSeconds}
-                error={groupCallError}
-                displayName={activeGroup?.name || 'Group'}
-                onMute={toggleGroupCallMute}
-                onToggleCamera={toggleGroupCallCamera}
-                onLeave={leaveGroupCall}
-                embedded
-              />
-            </div>
-          ) : (
-            <GroupChat
-              group={activeGroup}
+        <div className="grid grid-cols-1 gap-6 overflow-hidden lg:grid-cols-[360px_1fr] lg:overflow-visible">
+          <div className={`[grid-area:1/1] transition-all duration-200 ease-out lg:[grid-area:auto] ${mobileGroupOpen && !mobileGroupClosing ? 'hidden -translate-x-4 opacity-0 lg:block lg:translate-x-0 lg:opacity-100' : 'block translate-x-0 opacity-100'}`}>
+            <GroupList
+              groups={groups}
+              discoverableGroups={discoverableGroups}
+              activeGroupId={activeGroup?._id}
               currentUserId={currentUserId}
-              messages={messages}
-              activeCall={activeGroupCall}
-              callState={groupCallState}
-              onStartGroupAudioCall={() => startGroupCall('audio')}
-              onStartGroupVideoCall={() => startGroupCall('video')}
-              onJoinGroupCall={joinGroupCall}
-              onSendMessage={handleSendMessage}
-              onSendVoice={handleSendVoice}
-              onSendMedia={handleSendMedia}
-              onDeleteMessage={handleDeleteMessage}
-              onReactToMessage={handleReactToMessage}
-              onForwardMessage={handleOpenForward}
-              onTypingStart={emitGroupTypingStart}
-              onTypingStop={emitGroupTypingStop}
-              typingLabel={typingLabel}
-              targetMessageId={targetMessageId}
-              onOpenSettings={() => setSettingsOpen(true)}
+              onSelectGroup={handleSelectGroup}
+              onRequestJoin={handleRequestJoin}
+              onCancelJoinRequest={handleCancelJoinRequest}
+              onExitGroup={handleExitGroup}
+              onMuteGroup={handleMuteGroup}
             />
-          )}
+          </div>
+          <div className={`[grid-area:1/1] transition-all duration-200 ease-out lg:[grid-area:auto] ${mobileGroupOpen ? 'block opacity-100' : 'hidden opacity-0 lg:block lg:opacity-100'} ${mobileGroupClosing ? 'translate-x-full' : mobileGroupOpen ? 'translate-x-0' : 'translate-x-3 lg:translate-x-0'}`}>
+            {groupCallState !== 'idle' ? (
+              <div className="motion-panel-in motion-card h-[calc(100vh-9rem)] overflow-hidden rounded-2xl bg-white shadow-xl shadow-gray-200/70 ring-1 ring-gray-200/70 lg:h-[70vh] lg:rounded-[2rem]">
+                <button
+                  type="button"
+                  onClick={closeMobileGroupPanel}
+                  className="flex items-center gap-2 border-b border-gray-100 bg-white px-4 py-3 text-sm font-bold text-brand-primary transition hover:bg-gray-50 lg:hidden"
+                >
+                  <ArrowLeft size={18} />
+                  Back
+                </button>
+                <GroupCallScreen
+                  group={activeGroup}
+                  callState={groupCallState}
+                  callType={groupCallType}
+                  localParticipant={groupCallLocalParticipant}
+                  remoteStreams={groupCallRemoteStreams}
+                  muted={groupCallMuted}
+                  cameraOn={groupCallCameraOn}
+                  durationSeconds={groupCallDurationSeconds}
+                  error={groupCallError}
+                  displayName={activeGroup?.name || 'Group'}
+                  onMute={toggleGroupCallMute}
+                  onToggleCamera={toggleGroupCallCamera}
+                  onLeave={leaveGroupCall}
+                  embedded
+                />
+              </div>
+            ) : (
+              <GroupChat
+                group={activeGroup}
+                currentUserId={currentUserId}
+                messages={messages}
+                activeCall={activeGroupCall}
+                callState={groupCallState}
+                onStartGroupAudioCall={() => startGroupCall('audio')}
+                onStartGroupVideoCall={() => startGroupCall('video')}
+                onJoinGroupCall={joinGroupCall}
+                onSendMessage={handleSendMessage}
+                onSendVoice={handleSendVoice}
+                onSendMedia={handleSendMedia}
+                onDeleteMessage={handleDeleteMessage}
+                onReactToMessage={handleReactToMessage}
+                onForwardMessage={handleOpenForward}
+                onTypingStart={emitGroupTypingStart}
+                onTypingStop={emitGroupTypingStop}
+                typingLabel={typingLabel}
+                targetMessageId={targetMessageId}
+                onOpenSettings={() => setSettingsOpen(true)}
+                onMobileBack={closeMobileGroupPanel}
+                className="h-[calc(100vh-9rem)] rounded-2xl lg:h-[70vh] lg:rounded-[2rem]"
+              />
+            )}
+          </div>
         </div>
       </FeaturePage>
 

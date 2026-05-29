@@ -58,6 +58,10 @@ const serializeVolunteer = (volunteer, origin) => {
     _id: volunteer._id,
     name: volunteer.name,
     role: volunteer.role,
+    location: {
+      lat: Number(lat),
+      lng: Number(lng)
+    },
     distance: {
       meters: Math.round(distanceMeters),
       km: Number((distanceMeters / 1000).toFixed(2))

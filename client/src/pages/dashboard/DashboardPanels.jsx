@@ -259,13 +259,25 @@ function TelemetryReadinessCard({
   targetSeniorId = '',
   location = undefined
 }) {
+  const navigate = useNavigate();
   const { vitalsSnapshot, connected, statusLabel } = useVitalsSource(targetSeniorId);
   const vitals = vitalsSnapshot?.vitals;
   const hasLocation = location === undefined ? undefined : hasUsableLocation(location);
   const readiness = getReadinessStatus({ vitals, hasLocation });
 
   return (
-    <div className="motion-card rounded-2xl border border-gray-200 bg-white/90 p-5">
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={() => navigate('/health/telemetry')}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          navigate('/health/telemetry');
+        }
+      }}
+      className="motion-card cursor-pointer rounded-2xl border border-gray-200 bg-white/90 p-5"
+    >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h3 className="text-lg font-semibold text-brand-primary">{title}</h3>
@@ -304,6 +316,10 @@ function TelemetryReadinessCard({
           {statusLabel}
         </span>
         <span>Last health update: {formatTimestamp(vitalsSnapshot?.timestamp)}</span>
+        <span className="inline-flex items-center gap-1 font-semibold text-brand-primary">
+          View Details
+          <ChevronRight size={16} />
+        </span>
       </div>
     </div>
   );
@@ -315,12 +331,12 @@ function SeniorReadinessPanel() {
       title="Emergency Readiness"
       description="Keep your location current and monitor nearby volunteer coverage for emergency routing."
     >
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+      <div className="space-y-5">
         <TelemetryReadinessCard
           title="Live Health Telemetry"
           description="Your latest vitals and emergency readiness status."
         />
-        <NearbyVolunteers />
+        <NearbyVolunteers mapView />
       </div>
     </RoleStabilityPanel>
   );
@@ -626,7 +642,7 @@ function CaregiverAlertCenter({ linkedSenior }) {
 }
 
 const panelComponents = {
-  callReminders: CallReminderPanel,
+  callReminders: (props) => <CallReminderPanel {...props} preview />,
   seniorReadiness: SeniorReadinessPanel,
   volunteerReadiness: VolunteerReadinessPanel,
   caregiverAlertCenter: CaregiverAlertCenter

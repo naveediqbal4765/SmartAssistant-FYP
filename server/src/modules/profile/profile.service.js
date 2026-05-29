@@ -18,6 +18,28 @@ const defaultPrivacySettings = {
   showEmergencyContacts: false
 };
 
+const toId = (value) => String(value?._id || value || '');
+const toRadians = (value) => (Number(value) * Math.PI) / 180;
+const calculateDistanceMeters = (origin, target) => {
+  const earthRadiusMeters = 6371000;
+  const dLat = toRadians(target.lat - origin.lat);
+  const dLng = toRadians(target.lng - origin.lng);
+  const lat1 = toRadians(origin.lat);
+  const lat2 = toRadians(target.lat);
+  const a = Math.sin(dLat / 2) ** 2
+    + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+  return 2 * earthRadiusMeters * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+};
+
+const getPointCoordinates = (location) => {
+  const [lng, lat] = location?.coordinates || [];
+  const latitude = Number(lat);
+  const longitude = Number(lng);
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
+  if (latitude === 0 && longitude === 0) return null;
+  return { lat: latitude, lng: longitude };
+};
+
 const logActivity = async (userId, action, details = '', ipAddress = '') => {
   try {
     const log = new ActivityLog({ userId, action, details, ipAddress });
@@ -105,6 +127,65 @@ const getLinkedSeniorProfile = async (user, seniorId) => {
         linkedSenior: null,
         linkedCaregivers: [],
         privacySettings: senior.privacySettings || defaultPrivacySettings
+      }
+    }
+  };
+};
+
+const getPublicVolunteerProfile = async (user, volunteerId) => {
+  if (user.role !== 'elder') {
+    return { status: 403, body: { success: false, msg: 'Volunteer profile view is only available to seniors' } };
+  }
+
+  if (!mongoose.Types.ObjectId.isValid(volunteerId)) {
+    return { status: 400, body: { success: false, msg: 'Valid volunteer id is required' } };
+  }
+
+  const [volunteer, completedTasks, seniorIds] = await Promise.all([
+    User.findOne({ _id: volunteerId, role: 'volunteer' })
+      .select('name role avatar profilePicture isOnline lastSeenAt createdAt location'),
+    Task.countDocuments({
+      $or: [{ assignedVolunteerId: volunteerId }, { volunteerId }],
+      status: { $in: ['verified_completed', 'completed', 'closed'] }
+    }),
+    Task.distinct('userId', {
+      $or: [{ assignedVolunteerId: volunteerId }, { volunteerId }],
+      status: { $in: ['verified_completed', 'completed', 'closed'] }
+    })
+  ]);
+
+  const seniorLocation = getPointCoordinates(user.location);
+  const volunteerLocation = getPointCoordinates(volunteer?.location);
+
+  if (!volunteer || !seniorLocation || !volunteerLocation) {
+    return { status: 404, body: { success: false, msg: 'Profile not available' } };
+  }
+
+  const distanceMeters = calculateDistanceMeters(seniorLocation, volunteerLocation);
+  if (distanceMeters > 10000) {
+    return { status: 404, body: { success: false, msg: 'Profile not available' } };
+  }
+
+  await logActivity(user._id, 'volunteer_profile_view', `Viewed volunteer profile: ${volunteer._id}`);
+
+  return {
+    status: 200,
+    body: {
+      success: true,
+      volunteer: {
+        id: volunteer._id,
+        name: volunteer.name,
+        role: volunteer.role,
+        avatar: volunteer.avatar || volunteer.profilePicture || '',
+        availabilityStatus: volunteer.isOnline ? 'active' : 'inactive',
+        lastSeenAt: volunteer.lastSeenAt || null,
+        tasksCompletedCount: completedTasks,
+        seniorsHelpedCount: seniorIds.map(toId).filter(Boolean).length,
+        joinedAt: volunteer.createdAt,
+        distance: {
+          meters: Math.round(distanceMeters),
+          km: Number((distanceMeters / 1000).toFixed(2))
+        }
       }
     }
   };
@@ -389,6 +470,7 @@ const deleteAccount = async (user) => {
 module.exports = {
   getProfile,
   getLinkedSeniorProfile,
+  getPublicVolunteerProfile,
   updateProfile,
   getPrivacy,
   updatePrivacy,

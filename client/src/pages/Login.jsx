@@ -194,8 +194,11 @@ export default function Login({ onLogin }) {
         backgroundImage: "url('/images/background.jpg')"
       }}
     >
-      {/* Dark overlay keeps the background visible while preserving text contrast. */}
-      <div className="min-h-screen bg-[#0f1f17]/70 motion-auth-enter">
+      {/* Gradient overlay keeps the background subtle while preserving text contrast. */}
+      <div
+        className="min-h-screen motion-auth-enter"
+        style={{ background: 'radial-gradient(ellipse at center, rgba(0, 0, 0, 0.42) 0%, rgba(0, 0, 0, 0.62) 100%)' }}
+      >
         
         <div className="w-full bg-brand-primary shadow-lg">
           <div className="px-4 py-4 sm:px-6 md:px-8 lg:px-12">
@@ -204,8 +207,8 @@ export default function Login({ onLogin }) {
         </div>
 
         {/* Main Content */}
-        <div className="container mx-auto px-4 sm:px-6 md:px-8 lg:px-12 py-8 sm:py-10 md:py-12">
-          <div className="flex flex-col lg:flex-row items-center justify-between gap-8 sm:gap-10 lg:gap-12">
+        <div className="container mx-auto flex min-h-[calc(100vh-76px)] items-center px-4 py-6 sm:px-6 sm:py-8 md:px-8 lg:px-12">
+          <div className="flex w-full flex-col items-center justify-between gap-8 sm:gap-10 lg:flex-row lg:gap-12">
             
 {/* Left Side - Hero Section */}
 <div className="flex-1 text-center">
@@ -229,10 +232,9 @@ export default function Login({ onLogin }) {
 </div>
 
             {/* Right Side - Login/Register Form */}
-            <div className="flex-1 max-w-md w-full">
+            <div className="w-full max-w-[440px] lg:flex-1">
               <div
-                className={`motion-card rounded-2xl p-6 sm:p-8 ${authTransitioning ? 'motion-auth-exit' : ''}`}
-                style={{ backgroundColor: '#a9c6b2' }}
+                className={`rounded-[24px] bg-brand-surface p-5 shadow-[0_8px_32px_rgba(255,255,255,0.08)] transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_12px_40px_rgba(255,255,255,0.15)] sm:p-6 ${authTransitioning ? 'motion-auth-exit' : ''}`}
               >
                 
                 {/* Logo at Top of Form */}
@@ -268,7 +270,7 @@ export default function Login({ onLogin }) {
                           placeholder="Enter your email"
                           value={form.email}
                           onChange={(e) => setForm({ ...form, email: e.target.value })}
-                          className="w-full rounded-xl border-0 bg-white px-4 py-3 shadow-sm transition duration-200 ease-in-out placeholder:text-sm hover:-translate-y-0.5 hover:shadow-md focus:-translate-y-0.5 focus:border-transparent focus:shadow-[0_0_0_3px_rgba(28,56,42,0.18),0_10px_24px_rgba(15,31,23,0.10)] focus:outline-none focus:ring-0"
+                          className="h-11 w-full rounded-xl border-0 bg-white px-3 py-0 text-sm shadow-sm transition duration-200 ease-in-out placeholder:text-sm hover:-translate-y-0.5 hover:shadow-md focus:-translate-y-0.5 focus:border-transparent focus:shadow-[0_0_0_3px_rgba(28,56,42,0.18),0_10px_24px_rgba(15,31,23,0.10)] focus:outline-none focus:ring-0"
                           required
                         />
                       </div>
@@ -280,7 +282,7 @@ export default function Login({ onLogin }) {
                           placeholder="Enter your password"
                           value={form.password}
                           onChange={(e) => setForm({ ...form, password: e.target.value })}
-                          className="w-full rounded-xl border-0 bg-white px-4 py-3 shadow-sm transition duration-200 ease-in-out placeholder:text-sm hover:-translate-y-0.5 hover:shadow-md focus:-translate-y-0.5 focus:border-transparent focus:shadow-[0_0_0_3px_rgba(28,56,42,0.18),0_10px_24px_rgba(15,31,23,0.10)] focus:outline-none focus:ring-0"
+                          className="h-11 w-full rounded-xl border-0 bg-white px-3 py-0 text-sm shadow-sm transition duration-200 ease-in-out placeholder:text-sm hover:-translate-y-0.5 hover:shadow-md focus:-translate-y-0.5 focus:border-transparent focus:shadow-[0_0_0_3px_rgba(28,56,42,0.18),0_10px_24px_rgba(15,31,23,0.10)] focus:outline-none focus:ring-0"
                           required
                         />
                       </div>
@@ -289,7 +291,7 @@ export default function Login({ onLogin }) {
                         <button
                           type="submit"
                           disabled={loading || authTransitioning}
-                          className="flex-1 bg-[#1c382a] hover:-translate-y-1 hover:bg-[#142a20] hover:shadow-lg active:translate-y-px active:bg-[#0f1f17] text-white py-3 rounded-xl font-semibold text-base shadow-sm transition duration-200 ease-in-out disabled:opacity-50"
+                          className="h-11 flex-1 rounded-xl bg-[#1c382a] px-3 text-sm font-semibold text-white shadow-sm transition duration-200 ease-in-out hover:-translate-y-1 hover:bg-[#142a20] hover:shadow-lg active:translate-y-px active:bg-[#0f1f17] disabled:opacity-50"
                         >
                           {loading ? '...' : 'Login'}
                         </button>
@@ -299,7 +301,7 @@ export default function Login({ onLogin }) {
                             switchAuthMode(true);
                           }}
                           disabled={authTransitioning}
-                          className="flex-1 bg-white text-[#1c382a] hover:-translate-y-1 hover:bg-[#1c382a] hover:text-white hover:shadow-lg active:translate-y-px active:bg-[#0f1f17] py-3 rounded-xl font-semibold text-base shadow-sm transition duration-200 ease-in-out"
+                          className="h-11 flex-1 rounded-xl bg-white px-3 text-sm font-semibold text-[#1c382a] shadow-sm transition duration-200 ease-in-out hover:-translate-y-1 hover:bg-[#1c382a] hover:text-white hover:shadow-lg active:translate-y-px active:bg-[#0f1f17]"
                         >
                           Sign Up
                         </button>
@@ -333,7 +335,7 @@ export default function Login({ onLogin }) {
                           placeholder="Enter your full name"
                           value={form.name}
                           onChange={(e) => setForm({ ...form, name: e.target.value })}
-                          className="w-full rounded-xl border-0 bg-white px-4 py-3 shadow-sm transition duration-200 ease-in-out placeholder:text-sm hover:-translate-y-0.5 hover:shadow-md focus:-translate-y-0.5 focus:border-transparent focus:shadow-[0_0_0_3px_rgba(28,56,42,0.18),0_10px_24px_rgba(15,31,23,0.10)] focus:outline-none focus:ring-0"
+                          className="h-11 w-full rounded-xl border-0 bg-white px-3 py-0 text-sm shadow-sm transition duration-200 ease-in-out placeholder:text-sm hover:-translate-y-0.5 hover:shadow-md focus:-translate-y-0.5 focus:border-transparent focus:shadow-[0_0_0_3px_rgba(28,56,42,0.18),0_10px_24px_rgba(15,31,23,0.10)] focus:outline-none focus:ring-0"
                           required
                         />
                       </div>
@@ -345,7 +347,7 @@ export default function Login({ onLogin }) {
                           placeholder="Enter your email"
                           value={form.email}
                           onChange={(e) => setForm({ ...form, email: e.target.value })}
-                          className="w-full rounded-xl border-0 bg-white px-4 py-3 shadow-sm transition duration-200 ease-in-out placeholder:text-sm hover:-translate-y-0.5 hover:shadow-md focus:-translate-y-0.5 focus:border-transparent focus:shadow-[0_0_0_3px_rgba(28,56,42,0.18),0_10px_24px_rgba(15,31,23,0.10)] focus:outline-none focus:ring-0"
+                          className="h-11 w-full rounded-xl border-0 bg-white px-3 py-0 text-sm shadow-sm transition duration-200 ease-in-out placeholder:text-sm hover:-translate-y-0.5 hover:shadow-md focus:-translate-y-0.5 focus:border-transparent focus:shadow-[0_0_0_3px_rgba(28,56,42,0.18),0_10px_24px_rgba(15,31,23,0.10)] focus:outline-none focus:ring-0"
                           required
                         />
                       </div>
@@ -357,7 +359,7 @@ export default function Login({ onLogin }) {
                           placeholder="Enter your password"
                           value={form.password}
                           onChange={(e) => setForm({ ...form, password: e.target.value })}
-                          className="w-full rounded-xl border-0 bg-white px-4 py-3 shadow-sm transition duration-200 ease-in-out placeholder:text-sm hover:-translate-y-0.5 hover:shadow-md focus:-translate-y-0.5 focus:border-transparent focus:shadow-[0_0_0_3px_rgba(28,56,42,0.18),0_10px_24px_rgba(15,31,23,0.10)] focus:outline-none focus:ring-0"
+                          className="h-11 w-full rounded-xl border-0 bg-white px-3 py-0 text-sm shadow-sm transition duration-200 ease-in-out placeholder:text-sm hover:-translate-y-0.5 hover:shadow-md focus:-translate-y-0.5 focus:border-transparent focus:shadow-[0_0_0_3px_rgba(28,56,42,0.18),0_10px_24px_rgba(15,31,23,0.10)] focus:outline-none focus:ring-0"
                           required
                         />
                       </div>
@@ -374,7 +376,7 @@ export default function Login({ onLogin }) {
                               setError('');
                             }
                           }}
-                          className="w-full rounded-xl border-0 bg-white px-4 py-3 shadow-sm transition duration-200 ease-in-out placeholder:text-sm hover:-translate-y-0.5 hover:shadow-md focus:-translate-y-0.5 focus:border-transparent focus:shadow-[0_0_0_3px_rgba(28,56,42,0.18),0_10px_24px_rgba(15,31,23,0.10)] focus:outline-none focus:ring-0"
+                          className="h-11 w-full rounded-xl border-0 bg-white px-3 py-0 text-sm shadow-sm transition duration-200 ease-in-out placeholder:text-sm hover:-translate-y-0.5 hover:shadow-md focus:-translate-y-0.5 focus:border-transparent focus:shadow-[0_0_0_3px_rgba(28,56,42,0.18),0_10px_24px_rgba(15,31,23,0.10)] focus:outline-none focus:ring-0"
                           required
                         />
                       </div>
@@ -385,7 +387,7 @@ export default function Login({ onLogin }) {
                           <button
                             type="button"
                             onClick={() => handleRoleChange('volunteer')}
-                            className={`flex-1 py-2 px-2 rounded-xl text-xs sm:text-sm font-medium shadow-sm transition duration-200 ease-in-out hover:-translate-y-0.5 hover:shadow-md active:translate-y-px ${
+                            className={`h-10 flex-1 rounded-xl px-2 text-xs font-medium shadow-sm transition duration-200 ease-in-out hover:-translate-y-0.5 hover:shadow-md active:translate-y-px ${
                               form.role === 'volunteer' 
                                 ? 'bg-[#1c382a] text-white hover:bg-[#142a20] active:bg-[#0f1f17]'
                                 : 'bg-white text-[#1c382a] hover:bg-[#eef4f0] active:bg-[#dce8e1]'
@@ -396,7 +398,7 @@ export default function Login({ onLogin }) {
                           <button
                             type="button"
                             onClick={() => handleRoleChange('elder')}
-                            className={`flex-1 py-2 px-2 rounded-xl text-xs sm:text-sm font-medium shadow-sm transition duration-200 ease-in-out hover:-translate-y-0.5 hover:shadow-md active:translate-y-px ${
+                            className={`h-10 flex-1 rounded-xl px-2 text-xs font-medium shadow-sm transition duration-200 ease-in-out hover:-translate-y-0.5 hover:shadow-md active:translate-y-px ${
                               form.role === 'elder' 
                                 ? 'bg-[#1c382a] text-white hover:bg-[#142a20] active:bg-[#0f1f17]'
                                 : 'bg-white text-[#1c382a] hover:bg-[#eef4f0] active:bg-[#dce8e1]'
@@ -407,7 +409,7 @@ export default function Login({ onLogin }) {
                           <button
                             type="button"
                             onClick={() => handleRoleChange('caregiver')}
-                            className={`flex-1 py-2 px-2 rounded-xl text-xs sm:text-sm font-medium shadow-sm transition duration-200 ease-in-out hover:-translate-y-0.5 hover:shadow-md active:translate-y-px ${
+                            className={`h-10 flex-1 rounded-xl px-2 text-xs font-medium shadow-sm transition duration-200 ease-in-out hover:-translate-y-0.5 hover:shadow-md active:translate-y-px ${
                               form.role === 'caregiver' 
                                 ? 'bg-[#1c382a] text-white hover:bg-[#142a20] active:bg-[#0f1f17]'
                                 : 'bg-white text-[#1c382a] hover:bg-[#eef4f0] active:bg-[#dce8e1]'
@@ -438,7 +440,7 @@ export default function Login({ onLogin }) {
                                 ...form,
                                 seniorLinkCode: e.target.value.replace(/\D/g, '').slice(0, 6)
                               })}
-                            className="w-full rounded-xl border-0 bg-white px-4 py-3 shadow-sm transition duration-200 ease-in-out placeholder:text-sm hover:-translate-y-0.5 hover:shadow-md focus:-translate-y-0.5 focus:border-transparent focus:shadow-[0_0_0_3px_rgba(28,56,42,0.18),0_10px_24px_rgba(15,31,23,0.10)] focus:outline-none focus:ring-0"
+                            className="h-11 w-full rounded-xl border-0 bg-white px-3 py-0 text-sm shadow-sm transition duration-200 ease-in-out placeholder:text-sm hover:-translate-y-0.5 hover:shadow-md focus:-translate-y-0.5 focus:border-transparent focus:shadow-[0_0_0_3px_rgba(28,56,42,0.18),0_10px_24px_rgba(15,31,23,0.10)] focus:outline-none focus:ring-0"
                               required
                             />
                             <p className="text-gray-700 text-xs mt-2">
@@ -452,7 +454,7 @@ export default function Login({ onLogin }) {
                         <button
                           type="submit"
                           disabled={loading || authTransitioning}
-                          className="flex-1 bg-[#1c382a] hover:-translate-y-1 hover:bg-[#142a20] hover:shadow-lg active:translate-y-px active:bg-[#0f1f17] text-white py-3 rounded-xl font-semibold text-base shadow-sm transition duration-200 ease-in-out disabled:opacity-50"
+                          className="h-11 flex-1 rounded-xl bg-[#1c382a] px-3 text-sm font-semibold text-white shadow-sm transition duration-200 ease-in-out hover:-translate-y-1 hover:bg-[#142a20] hover:shadow-lg active:translate-y-px active:bg-[#0f1f17] disabled:opacity-50"
                         >
                           {loading ? '...' : 'Register'}
                         </button>
@@ -462,7 +464,7 @@ export default function Login({ onLogin }) {
                             switchAuthMode(false);
                           }}
                           disabled={authTransitioning}
-                          className="flex-1 bg-white text-[#1c382a] hover:-translate-y-1 hover:bg-[#1c382a] hover:text-white hover:shadow-lg active:translate-y-px active:bg-[#0f1f17] py-3 rounded-xl font-semibold text-base shadow-sm transition duration-200 ease-in-out"
+                          className="h-11 flex-1 rounded-xl bg-white px-3 text-sm font-semibold text-[#1c382a] shadow-sm transition duration-200 ease-in-out hover:-translate-y-1 hover:bg-[#1c382a] hover:text-white hover:shadow-lg active:translate-y-px active:bg-[#0f1f17]"
                         >
                           Back
                         </button>
@@ -485,7 +487,7 @@ export default function Login({ onLogin }) {
                      {/* Google Login Link */}
 <a 
   href="http://localhost:5000/api/auth/google"
-  className="w-full flex items-center justify-center gap-3 bg-white hover:-translate-y-1 hover:bg-gray-50 hover:shadow-lg active:translate-y-px py-3 rounded-xl shadow-sm transition duration-200 ease-in-out"
+  className="flex h-11 w-full items-center justify-center gap-3 rounded-xl bg-white px-3 text-sm shadow-sm transition duration-200 ease-in-out hover:-translate-y-1 hover:bg-gray-50 hover:shadow-lg active:translate-y-px"
 >
   <svg className="w-5 h-5" viewBox="0 0 24 24">
     <path className="fill-blue-500" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -498,7 +500,7 @@ export default function Login({ onLogin }) {
                       {/* Facebook Login Link */}
 <a 
   href="http://localhost:5000/api/auth/facebook"
-  className="w-full flex items-center justify-center gap-3 bg-white hover:-translate-y-1 hover:bg-gray-50 hover:shadow-lg active:translate-y-px py-3 rounded-xl shadow-sm transition duration-200 ease-in-out"
+  className="flex h-11 w-full items-center justify-center gap-3 rounded-xl bg-white px-3 text-sm shadow-sm transition duration-200 ease-in-out hover:-translate-y-1 hover:bg-gray-50 hover:shadow-lg active:translate-y-px"
 >
   <svg className="w-5 h-5 text-blue-700" fill="currentColor" viewBox="0 0 24 24">
     <path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" />

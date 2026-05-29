@@ -14,6 +14,7 @@ const roleLabels = {
 export default function AppHeader({ role, onLogout, notificationState }) {
   const navigate = useNavigate();
   const [profileOpen, setProfileOpen] = useState(false);
+  const [scrollShadowStrength, setScrollShadowStrength] = useState(0);
   const profileRef = useRef(null);
   const roleLabel = roleLabels[role] || 'User';
   const user = useMemo(() => {
@@ -37,8 +38,40 @@ export default function AppHeader({ role, onLogout, notificationState }) {
     return () => document.removeEventListener('pointerdown', handlePointerDown);
   }, [profileOpen]);
 
+  useEffect(() => {
+    let frameId = null;
+
+    const updateHeaderShadow = () => {
+      frameId = null;
+      const nextStrength = Math.min(window.scrollY / 120, 1);
+      setScrollShadowStrength(nextStrength);
+    };
+
+    const handleScroll = () => {
+      if (frameId !== null) return;
+      frameId = window.requestAnimationFrame(updateHeaderShadow);
+    };
+
+    updateHeaderShadow();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (frameId !== null) {
+        window.cancelAnimationFrame(frameId);
+      }
+    };
+  }, []);
+
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-brand-primary shadow-md">
+    <header
+      className="sticky top-0 z-50 w-full border-b border-white/10 bg-brand-primary transition-shadow duration-300 ease-out"
+      style={{
+        boxShadow: scrollShadowStrength
+          ? `0 ${Math.round(8 + scrollShadowStrength * 10)}px ${Math.round(18 + scrollShadowStrength * 16)}px rgba(5, 46, 22, ${0.08 + scrollShadowStrength * 0.16})`
+          : '0 0 0 rgba(5, 46, 22, 0)'
+      }}
+    >
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-4">
         <button
           type="button"

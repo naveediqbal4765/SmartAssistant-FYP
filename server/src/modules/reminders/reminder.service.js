@@ -1,5 +1,10 @@
 const Reminder = require('./reminder.model');
 
+const scheduleReminderWorker = () => {
+  const { scheduleNextReminderRun } = require('./reminder.worker');
+  scheduleNextReminderRun();
+};
+
 const createError = (status, message) => {
   const err = new Error(message);
   err.status = status;
@@ -24,7 +29,7 @@ const createReminder = async (user, payload) => {
     throw createError(400, 'Valid scheduled time is required');
   }
 
-  return Reminder.create({
+  const reminder = await Reminder.create({
     userId: user._id,
     seniorId: user._id,
     targetUserName: payload.targetUserName.trim(),
@@ -35,6 +40,9 @@ const createReminder = async (user, payload) => {
     status: 'active',
     updatedAt: new Date()
   });
+
+  scheduleReminderWorker();
+  return reminder;
 };
 
 const getReminders = async (user) => {
@@ -57,6 +65,7 @@ const deleteReminder = async (user, reminderId) => {
   });
 
   if (!reminder) throw createError(404, 'Reminder not found');
+  scheduleReminderWorker();
   return reminder;
 };
 

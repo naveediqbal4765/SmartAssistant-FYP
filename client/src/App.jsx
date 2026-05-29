@@ -5,10 +5,12 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import TaskRequests from './pages/TaskRequests';
 import Profile from './pages/Profile';
+import VolunteerProfileView from './pages/VolunteerProfileView';
 import ForgotPassword from './pages/ForgotPassword';
 import SocialLoginHandler from './pages/SocialLoginHandler';
 import PrivacySettings from './pages/PrivacySettings';
 import ActivityLogs from './pages/ActivityLogs';
+import CallRemindersPage from './pages/CallRemindersPage';
 import CommunicationHub from './features/communication/CommunicationHub';
 import ChatPage from './features/communication/chat/pages/ChatPage';
 import GroupPage from './features/communication/groups/GroupPage';
@@ -204,6 +206,15 @@ function App() {
               </PrivateRoute>
             }
           />
+
+          <Route
+            path="/volunteers/:volunteerId"
+            element={
+              <PrivateRoute>
+                <VolunteerProfileView />
+              </PrivateRoute>
+            }
+          />
           
           <Route 
             path="/task-request" 
@@ -248,6 +259,15 @@ function App() {
             element={
               <PrivateRoute>
                 <ActivityLogs />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/reminders"
+            element={
+              <PrivateRoute>
+                <CallRemindersPage />
               </PrivateRoute>
             }
           />

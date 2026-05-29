@@ -8,6 +8,9 @@ import { buildReplyTarget } from '../chat/utils/replyPreview';
 import Button from '../../../components/ui/Button';
 import { ChatSkeleton } from '../../../components/ui/Skeleton';
 
+const SWIPE_CLOSE_THRESHOLD_PX = 72;
+const SWIPE_CLOSE_VERTICAL_TOLERANCE_PX = 80;
+
 const isAdmin = (group, userId) => {
   return group?.members?.some((member) => {
     const memberId = String(member.userId?._id || member.userId);
@@ -34,7 +37,9 @@ export default function GroupChat({
   onTypingStop,
   typingLabel,
   targetMessageId,
-  onOpenSettings
+  onOpenSettings,
+  onMobileBack,
+  className = ''
 }) {
   const [text, setText] = useState('');
   const [activePanel, setActivePanel] = useState(null);
@@ -53,6 +58,7 @@ export default function GroupChat({
   const micButtonRef = useRef(null);
   const mediaInputRef = useRef(null);
   const fileInputRef = useRef(null);
+  const swipeStartRef = useRef(null);
   const showRecorder = activePanel === 'mic';
   const showAttachments = activePanel === 'attachments';
 
@@ -149,7 +155,7 @@ export default function GroupChat({
 
   if (!group) {
     return (
-      <div className="motion-card h-[70vh] overflow-hidden rounded-[2rem] bg-white shadow-xl shadow-gray-200/70 ring-1 ring-gray-200/70">
+      <div className={`motion-card h-[70vh] overflow-hidden rounded-[2rem] bg-white shadow-xl shadow-gray-200/70 ring-1 ring-gray-200/70 ${className}`}>
         <ChatSkeleton />
       </div>
     );
@@ -204,9 +210,29 @@ export default function GroupChat({
     highlightTimerRef.current = window.setTimeout(() => setHighlightedMessageId(''), 1600);
   };
 
+  const handlePointerDown = (event) => {
+    if (!onMobileBack || !window.matchMedia('(max-width: 1023px)').matches) return;
+    swipeStartRef.current = {
+      x: event.clientX,
+      y: event.clientY
+    };
+  };
+
+  const handlePointerUp = (event) => {
+    if (!swipeStartRef.current || !onMobileBack) return;
+
+    const deltaX = event.clientX - swipeStartRef.current.x;
+    const deltaY = Math.abs(event.clientY - swipeStartRef.current.y);
+    swipeStartRef.current = null;
+
+    if (deltaX > SWIPE_CLOSE_THRESHOLD_PX && deltaY < SWIPE_CLOSE_VERTICAL_TOLERANCE_PX) {
+      onMobileBack();
+    }
+  };
+
   if (captureMode) {
     return (
-      <div className="motion-panel-in motion-card h-[70vh] overflow-hidden rounded-[2rem] bg-white shadow-xl shadow-gray-200/70 ring-1 ring-gray-200/70">
+      <div className={`motion-panel-in motion-card h-[70vh] overflow-hidden rounded-[2rem] bg-white shadow-xl shadow-gray-200/70 ring-1 ring-gray-200/70 ${className}`}>
         <input ref={mediaInputRef} type="file" accept="image/*,video/*" className="hidden" onChange={handleMediaChange} />
         <MediaCaptureModal
           open
@@ -221,7 +247,24 @@ export default function GroupChat({
   };
 
   return (
-    <div className="motion-panel-in motion-card flex h-[70vh] flex-col overflow-hidden rounded-[2rem] bg-white shadow-xl shadow-gray-200/70 ring-1 ring-gray-200/70">
+    <div
+      onPointerDown={handlePointerDown}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={() => {
+        swipeStartRef.current = null;
+      }}
+      className={`relative flex h-[70vh] touch-pan-y flex-col rounded-[2rem] ${className}`}
+    >
+      {onMobileBack && (
+        <button
+          type="button"
+          onClick={onMobileBack}
+          className="swipe-close-hint z-[90] mx-auto mb-2 rounded-full bg-white/95 px-4 py-2 text-xs font-bold text-brand-primary shadow-xl shadow-gray-900/15 ring-1 ring-emerald-100 backdrop-blur lg:hidden"
+        >
+          Swipe right to close
+        </button>
+      )}
+      <div className="motion-panel-in motion-card flex min-h-0 flex-1 flex-col overflow-hidden rounded-[inherit] bg-white shadow-xl shadow-gray-200/70 ring-1 ring-gray-200/70">
       <div className="relative z-10 border-b border-gray-200 bg-gray-50 p-4 shadow-[inset_0_-10px_16px_-18px_rgba(15,23,42,0.45)]">
         <div className="flex items-start justify-between gap-4">
           <div>
@@ -406,6 +449,7 @@ export default function GroupChat({
           onCapture={handleCapturedMedia}
           onFallback={() => mediaInputRef.current?.click()}
         />
+      </div>
       </div>
     </div>
   );

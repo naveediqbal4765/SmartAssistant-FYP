@@ -5,6 +5,7 @@ const { createCloudinaryStorage } = require('../../shared/cloudinary');
 const {
   getProfile,
   getLinkedSeniorProfile,
+  getPublicVolunteerProfile,
   updateProfile,
   updateLocation,
   getPrivacy,
@@ -36,6 +37,7 @@ const upload = multer({
 });
 
 router.get('/profile', auth, getProfile);
+router.get('/volunteers/:volunteerId', auth, getPublicVolunteerProfile);
 router.get('/profile/:userId', auth, getLinkedSeniorProfile);
 router.put('/profile', auth, updateProfile);
 router.put('/location', auth, updateLocation);

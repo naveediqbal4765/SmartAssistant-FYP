@@ -15,6 +15,11 @@ const createError = (status, message) => {
   return err;
 };
 
+const scheduleReminderWorker = () => {
+  const { scheduleNextReminderRun } = require('../../reminders/reminder.worker');
+  scheduleNextReminderRun();
+};
+
 const assertObjectId = (id, label = 'id') => {
   if (!mongoose.Types.ObjectId.isValid(id)) {
     throw createError(400, `Valid ${label} is required`);
@@ -262,6 +267,7 @@ const createMedication = async (user, payload) => {
 
   const senior = await User.findById(user._id).select('linkedCaregivers');
   emitSeniorReminderChanged({ senior, reminderType: 'medication', action: 'created', item: medication });
+  scheduleReminderWorker();
   return medication;
 };
 
@@ -292,6 +298,7 @@ const updateMedication = async (user, medicationId, payload) => {
 
   const senior = await User.findById(user._id).select('linkedCaregivers');
   emitSeniorReminderChanged({ senior, reminderType: 'medication', action: 'updated', item: medication });
+  scheduleReminderWorker();
   return medication;
 };
 
@@ -346,6 +353,7 @@ const updateReminderStatus = async (user, medicationId, occurrenceKey, status) =
   const senior = await User.findById(user._id).select('linkedCaregivers');
   emitMedicationReminderStatusUpdated({ senior, medication, reminder });
   emitSeniorReminderChanged({ senior, reminderType: 'medication', action: 'completed', item: medication });
+  scheduleReminderWorker();
   return reminder;
 };
 
@@ -364,6 +372,7 @@ const deleteMedication = async (user, medicationId) => {
 
   const senior = await User.findById(user._id).select('linkedCaregivers');
   emitSeniorReminderChanged({ senior, reminderType: 'medication', action: 'deleted', item: medication });
+  scheduleReminderWorker();
   return medication;
 };
 

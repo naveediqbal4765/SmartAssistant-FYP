@@ -22,6 +22,16 @@ const getLinkedSeniorProfile = async (req, res) => {
   }
 };
 
+const getPublicVolunteerProfile = async (req, res) => {
+  try {
+    const result = await profileService.getPublicVolunteerProfile(req.user, req.params.volunteerId);
+    return res.status(result.status).json(result.body);
+  } catch (err) {
+    console.error('Volunteer profile fetch error:', err);
+    return res.status(500).json({ success: false, msg: 'Server error' });
+  }
+};
+
 const updateProfile = async (req, res) => {
   try {
     const result = await profileService.updateProfile(req.user, req.body);
@@ -152,6 +162,7 @@ const deleteAccount = async (req, res) => {
 module.exports = {
   getProfile,
   getLinkedSeniorProfile,
+  getPublicVolunteerProfile,
   updateProfile,
   updateLocation,
   getPrivacy,

@@ -127,6 +127,17 @@ input, select, textarea {
   100% { transform: scale(1); }
 }
 
+@keyframes motion-swipe-close-hint {
+  0%, 100% {
+    transform: translateX(0);
+    opacity: 0.88;
+  }
+  50% {
+    transform: translateX(10px);
+    opacity: 1;
+  }
+}
+
 @keyframes motion-page-forward {
   from {
     opacity: 0;
@@ -248,6 +259,10 @@ input, select, textarea {
 
 .motion-pop {
   animation: motion-pop var(--motion-standard) var(--motion-ease-standard) both;
+}
+
+.swipe-close-hint {
+  animation: motion-swipe-close-hint 1.8s var(--motion-ease-standard) infinite;
 }
 
 .motion-page-forward {
