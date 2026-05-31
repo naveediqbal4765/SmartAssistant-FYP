@@ -21,7 +21,8 @@ export const roleConfig = {
       { title: 'Medications', icon: Bell, tone: 'warning', route: '/health/medications' },
       { title: 'Digital Health Vault', icon: FileText, tone: 'indigo', vaultTarget: 'self' },
       { title: 'Appointments', icon: Calendar, tone: 'teal', route: '/health/appointments' },
-      { title: 'Drug Interaction Checker', icon: Heart, tone: 'danger', route: '/health/interactions' }
+      { title: 'Drug Interaction Checker', icon: Heart, tone: 'danger', route: '/health/interactions' },
+      { title: 'Wellness & Rehab', icon: Activity, tone: 'lime', route: '/wellness' }
     ]
   },
   volunteer: {
