@@ -1,6 +1,8 @@
-// Module: Wellness & Rehabilitation | Phase 2 — Nutrition Tracking
+// Module: Wellness & Rehabilitation | Phase 3 — Wellness Summary
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import ExerciseSuggestions from '../components/ExerciseSuggestions';
+import WellnessIntelligenceCard from '../components/WellnessIntelligenceCard';
 import { getNutritionLogs, getSessions } from '../services/wellnessService';
 
 const toDateKey = (value) => {
@@ -72,7 +74,7 @@ export default function WellnessDashboard() {
         if (!cancelled) {
           setNutritionTotals(nutritionData.totals || { calories: 0, protein: 0, carbs: 0, fat: 0 });
         }
-      } catch (err) {
+      } catch {
         if (!cancelled) {
           setNutritionTotals({ calories: 0, protein: 0, carbs: 0, fat: 0 });
         }
@@ -80,30 +82,44 @@ export default function WellnessDashboard() {
     };
 
     loadSessions();
-    if (seniorId) loadNutritionTotals();
+    if (seniorId) {
+      loadNutritionTotals();
+    }
 
     return () => {
       cancelled = true;
     };
   }, []);
 
-  const metrics = useMemo(() => {
+  const todayCompleted = useMemo(() => {
     const todayKey = toDateKey(new Date());
-    const todayCompleted = sessions.filter((session) => (
+    return sessions.filter((session) => (
       session.status === 'completed'
       && toDateKey(session.ended_at || session.created_at) === todayKey
     ));
+  }, [sessions]);
 
+  const summary = useMemo(() => {
     const exerciseMinutes = todayCompleted.reduce((sum, session) => sum + Number(session.duration || 0), 0);
     const caloriesBurned = todayCompleted.reduce((sum, session) => sum + Number(session.calories_burned || 0), 0);
 
-    return [
-      { label: "Today's Exercise", value: loading ? '--' : Math.round(exerciseMinutes), helper: 'Minutes completed' },
-      { label: 'Calories Burned', value: loading ? '--' : Math.round(caloriesBurned), helper: 'Estimated calories' },
-      { label: 'Sessions', value: loading ? '--' : todayCompleted.length, helper: 'Completed sessions' },
+    return {
+      totalExerciseMinutes: exerciseMinutes,
+      totalSessionsCompleted: todayCompleted.length,
+      totalCaloriesBurned: caloriesBurned,
+      totalCaloriesConsumed: nutritionTotals.calories || 0,
+      totalProtein: nutritionTotals.protein || 0
+    };
+  }, [nutritionTotals, todayCompleted]);
+
+  const metrics = useMemo(() => (
+    [
+      { label: "Today's Exercise", value: loading ? '--' : Math.round(summary.totalExerciseMinutes), helper: 'Minutes completed' },
+      { label: 'Calories Burned', value: loading ? '--' : Math.round(summary.totalCaloriesBurned), helper: 'Estimated calories' },
+      { label: 'Sessions', value: loading ? '--' : summary.totalSessionsCompleted, helper: 'Completed sessions' },
       { label: 'Streak', value: loading ? '--' : calculateWorkoutStreak(sessions), helper: 'Active days' }
-    ];
-  }, [loading, sessions]);
+    ]
+  ), [loading, sessions, summary]);
 
   const nutritionMetrics = [
     { label: 'Calories', value: Math.round(nutritionTotals.calories || 0), unit: '', className: 'bg-amber-50 text-amber-800' },
@@ -114,27 +130,9 @@ export default function WellnessDashboard() {
 
   return (
     <main className="min-h-[calc(100vh-6rem)] bg-brand-surface px-4 py-8 sm:px-6 lg:px-10">
-      <section className="mx-auto max-w-6xl">
-        <div className="flex flex-col gap-5 rounded-[2rem] bg-white/95 p-6 ring-1 ring-emerald-100 sm:p-8 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <p className="text-lg font-bold uppercase tracking-[0.18em] text-brand-muted">
-              Phase 1 Fitness Tracking
-            </p>
-            <h1 className="mt-3 text-3xl font-bold text-brand-primary sm:text-4xl">
-              Wellness & Rehabilitation
-            </h1>
-            <p className="mt-3 max-w-3xl text-lg leading-8 text-gray-700">
-              Track daily movement, rehabilitation sessions, nutrition, and personalized wellness guidance.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => navigate('/wellness/library')}
-            className="rounded-2xl bg-green-700 px-6 py-4 text-lg font-bold text-white transition hover:bg-green-800"
-          >
-            Start Workout
-          </button>
-        </div>
+      <section className="mx-auto max-w-6xl space-y-6">
+        <WellnessIntelligenceCard summary={summary} />
+        <ExerciseSuggestions />
 
         {error && (
           <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-lg font-semibold text-red-700">
@@ -142,7 +140,7 @@ export default function WellnessDashboard() {
           </div>
         )}
 
-        <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
           {metrics.map((card) => (
             <article
               key={card.label}
@@ -155,19 +153,10 @@ export default function WellnessDashboard() {
           ))}
         </div>
 
-        <section className="mt-6 rounded-[2rem] bg-white p-6">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <h2 className="text-3xl font-bold text-brand-primary">Nutrition Today</h2>
-              <p className="mt-2 text-lg font-semibold text-gray-700">Review today&apos;s meal totals and log more food.</p>
-            </div>
-            <button
-              type="button"
-              onClick={() => navigate('/wellness/nutrition')}
-              className="rounded-2xl bg-green-700 px-6 py-4 text-lg font-bold text-white transition hover:bg-green-800"
-            >
-              Log Meals
-            </button>
+        <section className="rounded-[2rem] bg-white p-6">
+          <div>
+            <h2 className="text-3xl font-bold text-brand-primary">Nutrition Today</h2>
+            <p className="mt-2 text-lg font-semibold text-gray-700">Review today&apos;s meal totals and log more food.</p>
           </div>
           <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {nutritionMetrics.map((metric) => (
@@ -181,6 +170,23 @@ export default function WellnessDashboard() {
             ))}
           </div>
         </section>
+
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <button
+            type="button"
+            onClick={() => navigate('/wellness/library')}
+            className="rounded-2xl bg-green-700 px-6 py-4 text-lg font-bold text-white transition hover:bg-green-800"
+          >
+            Start Workout
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate('/wellness/nutrition')}
+            className="rounded-2xl bg-green-700 px-6 py-4 text-lg font-bold text-white transition hover:bg-green-800"
+          >
+            Log Meals
+          </button>
+        </div>
       </section>
     </main>
   );

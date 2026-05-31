@@ -18,7 +18,7 @@ export const getSessions = async (seniorId) => {
     });
     return response.data.sessions || [];
   } catch (err) {
-    throw new Error(getErrorMessage(err, 'Failed to load wellness sessions'));
+    throw new Error(getErrorMessage(err, 'Failed to load wellness sessions'), { cause: err });
   }
 };
 
@@ -29,7 +29,7 @@ export const startSession = async (data) => {
     });
     return response.data.session;
   } catch (err) {
-    throw new Error(getErrorMessage(err, 'Failed to start wellness session'));
+    throw new Error(getErrorMessage(err, 'Failed to start wellness session'), { cause: err });
   }
 };
 
@@ -40,7 +40,7 @@ export const completeSession = async (id, data) => {
     });
     return response.data.session;
   } catch (err) {
-    throw new Error(getErrorMessage(err, 'Failed to complete wellness session'));
+    throw new Error(getErrorMessage(err, 'Failed to complete wellness session'), { cause: err });
   }
 };
 
@@ -49,7 +49,7 @@ export const getExerciseLibrary = async () => {
     const response = await axios.get(`${API_BASE_URL}/exercises/library`);
     return response.data.exercises || [];
   } catch (err) {
-    throw new Error(getErrorMessage(err, 'Failed to load exercise library'));
+    throw new Error(getErrorMessage(err, 'Failed to load exercise library'), { cause: err });
   }
 };
 
@@ -63,7 +63,7 @@ export const searchFood = async (name) => {
       message: response.data.message || ''
     };
   } catch (err) {
-    throw new Error(getErrorMessage(err, 'Failed to search food'));
+    throw new Error(getErrorMessage(err, 'Failed to search food'), { cause: err });
   }
 };
 
@@ -74,7 +74,7 @@ export const logNutrition = async (data) => {
     });
     return response.data.nutritionLog;
   } catch (err) {
-    throw new Error(getErrorMessage(err, 'Failed to log nutrition'));
+    throw new Error(getErrorMessage(err, 'Failed to log nutrition'), { cause: err });
   }
 };
 
@@ -92,7 +92,7 @@ export const getNutritionLogs = async (seniorId, date) => {
       totals: response.data.totals || { calories: 0, protein: 0, carbs: 0, fat: 0 }
     };
   } catch (err) {
-    throw new Error(getErrorMessage(err, 'Failed to load nutrition logs'));
+    throw new Error(getErrorMessage(err, 'Failed to load nutrition logs'), { cause: err });
   }
 };
 
@@ -103,7 +103,7 @@ export const getNutritionSuggestions = async (seniorId) => {
     });
     return response.data.suggestions || [];
   } catch (err) {
-    throw new Error(getErrorMessage(err, 'Failed to load nutrition suggestions'));
+    throw new Error(getErrorMessage(err, 'Failed to load nutrition suggestions'), { cause: err });
   }
 };
 

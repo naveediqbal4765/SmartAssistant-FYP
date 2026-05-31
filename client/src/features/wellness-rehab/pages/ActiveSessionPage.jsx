@@ -1,6 +1,7 @@
-// Module: Wellness & Rehabilitation | Phase 1 — Fitness Tracking
+// Module: Wellness & Rehabilitation | Phase 3 — Telemetry Intelligence
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import useVitalsSource from '../../health/iot/hooks/useVitalsSource';
 import RestTimer from '../components/RestTimer';
 import SessionSummary from '../components/SessionSummary';
 import { completeSession } from '../services/wellnessService';
@@ -11,9 +12,20 @@ const formatTimer = (seconds) => {
   return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
 };
 
+const getSeniorId = () => {
+  try {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    return user._id || user.id || '';
+  } catch {
+    return '';
+  }
+};
+
 export default function ActiveSessionPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const seniorId = getSeniorId();
+  const { vitalsSnapshot } = useVitalsSource(seniorId);
   const session = location.state?.session || null;
   const exercise = location.state?.exercise || null;
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
@@ -32,6 +44,34 @@ export default function ActiveSessionPage() {
   const exerciseName = useMemo(() => (
     exercise?.name || session?.exercise_type || 'Active Exercise'
   ), [exercise, session]);
+
+  const safetyWarning = useMemo(() => {
+    const vitals = vitalsSnapshot?.vitals;
+    if (!vitals) return null;
+
+    if (vitals.oxygenLevel < 95) {
+      return {
+        tone: 'danger',
+        message: 'Your oxygen level is low. Stop exercise immediately.'
+      };
+    }
+
+    if (vitals.heartRate > 100) {
+      return {
+        tone: 'danger',
+        message: 'Your heart rate is high. Consider stopping and resting.'
+      };
+    }
+
+    if (vitals.temperature >= 37.5) {
+      return {
+        tone: 'warning',
+        message: 'You have a fever. It is recommended to stop exercising.'
+      };
+    }
+
+    return null;
+  }, [vitalsSnapshot]);
 
   const handleComplete = async () => {
     if (!session?._id) {
@@ -73,6 +113,17 @@ export default function ActiveSessionPage() {
           <p className="mt-6 text-lg font-semibold text-gray-700">Session Timer</p>
           <p className="mt-3 text-6xl font-bold tracking-wider text-gray-950">{formatTimer(elapsedSeconds)}</p>
         </div>
+
+        {safetyWarning && (
+          <div className={`mt-6 rounded-[1.5rem] border-4 p-5 text-2xl font-bold ${
+            safetyWarning.tone === 'danger'
+              ? 'border-red-500 bg-red-100 text-red-900'
+              : 'border-amber-500 bg-amber-100 text-amber-900'
+          }`}
+          >
+            {safetyWarning.message}
+          </div>
+        )}
 
         <div className="mt-6">
           <RestTimer />
