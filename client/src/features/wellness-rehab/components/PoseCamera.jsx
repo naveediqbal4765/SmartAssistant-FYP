@@ -1,6 +1,8 @@
 // Module: Wellness & Rehabilitation | Phase 5 — Pose Correction
 import { useEffect, useRef, useState } from 'react';
+import VoiceToggle from './VoiceToggle';
 import { getCorrectionMessage } from '../pose/correctionEngine';
+import useAudioCoach from '../pose/useAudioCoach';
 import usePoseLandmarker from '../pose/usePoseLandmarker';
 import { detectArmExtension } from '../pose/exercises/armExtension';
 import { detectLegRaise } from '../pose/exercises/legRaise';
@@ -130,7 +132,16 @@ export default function PoseCamera({ exerciseType, onPoseResult }) {
   const lastMessage = useRef('');
   const correctionRef = useRef({ message: '', severity: 'good' });
   const correctionCountRef = useRef(0);
+  const speakRef = useRef(null);
   const { poseLandmarker, isLoading, error } = usePoseLandmarker();
+  const {
+    voiceEnabled,
+    speechRate,
+    isSpeaking,
+    speak,
+    toggleVoice,
+    setRate
+  } = useAudioCoach();
   const [cameraError, setCameraError] = useState('');
   const [correction, setCorrection] = useState({
     message: '',
@@ -141,6 +152,10 @@ export default function PoseCamera({ exerciseType, onPoseResult }) {
   useEffect(() => {
     onPoseResultRef.current = onPoseResult;
   }, [onPoseResult]);
+
+  useEffect(() => {
+    speakRef.current = speak;
+  }, [speak]);
 
   useEffect(() => {
     repStateRef.current = getInitialRepState(exerciseType);
@@ -185,6 +200,7 @@ export default function PoseCamera({ exerciseType, onPoseResult }) {
           if (feedback.message !== lastMessage.current) {
             const nextCorrection = { message: feedback.message, severity: feedback.severity };
             setCorrection(nextCorrection);
+            speakRef.current?.(feedback.message, feedback.shouldSpeak);
             correctionRef.current = nextCorrection;
             lastMessage.current = feedback.message;
 
@@ -264,6 +280,13 @@ export default function PoseCamera({ exerciseType, onPoseResult }) {
 
   return (
     <section className="overflow-hidden rounded-[2rem] bg-gray-950">
+      <VoiceToggle
+        voiceEnabled={voiceEnabled}
+        speechRate={speechRate}
+        isSpeaking={isSpeaking}
+        onToggle={toggleVoice}
+        onRateChange={setRate}
+      />
       <div className="relative aspect-video w-full">
         <video
           ref={videoRef}
