@@ -24,6 +24,7 @@ import DrugInteractionPage from './features/health/interactions/DrugInteractionP
 import WellnessDashboard from './features/wellness-rehab/pages/WellnessDashboard';
 import ExerciseLibraryPage from './features/wellness-rehab/pages/ExerciseLibraryPage';
 import ActiveSessionPage from './features/wellness-rehab/pages/ActiveSessionPage';
+import NutritionPage from './features/wellness-rehab/pages/NutritionPage';
 import { disconnectChatSocket, getChatSocket } from './features/communication/chat/services/socket';
 import { CallStateProvider } from './features/communication/calls/CallStateContext';
 import GlobalCallHandler from './features/communication/calls/GlobalCallHandler';
@@ -406,6 +407,15 @@ function App() {
             element={
               <PrivateRoute>
                 <ActiveSessionPage />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/wellness/nutrition"
+            element={
+              <PrivateRoute>
+                <NutritionPage />
               </PrivateRoute>
             }
           />

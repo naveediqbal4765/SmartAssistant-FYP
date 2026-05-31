@@ -1,4 +1,4 @@
-// Module: Wellness & Rehabilitation | Phase 1 — Fitness Tracking
+// Module: Wellness & Rehabilitation | Phase 2 — Nutrition Tracking
 import axios from 'axios';
 
 const API_BASE_URL = 'http://localhost:5000/api/wellness';
@@ -53,9 +53,23 @@ export const getExerciseLibrary = async () => {
   }
 };
 
-export const logNutrition = async (payload) => {
+export const searchFood = async (name) => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/nutrition/log`, payload, {
+    const response = await axios.get(`${API_BASE_URL}/food/search`, {
+      params: { name }
+    });
+    return {
+      results: response.data.results || [],
+      message: response.data.message || ''
+    };
+  } catch (err) {
+    throw new Error(getErrorMessage(err, 'Failed to search food'));
+  }
+};
+
+export const logNutrition = async (data) => {
+  try {
+    const response = await axios.post(`${API_BASE_URL}/nutrition/log`, data, {
       headers: authHeaders()
     });
     return response.data.nutritionLog;
@@ -64,25 +78,32 @@ export const logNutrition = async (payload) => {
   }
 };
 
-export const fetchNutritionLogs = async (seniorId) => {
+export const getNutritionLogs = async (seniorId, date) => {
   try {
     const response = await axios.get(`${API_BASE_URL}/nutrition/${seniorId}`, {
-      headers: authHeaders()
+      headers: authHeaders(),
+      params: date ? { date } : {}
     });
-    return response.data.nutritionLogs || [];
+    return {
+      breakfast: response.data.breakfast || [],
+      lunch: response.data.lunch || [],
+      dinner: response.data.dinner || [],
+      snack: response.data.snack || [],
+      totals: response.data.totals || { calories: 0, protein: 0, carbs: 0, fat: 0 }
+    };
   } catch (err) {
     throw new Error(getErrorMessage(err, 'Failed to load nutrition logs'));
   }
 };
 
-export const fetchWellnessRecommendations = async (seniorId) => {
+export const getNutritionSuggestions = async (seniorId) => {
   try {
     const response = await axios.get(`${API_BASE_URL}/recommendations/${seniorId}`, {
       headers: authHeaders()
     });
-    return response.data.recommendations || [];
+    return response.data.suggestions || [];
   } catch (err) {
-    throw new Error(getErrorMessage(err, 'Failed to load wellness recommendations'));
+    throw new Error(getErrorMessage(err, 'Failed to load nutrition suggestions'));
   }
 };
 
@@ -90,3 +111,5 @@ export const fetchWellnessSessions = getSessions;
 export const startWellnessSession = startSession;
 export const completeWellnessSession = completeSession;
 export const fetchExerciseLibrary = getExerciseLibrary;
+export const fetchNutritionLogs = getNutritionLogs;
+export const fetchWellnessRecommendations = getNutritionSuggestions;

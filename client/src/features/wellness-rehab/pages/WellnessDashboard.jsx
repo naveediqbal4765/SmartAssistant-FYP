@@ -1,15 +1,7 @@
-// Module: Wellness & Rehabilitation | Phase 1 — Fitness Tracking
+// Module: Wellness & Rehabilitation | Phase 2 — Nutrition Tracking
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getSessions } from '../services/wellnessService';
-
-const getCurrentUser = () => {
-  try {
-    return JSON.parse(localStorage.getItem('user') || '{}');
-  } catch (err) {
-    return {};
-  }
-};
+import { getNutritionLogs, getSessions } from '../services/wellnessService';
 
 const toDateKey = (value) => {
   const date = new Date(value);
@@ -20,6 +12,8 @@ const toDateKey = (value) => {
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 };
+
+const getTodayDate = () => new Date().toISOString().slice(0, 10);
 
 const calculateWorkoutStreak = (sessions = []) => {
   const completedDays = new Set(
@@ -43,13 +37,15 @@ const calculateWorkoutStreak = (sessions = []) => {
 export default function WellnessDashboard() {
   const navigate = useNavigate();
   const [sessions, setSessions] = useState([]);
+  const [nutritionTotals, setNutritionTotals] = useState({ calories: 0, protein: 0, carbs: 0, fat: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
     let cancelled = false;
-    const user = getCurrentUser();
-    const seniorId = user.id || user._id;
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const seniorId = user._id || user.id;
+    const todayDate = getTodayDate();
 
     const loadSessions = async () => {
       if (!seniorId) {
@@ -61,8 +57,8 @@ export default function WellnessDashboard() {
       setError('');
 
       try {
-        const data = await getSessions(seniorId);
-        if (!cancelled) setSessions(data);
+        const sessionData = await getSessions(seniorId);
+        if (!cancelled) setSessions(sessionData);
       } catch (err) {
         if (!cancelled) setError(err.message || 'Failed to load wellness progress');
       } finally {
@@ -70,7 +66,21 @@ export default function WellnessDashboard() {
       }
     };
 
+    const loadNutritionTotals = async () => {
+      try {
+        const nutritionData = await getNutritionLogs(seniorId, todayDate);
+        if (!cancelled) {
+          setNutritionTotals(nutritionData.totals || { calories: 0, protein: 0, carbs: 0, fat: 0 });
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setNutritionTotals({ calories: 0, protein: 0, carbs: 0, fat: 0 });
+        }
+      }
+    };
+
     loadSessions();
+    if (seniorId) loadNutritionTotals();
 
     return () => {
       cancelled = true;
@@ -94,6 +104,13 @@ export default function WellnessDashboard() {
       { label: 'Streak', value: loading ? '--' : calculateWorkoutStreak(sessions), helper: 'Active days' }
     ];
   }, [loading, sessions]);
+
+  const nutritionMetrics = [
+    { label: 'Calories', value: Math.round(nutritionTotals.calories || 0), unit: '', className: 'bg-amber-50 text-amber-800' },
+    { label: 'Protein', value: Math.round(nutritionTotals.protein || 0), unit: 'g', className: 'bg-blue-50 text-blue-800' },
+    { label: 'Carbs', value: Math.round(nutritionTotals.carbs || 0), unit: 'g', className: 'bg-green-50 text-green-800' },
+    { label: 'Fat', value: Math.round(nutritionTotals.fat || 0), unit: 'g', className: 'bg-rose-50 text-rose-800' }
+  ];
 
   return (
     <main className="min-h-[calc(100vh-6rem)] bg-brand-surface px-4 py-8 sm:px-6 lg:px-10">
@@ -137,6 +154,33 @@ export default function WellnessDashboard() {
             </article>
           ))}
         </div>
+
+        <section className="mt-6 rounded-[2rem] bg-white p-6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <h2 className="text-3xl font-bold text-brand-primary">Nutrition Today</h2>
+              <p className="mt-2 text-lg font-semibold text-gray-700">Review today&apos;s meal totals and log more food.</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => navigate('/wellness/nutrition')}
+              className="rounded-2xl bg-green-700 px-6 py-4 text-lg font-bold text-white transition hover:bg-green-800"
+            >
+              Log Meals
+            </button>
+          </div>
+          <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {nutritionMetrics.map((metric) => (
+              <article key={metric.label} className={`rounded-2xl p-5 ${metric.className}`}>
+                <p className="text-lg font-bold">{metric.label}</p>
+                <p className="mt-3 text-4xl font-bold">
+                  {loading ? '--' : metric.value}
+                  {metric.unit && <span className="text-xl"> {metric.unit}</span>}
+                </p>
+              </article>
+            ))}
+          </div>
+        </section>
       </section>
     </main>
   );

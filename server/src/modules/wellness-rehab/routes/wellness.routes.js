@@ -1,4 +1,4 @@
-// Module: Wellness & Rehabilitation | Phase 1 — Fitness Tracking
+// Module: Wellness & Rehabilitation | Phase 2 — Nutrition Tracking
 const express = require('express');
 const auth = require('../../../middleware/auth');
 const {
@@ -6,6 +6,7 @@ const {
   startSession,
   completeSession,
   getExerciseLibrary,
+  searchFood,
   logNutrition,
   getNutritionBySenior,
   getRecommendationsBySenior
@@ -14,6 +15,7 @@ const {
 const router = express.Router();
 
 router.get('/exercises/library', getExerciseLibrary);
+router.get('/food/search', searchFood);
 router.post('/sessions/start', auth, startSession);
 router.put('/sessions/:sessionId/complete', auth, completeSession);
 router.get('/sessions/:seniorId', auth, getSessionsBySenior);
