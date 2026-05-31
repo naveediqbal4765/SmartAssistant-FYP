@@ -1,7 +1,10 @@
-// Module: Wellness & Rehabilitation | Phase 3 — Telemetry Intelligence
-import { useEffect, useMemo, useState } from 'react';
+// Module: Wellness & Rehabilitation | Phase 4 — MediaPipe Integration
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import useVitalsSource from '../../health/iot/hooks/useVitalsSource';
+import CameraPermissionScreen from '../components/CameraPermissionScreen';
+import PoseCamera from '../components/PoseCamera';
+import RepCounter from '../components/RepCounter';
 import RestTimer from '../components/RestTimer';
 import SessionSummary from '../components/SessionSummary';
 import { completeSession } from '../services/wellnessService';
@@ -21,29 +24,62 @@ const getSeniorId = () => {
   }
 };
 
+const getStoredSessionData = () => {
+  try {
+    return JSON.parse(sessionStorage.getItem('activeWellnessSession') || '{}');
+  } catch {
+    return {};
+  }
+};
+
+const getExerciseType = (exerciseName) => {
+  if (exerciseName === 'Shoulder Raise') return 'shoulder-raise';
+  if (exerciseName === 'Arm Extension') return 'arm-extension';
+  if (exerciseName === 'Neck Stretch') return 'neck-stretch';
+  if (exerciseName === 'Leg Raise') return 'leg-raise';
+  if (exerciseName === 'Sit To Stand') return 'sit-to-stand';
+  if (exerciseName === 'Seated March') return 'seated-march';
+  if (exerciseName === 'Wall Push') return 'wall-push';
+  return null;
+};
+
 export default function ActiveSessionPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const seniorId = getSeniorId();
   const { vitalsSnapshot } = useVitalsSource(seniorId);
-  const session = location.state?.session || null;
-  const exercise = location.state?.exercise || null;
+  const storedSessionData = useMemo(() => getStoredSessionData(), []);
+  const session = location.state?.session || storedSessionData.session || null;
+  const exercise = location.state?.exercise || storedSessionData.exercise || null;
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [cameraPermission, setCameraPermission] = useState('pending');
+  const [poseResult, setPoseResult] = useState({ count: 0, poseScore: 0, angle: 0, phase: '' });
+  const [poseScoreTotals, setPoseScoreTotals] = useState({ total: 0, samples: 0 });
   const [completing, setCompleting] = useState(false);
   const [summarySession, setSummarySession] = useState(null);
   const [error, setError] = useState('');
 
+  const exerciseName = useMemo(() => (
+    exercise?.name || session?.exercise_type || 'Active Exercise'
+  ), [exercise, session]);
+
+  const exerciseType = useMemo(() => getExerciseType(exerciseName), [exerciseName]);
+
   useEffect(() => {
+    if (session || exercise) {
+      sessionStorage.setItem('activeWellnessSession', JSON.stringify({ session, exercise }));
+    }
+  }, [exercise, session]);
+
+  useEffect(() => {
+    if (exerciseType && cameraPermission === 'pending') return undefined;
+
     const timerId = window.setInterval(() => {
       setElapsedSeconds((current) => current + 1);
     }, 1000);
 
     return () => window.clearInterval(timerId);
-  }, []);
-
-  const exerciseName = useMemo(() => (
-    exercise?.name || session?.exercise_type || 'Active Exercise'
-  ), [exercise, session]);
+  }, [cameraPermission, exerciseType]);
 
   const safetyWarning = useMemo(() => {
     const vitals = vitalsSnapshot?.vitals;
@@ -73,6 +109,22 @@ export default function ActiveSessionPage() {
     return null;
   }, [vitalsSnapshot]);
 
+  const handlePoseResult = useCallback((result) => {
+    setPoseResult({
+      count: result.count || 0,
+      poseScore: result.poseScore || 0,
+      angle: result.angle || 0,
+      phase: result.phase || ''
+    });
+
+    if (result.poseScore > 0) {
+      setPoseScoreTotals((current) => ({
+        total: current.total + result.poseScore,
+        samples: current.samples + 1
+      }));
+    }
+  }, []);
+
   const handleComplete = async () => {
     if (!session?._id) {
       setError('No active session was found. Please start a new exercise.');
@@ -86,11 +138,15 @@ export default function ActiveSessionPage() {
     setError('');
 
     try {
+      const avgPoseScore = poseScoreTotals.samples > 0
+        ? Number((poseScoreTotals.total / poseScoreTotals.samples).toFixed(1))
+        : Number((poseResult.poseScore || 0).toFixed(1));
       const updatedSession = await completeSession(session._id, {
         duration: Number(durationMinutes.toFixed(1)),
         calories_burned: caloriesBurned,
-        avg_pose_score: 0
+        avg_pose_score: avgPoseScore
       });
+      sessionStorage.removeItem('activeWellnessSession');
       setSummarySession(updatedSession);
     } catch (err) {
       setError(err.message || 'Failed to complete session');
@@ -104,6 +160,16 @@ export default function ActiveSessionPage() {
     navigate('/wellness');
   };
 
+  if (exerciseType && cameraPermission === 'pending') {
+    return (
+      <CameraPermissionScreen
+        exerciseName={exerciseName}
+        onAllow={() => setCameraPermission('granted')}
+        onDecline={() => setCameraPermission('declined')}
+      />
+    );
+  }
+
   return (
     <main className="min-h-[calc(100vh-6rem)] bg-brand-surface px-4 py-8 sm:px-6 lg:px-10">
       <section className="mx-auto max-w-4xl">
@@ -113,6 +179,22 @@ export default function ActiveSessionPage() {
           <p className="mt-6 text-lg font-semibold text-gray-700">Session Timer</p>
           <p className="mt-3 text-6xl font-bold tracking-wider text-gray-950">{formatTimer(elapsedSeconds)}</p>
         </div>
+
+        {exerciseType && cameraPermission === 'granted' && (
+          <>
+            <div className="mt-6">
+              <PoseCamera exerciseType={exerciseType} onPoseResult={handlePoseResult} />
+            </div>
+            <div className="mt-6">
+              <RepCounter
+                count={poseResult.count}
+                poseScore={poseResult.poseScore}
+                angle={poseResult.angle}
+                phase={poseResult.phase}
+              />
+            </div>
+          </>
+        )}
 
         {safetyWarning && (
           <div className={`mt-6 rounded-[1.5rem] border-4 p-5 text-2xl font-bold ${
