@@ -21,6 +21,7 @@ import HealthVaultPage from './features/health/vault/HealthVaultPage';
 import AppointmentPage from './features/health/appointments/AppointmentPage';
 import TelemetryDashboard from './features/health/telemetry/TelemetryDashboard';
 import DrugInteractionPage from './features/health/interactions/DrugInteractionPage';
+import WellnessDashboard from './features/wellness-rehab/pages/WellnessDashboard';
 import { disconnectChatSocket, getChatSocket } from './features/communication/chat/services/socket';
 import { CallStateProvider } from './features/communication/calls/CallStateContext';
 import GlobalCallHandler from './features/communication/calls/GlobalCallHandler';
@@ -376,6 +377,15 @@ function App() {
             element={
               <PrivateRoute>
                 <DrugInteractionPage />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/wellness"
+            element={
+              <PrivateRoute>
+                <WellnessDashboard />
               </PrivateRoute>
             }
           />
