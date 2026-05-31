@@ -1,4 +1,4 @@
-// Module: Wellness & Rehabilitation | Phase 4 — MediaPipe Integration
+// Module: Wellness & Rehabilitation | Phase 5 — Pose Correction
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import useVitalsSource from '../../health/iot/hooks/useVitalsSource';
@@ -55,6 +55,7 @@ export default function ActiveSessionPage() {
   const [cameraPermission, setCameraPermission] = useState('pending');
   const [poseResult, setPoseResult] = useState({ count: 0, poseScore: 0, angle: 0, phase: '' });
   const [poseScoreTotals, setPoseScoreTotals] = useState({ total: 0, samples: 0 });
+  const [totalCorrections, setTotalCorrections] = useState(0);
   const [completing, setCompleting] = useState(false);
   const [summarySession, setSummarySession] = useState(null);
   const [error, setError] = useState('');
@@ -123,7 +124,11 @@ export default function ActiveSessionPage() {
         samples: current.samples + 1
       }));
     }
-  }, []);
+
+    if (result.correctionCount > totalCorrections) {
+      setTotalCorrections(result.correctionCount);
+    }
+  }, [totalCorrections]);
 
   const handleComplete = async () => {
     if (!session?._id) {
@@ -144,7 +149,8 @@ export default function ActiveSessionPage() {
       const updatedSession = await completeSession(session._id, {
         duration: Number(durationMinutes.toFixed(1)),
         calories_burned: caloriesBurned,
-        avg_pose_score: avgPoseScore
+        avg_pose_score: avgPoseScore,
+        corrections_count: totalCorrections
       });
       sessionStorage.removeItem('activeWellnessSession');
       setSummarySession(updatedSession);
@@ -193,6 +199,9 @@ export default function ActiveSessionPage() {
                 phase={poseResult.phase}
               />
             </div>
+            <p className="mt-4 text-lg font-semibold text-gray-700">
+              Form Corrections: {totalCorrections}
+            </p>
           </>
         )}
 

@@ -79,7 +79,7 @@ const startSession = async (req, res) => {
 
 const completeSession = async (req, res) => {
   try {
-    const { duration, calories_burned, avg_pose_score } = req.body;
+    const { duration, calories_burned, avg_pose_score, corrections_count } = req.body;
 
     const session = await WellnessSession.findByIdAndUpdate(
       req.params.sessionId,
@@ -88,7 +88,8 @@ const completeSession = async (req, res) => {
         ended_at: new Date(),
         duration,
         calories_burned,
-        avg_pose_score
+        avg_pose_score,
+        corrections_count: corrections_count || 0
       },
       { new: true, runValidators: true }
     );

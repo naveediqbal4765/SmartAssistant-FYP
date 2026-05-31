@@ -38,6 +38,11 @@ const WellnessSessionSchema = new mongoose.Schema({
     min: 0,
     max: 100
   },
+  corrections_count: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
   created_at: {
     type: Date,
     default: Date.now
