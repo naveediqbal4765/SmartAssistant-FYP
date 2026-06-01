@@ -1,14 +1,21 @@
 // Module: Wellness & Rehabilitation | Phase 3 — Wellness Summary
 import { useEffect, useMemo, useState } from 'react';
+import { ChevronRight, Dumbbell, Utensils } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import ExerciseSuggestions from '../components/ExerciseSuggestions';
+import Button from '../../../components/ui/Button';
+import FeaturePage from '../../../components/ui/FeaturePage';
+import LoadingState from '../../../components/ui/LoadingState';
 import WellnessIntelligenceCard from '../components/WellnessIntelligenceCard';
-import { getNutritionLogs, getSessions } from '../services/wellnessService';
+import {
+  getNutritionLogs,
+  getNutritionSuggestions,
+  getSessions,
+  getStreak
+} from '../services/wellnessService';
 
 const toDateKey = (value) => {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return '';
-
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
@@ -17,31 +24,64 @@ const toDateKey = (value) => {
 
 const getTodayDate = () => new Date().toISOString().slice(0, 10);
 
-const calculateWorkoutStreak = (sessions = []) => {
-  const completedDays = new Set(
-    sessions
-      .filter((session) => session.status === 'completed')
-      .map((session) => toDateKey(session.ended_at || session.created_at))
-      .filter(Boolean)
-  );
-
-  let streak = 0;
-  const cursor = new Date();
-
-  while (completedDays.has(toDateKey(cursor))) {
-    streak += 1;
-    cursor.setDate(cursor.getDate() - 1);
+const suggestedExercises = [
+  {
+    title: 'Shoulder Raise',
+    description: 'Gentle shoulder mobility to keep your joints flexible and reduce stiffness.',
+    icon: '🏋️'
+  },
+  {
+    title: 'Deep Breathing',
+    description: 'Calm breathing exercise to improve oxygen levels and reduce stress.',
+    icon: '🌬️'
+  },
+  {
+    title: 'Seated March',
+    description: 'Light leg movement while seated to boost circulation and energy.',
+    icon: '🚶'
+  },
+  {
+    title: 'Neck Stretch',
+    description: 'Slow gentle neck stretch to relieve tension and improve posture.',
+    icon: '🧘'
   }
+];
 
-  return streak;
-};
+const suggestedMeals = [
+  {
+    title: 'Breakfast',
+    suggestion: 'Oatmeal with fruits and a glass of milk',
+    icon: '☀️',
+    tip: 'High in fiber and protein to start your day strong.'
+  },
+  {
+    title: 'Lunch',
+    suggestion: 'Grilled chicken with vegetables and brown rice',
+    icon: '🌤️',
+    tip: 'Balanced meal with lean protein and complex carbs.'
+  },
+  {
+    title: 'Dinner',
+    suggestion: 'Lentil soup with whole grain bread',
+    icon: '🌙',
+    tip: 'Light and nutritious — easy to digest before sleep.'
+  },
+  {
+    title: 'Snack',
+    suggestion: 'A handful of mixed nuts or a banana',
+    icon: '🥜',
+    tip: 'Quick energy boost between meals.'
+  }
+];
 
 export default function WellnessDashboard() {
   const navigate = useNavigate();
   const [sessions, setSessions] = useState([]);
   const [nutritionTotals, setNutritionTotals] = useState({ calories: 0, protein: 0, carbs: 0, fat: 0 });
+  const [nutritionSuggestions, setNutritionSuggestions] = useState([]);
+  const [streak, setStreak] = useState(0);
+  const [exercisedToday, setExercisedToday] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
 
   useEffect(() => {
     let cancelled = false;
@@ -54,15 +94,12 @@ export default function WellnessDashboard() {
         setLoading(false);
         return;
       }
-
       setLoading(true);
-      setError('');
-
       try {
         const sessionData = await getSessions(seniorId);
         if (!cancelled) setSessions(sessionData);
-      } catch (err) {
-        if (!cancelled) setError(err.message || 'Failed to load wellness progress');
+      } catch {
+        if (!cancelled) setSessions([]);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -81,14 +118,38 @@ export default function WellnessDashboard() {
       }
     };
 
+    const loadStreak = async () => {
+      try {
+        const streakData = await getStreak(seniorId);
+        if (!cancelled) {
+          setStreak(Number(streakData.streak || 0));
+          setExercisedToday(Boolean(streakData.exercisedToday));
+        }
+      } catch {
+        if (!cancelled) {
+          setStreak(0);
+          setExercisedToday(false);
+        }
+      }
+    };
+
+    const loadNutritionSuggestions = async () => {
+      try {
+        const nextSuggestions = await getNutritionSuggestions(seniorId);
+        if (!cancelled) setNutritionSuggestions(nextSuggestions);
+      } catch {
+        if (!cancelled) setNutritionSuggestions([]);
+      }
+    };
+
     loadSessions();
     if (seniorId) {
       loadNutritionTotals();
+      loadStreak();
+      loadNutritionSuggestions();
     }
 
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, []);
 
   const todayCompleted = useMemo(() => {
@@ -102,7 +163,6 @@ export default function WellnessDashboard() {
   const summary = useMemo(() => {
     const exerciseMinutes = todayCompleted.reduce((sum, session) => sum + Number(session.duration || 0), 0);
     const caloriesBurned = todayCompleted.reduce((sum, session) => sum + Number(session.calories_burned || 0), 0);
-
     return {
       totalExerciseMinutes: exerciseMinutes,
       totalSessionsCompleted: todayCompleted.length,
@@ -112,82 +172,185 @@ export default function WellnessDashboard() {
     };
   }, [nutritionTotals, todayCompleted]);
 
-  const metrics = useMemo(() => (
-    [
-      { label: "Today's Exercise", value: loading ? '--' : Math.round(summary.totalExerciseMinutes), helper: 'Minutes completed' },
-      { label: 'Calories Burned', value: loading ? '--' : Math.round(summary.totalCaloriesBurned), helper: 'Estimated calories' },
-      { label: 'Sessions', value: loading ? '--' : summary.totalSessionsCompleted, helper: 'Completed sessions' },
-      { label: 'Streak', value: loading ? '--' : calculateWorkoutStreak(sessions), helper: 'Active days' }
-    ]
-  ), [loading, sessions, summary]);
-
-  const nutritionMetrics = [
-    { label: 'Calories', value: Math.round(nutritionTotals.calories || 0), unit: '', className: 'bg-amber-50 text-amber-800' },
-    { label: 'Protein', value: Math.round(nutritionTotals.protein || 0), unit: 'g', className: 'bg-blue-50 text-blue-800' },
-    { label: 'Carbs', value: Math.round(nutritionTotals.carbs || 0), unit: 'g', className: 'bg-green-50 text-green-800' },
-    { label: 'Fat', value: Math.round(nutritionTotals.fat || 0), unit: 'g', className: 'bg-rose-50 text-rose-800' }
-  ];
+  const shouldShowStreakBanner = !exercisedToday && new Date().getUTCHours() >= 18;
 
   return (
-    <main className="min-h-[calc(100vh-6rem)] bg-brand-surface px-4 py-8 sm:px-6 lg:px-10">
-      <section className="mx-auto max-w-6xl space-y-6">
-        <WellnessIntelligenceCard summary={summary} />
-        <ExerciseSuggestions />
+    <FeaturePage
+      title="Wellness & Rehabilitation"
+      description="Track your exercises, nutrition, and daily wellness."
+      backLabel="Back to Dashboard"
+      onBack={() => navigate('/dashboard')}
+      maxWidth="max-w-6xl"
+    >
+      {loading ? (
+        <LoadingState label="Loading wellness dashboard..." />
+      ) : (
+        <div className="space-y-5">
 
-        {error && (
-          <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-lg font-semibold text-red-700">
-            {error}
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
-          {metrics.map((card) => (
-            <article
-              key={card.label}
-              className="rounded-[1.5rem] border border-emerald-100 bg-white p-6"
+          {/* Streak Banner */}
+          {shouldShowStreakBanner && (
+            <div className={`rounded-2xl border p-5 shadow-sm transition-shadow hover:shadow-md ${
+              streak > 0
+                ? 'border-amber-200 bg-amber-50'
+                : 'border-blue-200 bg-blue-50'
+            }`}
             >
-              <p className="text-lg font-semibold text-brand-primary">{card.label}</p>
-              <p className="mt-5 text-5xl font-bold text-gray-950">{card.value}</p>
-              <p className="mt-4 text-lg font-medium text-gray-700">{card.helper}</p>
-            </article>
-          ))}
-        </div>
+              <div className="flex items-center gap-4">
+                <span className="text-3xl" aria-hidden="true">
+                  {streak > 0 ? '⚠️' : '💪'}
+                </span>
+                <div>
+                  <p className={`text-lg font-semibold ${
+                    streak > 0 ? 'text-amber-800' : 'text-blue-800'
+                  }`}
+                  >
+                    {streak > 0
+                      ? `You haven't exercised today! Don't break your ${streak} day streak!`
+                      : 'Start your streak today! Every journey begins with a single step.'}
+                  </p>
+                  <Button
+                    onClick={() => navigate('/wellness/library')}
+                    className="mt-2"
+                    size="sm"
+                  >
+                    {streak > 0 ? 'Start Workout Now' : 'Start First Workout'}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
 
-        <section className="rounded-[2rem] bg-white p-6">
-          <div>
-            <h2 className="text-3xl font-bold text-brand-primary">Nutrition Today</h2>
-            <p className="mt-2 text-lg font-semibold text-gray-700">Review today&apos;s meal totals and log more food.</p>
+          {/* Wellness Summary Card */}
+          <div className="rounded-2xl shadow-sm transition-shadow hover:shadow-md">
+            <WellnessIntelligenceCard
+              summary={summary}
+              streak={streak}
+              exercisedToday={exercisedToday}
+            />
           </div>
-          <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {nutritionMetrics.map((metric) => (
-              <article key={metric.label} className={`rounded-2xl p-5 ${metric.className}`}>
-                <p className="text-lg font-bold">{metric.label}</p>
-                <p className="mt-3 text-4xl font-bold">
-                  {loading ? '--' : metric.value}
-                  {metric.unit && <span className="text-xl"> {metric.unit}</span>}
-                </p>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <p className="flex items-center gap-2 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm font-medium text-blue-700">
+            <span>ℹ️</span>
+            Personalised exercise and nutrition plans will be available after the IoT Health Sensor module is integrated.
+          </p>
+          {/* Exercise Section */}
           <button
             type="button"
             onClick={() => navigate('/wellness/library')}
-            className="rounded-2xl bg-green-700 px-6 py-4 text-lg font-bold text-white transition hover:bg-green-800"
+            className="group block w-full rounded-2xl border border-gray-200 bg-white/90 p-6 text-left shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-emerald-400"
           >
-            Start Workout
+            <div className="mb-4 flex items-start justify-between gap-3">
+              <div className="flex items-start gap-3">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
+                  <Dumbbell size={24} aria-hidden="true" />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-bold text-brand-primary">
+                    Today&apos;s Exercises
+                  </h3>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Suggested workouts for you. Tap any to start.
+                  </p>
+                </div>
+              </div>
+              <ChevronRight
+                size={22}
+                className="shrink-0 text-emerald-700 transition-transform duration-200 group-hover:translate-x-1"
+                aria-hidden="true"
+              />
+            </div>
+
+            <div className="space-y-2">
+              {suggestedExercises.map((card) => (
+                <div
+                  key={card.title}
+                  className="flex items-center justify-between rounded-xl bg-emerald-50 p-3 shadow-sm transition-all duration-150 hover:bg-emerald-100 hover:shadow-md hover:-translate-y-0.5"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    navigate(`/wellness/library?start=${encodeURIComponent(card.title)}`);
+                  }}
+                  role="button"
+                  tabIndex={-1}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-xl" aria-hidden="true">{card.icon}</span>
+                    <div>
+                      <p className="font-semibold text-gray-900">{card.title}</p>
+                      <p className="text-xs text-emerald-700">{card.description}</p>
+                    </div>
+                  </div>
+                  <ChevronRight size={16} className="shrink-0 text-emerald-500" aria-hidden="true" />
+                </div>
+              ))}
+            </div>
+
           </button>
+
+          {/* Nutrition Section */}
           <button
             type="button"
             onClick={() => navigate('/wellness/nutrition')}
-            className="rounded-2xl bg-green-700 px-6 py-4 text-lg font-bold text-white transition hover:bg-green-800"
+            className="group block w-full rounded-2xl border border-gray-200 bg-white/90 p-6 text-left shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-blue-400"
           >
-            Log Meals
+            <div className="mb-4 flex items-start justify-between gap-3">
+              <div className="flex items-start gap-3">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-700">
+                  <Utensils size={24} aria-hidden="true" />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-bold text-brand-primary">
+                    Suggested Meals Today
+                  </h3>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Healthy meal ideas for today. Tap to log your food.
+                  </p>
+                </div>
+              </div>
+              <ChevronRight
+                size={22}
+                className="shrink-0 text-blue-700 transition-transform duration-200 group-hover:translate-x-1"
+                aria-hidden="true"
+              />
+            </div>
+
+            <div className="space-y-2">
+              {suggestedMeals.map((meal) => (
+                <div
+                  key={meal.title}
+                  className="flex items-center justify-between rounded-xl bg-blue-50 p-3 shadow-sm transition-all duration-150 hover:bg-blue-100 hover:shadow-md hover:-translate-y-0.5"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-xl" aria-hidden="true">{meal.icon}</span>
+                    <div>
+                      <p className="font-semibold text-gray-900">{meal.title}</p>
+                      <p className="text-xs text-blue-700">{meal.suggestion}</p>
+                      <p className="text-xs text-gray-400">{meal.tip}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {nutritionSuggestions.length > 0 && (
+              <div className="mt-3 flex items-start gap-2 rounded-xl bg-blue-50/80 p-3">
+                <span aria-hidden="true">
+                  {nutritionSuggestions[0].type === 'hydration'
+                    ? '💧'
+                    : nutritionSuggestions[0].type === 'nutrition'
+                      ? '🥗'
+                      : nutritionSuggestions[0].type === 'activity'
+                        ? '🚶'
+                        : 'ℹ️'}
+                </span>
+                <p className="text-sm font-semibold text-blue-800">
+                  {nutritionSuggestions[0].message}
+                </p>
+              </div>
+            )}
+
           </button>
+
         </div>
-      </section>
-    </main>
+      )}
+    </FeaturePage>
   );
 }

@@ -96,6 +96,32 @@ export const getNutritionLogs = async (seniorId, date) => {
   }
 };
 
+export const deleteNutritionLog = async (logId) => {
+  try {
+    const response = await axios.delete(`${API_BASE_URL}/nutrition/log/${logId}`, {
+      headers: authHeaders()
+    });
+    return response.data;
+  } catch (err) {
+    throw new Error(getErrorMessage(err, 'Failed to delete food log'), { cause: err });
+  }
+};
+
+export const clearNutritionLogs = async (seniorId, date, mealType) => {
+  try {
+    const response = await axios.delete(`${API_BASE_URL}/nutrition/clear/${seniorId}`, {
+      headers: authHeaders(),
+      params: {
+        date,
+        meal_type: mealType || undefined
+      }
+    });
+    return response.data;
+  } catch (err) {
+    throw new Error(getErrorMessage(err, 'Failed to clear meal logs'), { cause: err });
+  }
+};
+
 export const getNutritionSuggestions = async (seniorId) => {
   try {
     const response = await axios.get(`${API_BASE_URL}/recommendations/${seniorId}`, {
@@ -104,6 +130,17 @@ export const getNutritionSuggestions = async (seniorId) => {
     return response.data.suggestions || [];
   } catch (err) {
     throw new Error(getErrorMessage(err, 'Failed to load nutrition suggestions'), { cause: err });
+  }
+};
+
+export const getStreak = async (seniorId) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/streak/${seniorId}`, {
+      headers: authHeaders()
+    });
+    return response.data;
+  } catch (err) {
+    throw new Error(getErrorMessage(err, 'Failed to load streak'));
   }
 };
 

@@ -1,5 +1,6 @@
 // Module: Wellness & Rehabilitation | Phase 2 — Nutrition Tracking
 import { useEffect, useState } from 'react';
+import Button from '../../../components/ui/Button';
 import FoodResultCard from './FoodResultCard';
 import { logNutrition, searchFood } from '../services/wellnessService';
 
@@ -120,23 +121,23 @@ export default function FoodSearchBar({ mealType, onFoodLogged }) {
 
   return (
     <div className="relative">
-      <label className="block text-lg font-bold text-brand-primary">
+      <label className="block text-sm font-semibold text-brand-primary">
         Search for a food...
         <input
           type="text"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Search for a food..."
-          className="mt-3 w-full rounded-2xl border border-emerald-200 bg-white px-5 py-4 text-lg font-semibold text-gray-950 outline-none transition focus:border-green-600 focus:ring-4 focus:ring-green-100"
+          className="mt-3 w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-950 outline-none transition focus:border-green-600 focus:ring-4 focus:ring-green-100"
         />
       </label>
 
       {searching && (
-        <p className="mt-3 text-lg font-semibold text-gray-700">Searching foods...</p>
+        <p className="mt-3 text-sm text-gray-500">Searching foods...</p>
       )}
 
       {error && (
-        <p className="mt-3 rounded-xl border border-red-200 bg-red-50 p-3 text-lg font-semibold text-red-700">
+        <p className="mt-3 rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-700">
           {error}
         </p>
       )}
@@ -154,8 +155,8 @@ export default function FoodSearchBar({ mealType, onFoodLogged }) {
       )}
 
       {query.trim().length >= 2 && !searching && results.length === 0 && (
-        <form onSubmit={handleManualSubmit} className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4">
-          <p className="text-lg font-bold text-amber-900">
+        <form onSubmit={handleManualSubmit} className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
+          <p className="text-sm font-semibold text-amber-800">
             {message || 'No results found. Please enter nutrition values manually.'}
           </p>
           <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
@@ -164,7 +165,7 @@ export default function FoodSearchBar({ mealType, onFoodLogged }) {
               value={manualForm.food_name}
               onChange={(event) => setManualForm({ ...manualForm, food_name: event.target.value })}
               placeholder="Food name"
-              className="rounded-xl border border-amber-200 px-4 py-3 text-lg font-semibold"
+              className="rounded-lg border border-amber-200 px-3 py-2 text-sm"
               required
             />
             {['calories', 'protein', 'carbs', 'fat'].map((field) => (
@@ -176,17 +177,19 @@ export default function FoodSearchBar({ mealType, onFoodLogged }) {
                 value={manualForm[field]}
                 onChange={(event) => setManualForm({ ...manualForm, [field]: event.target.value })}
                 placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
-                className="rounded-xl border border-amber-200 px-4 py-3 text-lg font-semibold"
+                className="rounded-lg border border-amber-200 px-3 py-2 text-sm"
               />
             ))}
           </div>
-          <button
+          <Button
             type="submit"
             disabled={logging}
-            className="mt-4 w-full rounded-2xl bg-green-700 px-5 py-4 text-lg font-bold text-white transition hover:bg-green-800 disabled:opacity-60"
+            size="sm"
+            variant="success"
+            className="mt-3 w-full"
           >
             {logging ? 'Logging Food...' : 'Log Manually'}
-          </button>
+          </Button>
         </form>
       )}
     </div>

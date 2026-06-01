@@ -1,10 +1,14 @@
 // Module: Wellness & Rehabilitation | Phase 2 — Nutrition Tracking
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import FeatureCard from '../../../components/ui/FeatureCard';
+import FeaturePage from '../../../components/ui/FeaturePage';
+import { useDialog } from '../../../components/ui/GlobalDialogProvider';
+import LoadingState from '../../../components/ui/LoadingState';
+import StatusAlert from '../../../components/ui/StatusAlert';
 import MealSection from '../components/MealSection';
-import NutritionSuggestions from '../components/NutritionSuggestions';
 import NutritionSummaryCard from '../components/NutritionSummaryCard';
-import { getNutritionLogs, getNutritionSuggestions } from '../services/wellnessService';
+import { clearNutritionLogs, deleteNutritionLog, getNutritionLogs } from '../services/wellnessService';
 
 const mealTypes = ['breakfast', 'lunch', 'dinner', 'snack'];
 
@@ -25,8 +29,8 @@ const getTodayDate = () => new Date().toISOString().slice(0, 10);
 
 export default function NutritionPage() {
   const navigate = useNavigate();
+  const dialog = useDialog();
   const [nutritionData, setNutritionData] = useState(emptyNutritionData);
-  const [suggestions, setSuggestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -58,73 +62,67 @@ export default function NutritionPage() {
     loadNutrition();
   }, [loadNutrition]);
 
-  useEffect(() => {
-    const loadSuggestions = async () => {
-      try {
-        const user = JSON.parse(localStorage.getItem('user') || '{}');
-        const seniorId = user._id || user.id;
-        if (!seniorId) {
-          setSuggestions([]);
-          return;
-        }
+  const handleDelete = async (logId) => {
+    try {
+      await deleteNutritionLog(logId);
+      await loadNutrition();
+    } catch (err) {
+      setError(err.message || 'Failed to delete food log');
+    }
+  };
 
-        const nextSuggestions = await getNutritionSuggestions(seniorId);
-        setSuggestions(nextSuggestions);
-      } catch (err) {
-        setSuggestions([]);
-      }
-    };
-
-    loadSuggestions();
-  }, []);
+  const handleClearAll = async (mealType) => {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const seniorId = user._id || user.id;
+    const todayDate = getTodayDate();
+    const confirmed = await dialog.showConfirm({
+      title: `Clear ${mealType}?`,
+      message: `This will delete all logged foods for ${mealType} today.`,
+      confirmText: 'Clear All',
+      cancelText: 'Cancel'
+    });
+    if (!confirmed) return;
+    try {
+      await clearNutritionLogs(seniorId, todayDate, mealType);
+      await loadNutrition();
+    } catch (err) {
+      setError(err.message || 'Failed to clear meal logs');
+    }
+  };
 
   return (
-    <main className="min-h-[calc(100vh-6rem)] bg-brand-surface px-4 py-8 sm:px-6 lg:px-10">
-      <section className="mx-auto max-w-7xl space-y-6">
-        <div className="flex flex-col gap-4 rounded-[2rem] bg-white p-6 sm:p-8 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <p className="text-lg font-bold uppercase tracking-[0.16em] text-brand-muted">Nutrition Tracking</p>
-            <h1 className="mt-2 text-4xl font-bold text-brand-primary">Log Meals</h1>
-            <p className="mt-3 text-lg leading-8 text-gray-700">
-              Search foods, enter meals, and review today&apos;s nutrition totals.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => navigate('/wellness')}
-            className="rounded-2xl border border-brand-primary px-5 py-4 text-lg font-bold text-brand-primary transition hover:bg-brand-primary hover:text-white"
-          >
-            Back to Dashboard
-          </button>
-        </div>
+    <FeaturePage
+      title="Nutrition Tracker"
+      description="Log your meals and track your daily nutrition."
+      backLabel="Back to Wellness"
+      onBack={() => navigate('/wellness')}
+    >
+      {error && <StatusAlert variant="error">{error}</StatusAlert>}
 
-        {error && (
-          <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-lg font-semibold text-red-700">
-            {error}
-          </div>
-        )}
-
-        {loading ? (
-          <div className="rounded-[2rem] bg-white p-6 text-lg font-bold text-gray-700">
-            Loading nutrition data...
-          </div>
-        ) : (
-          <>
+      {loading ? (
+        <LoadingState label="Loading nutrition data..." />
+      ) : (
+        <div className="space-y-6">
+          <FeatureCard>
+            <h2 className="mb-4 text-xl font-bold text-brand-primary">Today&apos;s Nutrition Summary</h2>
             <NutritionSummaryCard totals={nutritionData.totals} />
-            <NutritionSuggestions suggestions={suggestions} />
-            <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-              {mealTypes.map((mealType) => (
+          </FeatureCard>
+
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+            {mealTypes.map((mealType) => (
+              <FeatureCard key={mealType}>
                 <MealSection
-                  key={mealType}
                   mealType={mealType}
                   logs={nutritionData[mealType]}
                   onFoodLogged={loadNutrition}
+                  onDelete={handleDelete}
+                  onClearAll={handleClearAll}
                 />
-              ))}
-            </div>
-          </>
-        )}
-      </section>
-    </main>
+              </FeatureCard>
+            ))}
+          </div>
+        </div>
+      )}
+    </FeaturePage>
   );
 }

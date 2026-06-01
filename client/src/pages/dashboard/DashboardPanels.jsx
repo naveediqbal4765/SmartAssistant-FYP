@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
-import { Calendar, ChevronRight, Clipboard, FileText, Pill } from 'lucide-react';
+import { Activity, Calendar, ChevronRight, Clipboard, FileText, Pill } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import CallReminderPanel from '../../components/CallReminderPanel';
 import { getChatSocket } from '../../features/communication/chat/services/socket';
@@ -10,6 +10,7 @@ import { fetchMedications } from '../../features/health/medications/medicationAp
 import LocationStatusCard from '../../features/location/LocationStatusCard';
 import NearbyVolunteers from '../../features/location/NearbyVolunteers';
 import { fetchTaskRequests } from '../../features/tasks/taskApi';
+import WellnessIntelligenceCard from '../../features/wellness-rehab/components/WellnessIntelligenceCard';
 import RoleStabilityPanel from './RoleStabilityPanel';
 
 const SENIOR_REMINDER_CHANGED_EVENT = 'SENIOR_REMINDER_CHANGED';
@@ -555,6 +556,176 @@ function CaregiverTaskRequestsCard({ linkedSenior }) {
   );
 }
 
+function CaregiverWellnessCard({ linkedSenior }) {
+  const seniorId = linkedSenior?._id || linkedSenior?.id;
+  const seniorName = linkedSenior?.name?.trim() || 'Senior';
+  const [summary, setSummary] = useState(null);
+  const [sessions, setSessions] = useState([]);
+  const [streak, setStreak] = useState(0);
+  const [exercisedToday, setExercisedToday] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState(null);
+
+  const load = useCallback(async () => {
+    if (!seniorId) {
+      setLoading(false);
+      return;
+    }
+
+    if (summary === null) setLoading(true);
+
+    try {
+      const todayDate = new Date().toISOString().slice(0, 10);
+      const todayKey = toDateKey(new Date());
+      const headers = { Authorization: `Bearer ${localStorage.getItem('token') || ''}` };
+      const [sessionsResponse, nutritionResponse, streakResponse] = await Promise.all([
+        axios.get(`http://localhost:5000/api/wellness/sessions/${seniorId}`, { headers }),
+        axios.get(`http://localhost:5000/api/wellness/nutrition/${seniorId}?date=${todayDate}`, { headers }),
+        axios.get(`http://localhost:5000/api/wellness/streak/${seniorId}`, { headers })
+      ]);
+      const sessions = Array.isArray(sessionsResponse.data)
+        ? sessionsResponse.data
+        : Array.isArray(sessionsResponse.data?.sessions)
+          ? sessionsResponse.data.sessions
+          : [];
+      setSessions(sessions);
+      const todaySessions = sessions.filter((session) => (
+        session.status === 'completed'
+        && toDateKey(new Date(session.ended_at || session.created_at)) === todayKey
+      ));
+      const exerciseMinutes = Math.round(
+        todaySessions.reduce((sum, session) => sum + Number(session.duration || 0), 0)
+      );
+      const caloriesBurned = Math.round(
+        todaySessions.reduce((sum, session) => sum + Number(session.calories_burned || 0), 0)
+      );
+      const totals = nutritionResponse.data?.totals || { calories: 0, protein: 0, carbs: 0, fat: 0 };
+      const meals = nutritionResponse.data;
+      setStreak(Number(streakResponse.data?.streak || 0));
+      setExercisedToday(Boolean(streakResponse.data?.exercisedToday));
+
+      setSummary({
+        sessionsToday: todaySessions.length,
+        exerciseMinutes,
+        caloriesBurned,
+        totalExerciseMinutes: exerciseMinutes,
+        totalSessionsCompleted: todaySessions.length,
+        totalCaloriesBurned: caloriesBurned,
+        totalCaloriesConsumed: totals.calories || 0,
+        totalProtein: totals.protein || 0,
+        caloriesConsumed: Math.round(totals.calories || 0),
+        protein: Math.round(totals.protein || 0),
+        carbs: Math.round(totals.carbs || 0),
+        fat: Math.round(totals.fat || 0),
+        breakfast: meals?.breakfast || [],
+        lunch: meals?.lunch || [],
+        dinner: meals?.dinner || [],
+        snack: meals?.snack || []
+      });
+      setLastUpdated(new Date());
+    } catch (err) {
+      console.error('Failed to load caregiver wellness summary:', err);
+      setSummary(null);
+      setSessions([]);
+      setStreak(0);
+      setExercisedToday(false);
+    } finally {
+      setLoading(false);
+    }
+  }, [seniorId]);
+
+  useEffect(() => {
+    load();
+    const interval = window.setInterval(load, 30000);
+    return () => window.clearInterval(interval);
+  }, [load]);
+
+  const mealRows = [
+    { label: 'Breakfast', icon: '☀️', key: 'breakfast' },
+    { label: 'Lunch', icon: '🌤️', key: 'lunch' },
+    { label: 'Dinner', icon: '🌙', key: 'dinner' },
+    { label: 'Snack', icon: '🥜', key: 'snack' }
+  ];
+
+  return (
+    <div className="motion-card rounded-2xl border border-gray-200 bg-white/90 p-5 lg:col-span-2">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
+            <Activity size={22} />
+          </span>
+          <div>
+            <h3 className="text-lg font-semibold text-brand-primary">{seniorName}&apos;s Wellness Today</h3>
+            <p className="mt-1 text-sm text-gray-700">Live exercise and nutrition summary.</p>
+          </div>
+        </div>
+        {lastUpdated && (
+          <p className="text-xs text-gray-400">
+            Updated {lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </p>
+        )}
+      </div>
+
+      {loading && summary === null ? (
+        <p className="rounded-xl bg-gray-50 p-3 text-sm font-semibold text-gray-500">Loading wellness data...</p>
+      ) : !loading && summary === null ? (
+        <p className="rounded-xl bg-gray-50 p-3 text-sm font-semibold text-gray-500">No wellness data available for today.</p>
+      ) : (
+        <div className="space-y-4">
+          <WellnessIntelligenceCard
+            summary={summary}
+            streak={streak}
+            exercisedToday={exercisedToday}
+            sessions={sessions}
+          />
+
+          <div className="rounded-xl border border-gray-100 bg-gray-50 p-3">
+            <p className="mb-3 text-xs font-bold uppercase tracking-wide text-gray-500">Today&apos;s Meal Logs</p>
+            {(() => {
+              const mealsToShow = mealRows.filter((meal) => summary[meal.key]?.length > 0);
+
+              if (mealsToShow.length === 0) {
+                return (
+                  <p className="py-2 text-center text-xs text-gray-400">
+                    No meals logged yet today.
+                  </p>
+                );
+              }
+
+              return mealsToShow.map((meal) => {
+                const logs = summary[meal.key] || [];
+
+                return (
+                  <div key={meal.key} className="mb-2 rounded-xl bg-white p-3 shadow-sm">
+                    <div className="mb-2 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span aria-hidden="true">{meal.icon}</span>
+                        <p className="text-sm font-semibold text-gray-800">{meal.label}</p>
+                      </div>
+                      <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-600">
+                        {logs.length} item{logs.length !== 1 ? 's' : ''}
+                      </span>
+                    </div>
+                    {logs.slice(0, 3).map((log) => (
+                      <div key={log._id} className="mt-1 flex items-center justify-between pl-6">
+                        <p className="text-xs text-gray-600">{log.food_name}</p>
+                        <p className="text-xs font-semibold text-brand-primary">{Math.round(log.calories || 0)} kcal</p>
+                      </div>
+                    ))}
+                    {logs.length > 3 && (
+                      <p className="mt-1 pl-6 text-xs text-gray-400">+{logs.length - 3} more items</p>
+                    )}
+                  </div>
+                );
+              });
+            })()}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function CaregiverHealthVaultCard({ linkedSenior }) {
   const navigate = useNavigate();
   const seniorId = linkedSenior?._id || linkedSenior?.id;
@@ -630,6 +801,7 @@ function CaregiverAlertCenter({ linkedSenior }) {
           />
           <CaregiverRemindersCard linkedSenior={linkedSenior} />
           <CaregiverTaskRequestsCard linkedSenior={linkedSenior} />
+          <CaregiverWellnessCard linkedSenior={linkedSenior} />
           <CaregiverHealthVaultCard linkedSenior={linkedSenior} />
         </div>
       ) : (

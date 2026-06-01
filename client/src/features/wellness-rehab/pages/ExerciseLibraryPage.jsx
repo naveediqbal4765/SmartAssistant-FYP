@@ -1,19 +1,26 @@
 // Module: Wellness & Rehabilitation | Phase 1 — Fitness Tracking
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import EmptyState from '../../../components/ui/EmptyState';
+import FeaturePage from '../../../components/ui/FeaturePage';
+import LoadingState from '../../../components/ui/LoadingState';
+import StatusAlert from '../../../components/ui/StatusAlert';
 import ExerciseCard from '../components/ExerciseCard';
 import { getExerciseLibrary, startSession } from '../services/wellnessService';
 
 const getCurrentUser = () => {
   try {
     return JSON.parse(localStorage.getItem('user') || '{}');
-  } catch (err) {
+  } catch {
     return {};
   }
 };
 
 export default function ExerciseLibraryPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const autoStart = searchParams.get('start');
+  const autoStartedRef = useRef(false);
   const [exercises, setExercises] = useState([]);
   const [loading, setLoading] = useState(true);
   const [startingId, setStartingId] = useState('');
@@ -43,7 +50,7 @@ export default function ExerciseLibraryPage() {
     };
   }, []);
 
-  const handleStart = async (exercise) => {
+  const handleStart = useCallback(async (exercise) => {
     const user = getCurrentUser();
     const seniorId = user.id || user._id;
 
@@ -71,54 +78,52 @@ export default function ExerciseLibraryPage() {
       setError(err.message || 'Failed to start exercise');
       setStartingId('');
     }
-  };
+  }, [navigate]);
+
+  useEffect(() => {
+    if (autoStartedRef.current || loading || !autoStart || !exercises.length) return;
+
+    const exercise = exercises.find((item) => (
+      item.name?.toLowerCase() === autoStart.toLowerCase()
+    ));
+    autoStartedRef.current = true;
+
+    if (exercise) {
+      handleStart(exercise);
+    }
+  }, [autoStart, exercises, handleStart, loading]);
 
   return (
-    <main className="min-h-[calc(100vh-6rem)] bg-brand-surface px-4 py-8 sm:px-6 lg:px-10">
-      <section className="mx-auto max-w-7xl">
-        <div className="flex flex-col gap-4 rounded-[2rem] bg-white p-6 sm:p-8 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <p className="text-lg font-bold uppercase tracking-[0.16em] text-brand-muted">Exercise Library</p>
-            <h1 className="mt-2 text-3xl font-bold text-brand-primary sm:text-4xl">Choose an Exercise</h1>
-            <p className="mt-3 text-lg leading-8 text-gray-700">
-              Select a safe beginner-friendly activity and start tracking your wellness session.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => navigate('/wellness')}
-            className="rounded-2xl border border-brand-primary px-5 py-4 text-lg font-bold text-brand-primary transition hover:bg-brand-primary hover:text-white"
-          >
-            Back to Dashboard
-          </button>
+    <FeaturePage
+      title="Exercise Library"
+      description="Choose a safe beginner-friendly exercise."
+      backLabel="Back to Wellness"
+      onBack={() => navigate('/wellness')}
+    >
+      {error && <StatusAlert variant="error">{error}</StatusAlert>}
+
+      {loading ? (
+        <LoadingState label="Loading exercises..." />
+      ) : exercises.length === 0 ? (
+        <EmptyState
+          title="No exercises available"
+          description="Please try again later."
+        />
+      ) : (
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          {exercises.map((exercise) => (
+            <ExerciseCard
+              key={exercise._id || exercise.name}
+              exercise={exercise}
+              onStart={handleStart}
+            />
+          ))}
         </div>
+      )}
 
-        {error && (
-          <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-lg font-semibold text-red-700">
-            {error}
-          </div>
-        )}
-
-        {loading ? (
-          <div className="mt-6 rounded-[1.5rem] bg-white p-6 text-lg font-semibold text-gray-700">
-            Loading exercises...
-          </div>
-        ) : (
-          <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
-            {exercises.map((exercise) => (
-              <ExerciseCard
-                key={exercise._id || exercise.name}
-                exercise={exercise}
-                onStart={handleStart}
-              />
-            ))}
-          </div>
-        )}
-
-        {startingId && (
-          <p className="mt-5 text-lg font-bold text-brand-primary">Starting exercise...</p>
-        )}
-      </section>
-    </main>
+      {startingId && (
+        <p className="mt-5 text-lg font-bold text-brand-primary">Starting exercise...</p>
+      )}
+    </FeaturePage>
   );
 }

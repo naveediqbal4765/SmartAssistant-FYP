@@ -108,6 +108,42 @@ const completeSession = async (req, res) => {
   }
 };
 
+const getStreak = async (req, res) => {
+  try {
+    const { seniorId } = req.params;
+    const sessions = await WellnessSession.find({
+      senior_id: seniorId,
+      status: 'completed'
+    })
+      .select('started_at')
+      .sort({ started_at: -1 });
+
+    const completedDays = new Set(
+      sessions
+        .map((session) => session.started_at?.toISOString().slice(0, 10))
+        .filter(Boolean)
+    );
+    const today = new Date().toISOString().slice(0, 10);
+    const exercisedToday = completedDays.has(today);
+    let streak = 0;
+    const cursor = new Date(`${today}T00:00:00.000Z`);
+
+    while (completedDays.has(cursor.toISOString().slice(0, 10))) {
+      streak += 1;
+      cursor.setUTCDate(cursor.getUTCDate() - 1);
+    }
+
+    return res.json({
+      success: true,
+      streak,
+      exercisedToday
+    });
+  } catch (err) {
+    console.error('Fetch wellness streak error:', err);
+    return res.status(500).json({ success: false, msg: 'Server error' });
+  }
+};
+
 const getExerciseLibrary = async (req, res) => {
   try {
     await seedExerciseLibrary();
@@ -218,6 +254,49 @@ const getNutritionBySenior = async (req, res) => {
   }
 };
 
+const deleteNutritionLog = async (req, res) => {
+  try {
+    const deletedLog = await NutritionLog.findByIdAndDelete(req.params.logId);
+
+    if (!deletedLog) {
+      return res.status(404).json({ success: false, msg: 'Nutrition log not found' });
+    }
+
+    return res.json({
+      success: true,
+      msg: 'Nutrition log deleted'
+    });
+  } catch (err) {
+    console.error('Delete nutrition log error:', err);
+    return res.status(500).json({ success: false, msg: 'Server error' });
+  }
+};
+
+const clearNutritionLogs = async (req, res) => {
+  try {
+    const { start, end } = toDateRange(req.query.date);
+    const filter = {
+      senior_id: req.params.seniorId,
+      logged_at: { $gte: start, $lt: end }
+    };
+
+    if (req.query.meal_type) {
+      filter.meal_type = req.query.meal_type;
+    }
+
+    const result = await NutritionLog.deleteMany(filter);
+
+    return res.json({
+      success: true,
+      msg: 'Nutrition logs cleared',
+      deleted: result.deletedCount || 0
+    });
+  } catch (err) {
+    console.error('Clear nutrition logs error:', err);
+    return res.status(500).json({ success: false, msg: 'Server error' });
+  }
+};
+
 const getRecommendationsBySenior = async (req, res) => {
   try {
     const latestTelemetry = await Telemetry.findOne({ userId: req.params.seniorId })
@@ -283,9 +362,12 @@ module.exports = {
   getSessionsBySenior,
   startSession,
   completeSession,
+  getStreak,
   getExerciseLibrary,
   searchFood,
   logNutrition,
   getNutritionBySenior,
+  deleteNutritionLog,
+  clearNutritionLogs,
   getRecommendationsBySenior
 };

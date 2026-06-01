@@ -1,6 +1,11 @@
 // Module: Wellness & Rehabilitation | Phase 5 — Pose Correction
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useLocation, useNavigate } from 'react-router-dom';
+import Button from '../../../components/ui/Button';
+import FeatureCard from '../../../components/ui/FeatureCard';
+import FeaturePage from '../../../components/ui/FeaturePage';
+import StatusAlert from '../../../components/ui/StatusAlert';
 import useVitalsSource from '../../health/iot/hooks/useVitalsSource';
 import CameraPermissionScreen from '../components/CameraPermissionScreen';
 import PoseCamera from '../components/PoseCamera';
@@ -166,77 +171,66 @@ export default function ActiveSessionPage() {
     navigate('/wellness');
   };
 
-  if (exerciseType && cameraPermission === 'pending') {
-    return (
-      <CameraPermissionScreen
-        exerciseName={exerciseName}
-        onAllow={() => setCameraPermission('granted')}
-        onDecline={() => setCameraPermission('declined')}
-      />
-    );
-  }
-
   return (
-    <main className="min-h-[calc(100vh-6rem)] bg-brand-surface px-4 py-8 sm:px-6 lg:px-10">
-      <section className="mx-auto max-w-4xl">
-        <div className="rounded-[2rem] bg-white p-6 text-center sm:p-8">
-          <p className="text-lg font-bold uppercase tracking-[0.16em] text-brand-muted">Active Session</p>
-          <h1 className="mt-3 text-4xl font-bold text-brand-primary">{exerciseName}</h1>
-          <p className="mt-6 text-lg font-semibold text-gray-700">Session Timer</p>
-          <p className="mt-3 text-6xl font-bold tracking-wider text-gray-950">{formatTimer(elapsedSeconds)}</p>
-        </div>
+    <>
+      {exerciseType && cameraPermission === 'pending' && createPortal(
+        <CameraPermissionScreen
+          exerciseName={exerciseName}
+          onBack={() => navigate('/wellness/library')}
+          onAllow={() => setCameraPermission('granted')}
+          onDecline={() => setCameraPermission('declined')}
+        />,
+        document.body
+      )}
 
-        {exerciseType && cameraPermission === 'granted' && (
-          <>
-            <div className="mt-6">
+      <FeaturePage
+        title={exerciseName || 'Active Session'}
+        description="Follow the on-screen guidance carefully."
+        backLabel="Back to Library"
+        onBack={() => navigate('/wellness/library')}
+        maxWidth="max-w-4xl"
+      >
+        <div className="space-y-6">
+          <FeatureCard className="p-5 text-center">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-brand-muted">Session Timer</h2>
+            <p className="mt-3 text-5xl font-bold tracking-wider text-gray-950">{formatTimer(elapsedSeconds)}</p>
+          </FeatureCard>
+
+          {exerciseType && cameraPermission === 'granted' && (
+            <>
               <PoseCamera exerciseType={exerciseType} onPoseResult={handlePoseResult} />
-            </div>
-            <div className="mt-6">
               <RepCounter
                 count={poseResult.count}
                 poseScore={poseResult.poseScore}
                 angle={poseResult.angle}
                 phase={poseResult.phase}
+                correctionsCount={totalCorrections}
               />
-            </div>
-            <p className="mt-4 text-lg font-semibold text-gray-700">
-              Form Corrections: {totalCorrections}
-            </p>
-          </>
-        )}
+            </>
+          )}
 
-        {safetyWarning && (
-          <div className={`mt-6 rounded-[1.5rem] border-4 p-5 text-2xl font-bold ${
-            safetyWarning.tone === 'danger'
-              ? 'border-red-500 bg-red-100 text-red-900'
-              : 'border-amber-500 bg-amber-100 text-amber-900'
-          }`}
-          >
-            {safetyWarning.message}
-          </div>
-        )}
+          {safetyWarning && (
+            <FeatureCard variant={safetyWarning.tone === 'danger' ? 'danger' : 'warning'}>
+              <p className="text-lg font-bold">{safetyWarning.message}</p>
+            </FeatureCard>
+          )}
 
-        <div className="mt-6">
           <RestTimer />
+
+          {error && <StatusAlert variant="error">{error}</StatusAlert>}
+
+          <Button
+            onClick={handleComplete}
+            disabled={completing}
+            size="lg"
+            className="w-full"
+          >
+            {completing ? 'Completing Session...' : 'Complete Session'}
+          </Button>
         </div>
 
-        {error && (
-          <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-lg font-semibold text-red-700">
-            {error}
-          </div>
-        )}
-
-        <button
-          type="button"
-          onClick={handleComplete}
-          disabled={completing}
-          className="mt-6 w-full rounded-[1.5rem] bg-green-700 px-6 py-5 text-2xl font-bold text-white transition hover:bg-green-800 disabled:opacity-60"
-        >
-          {completing ? 'Completing Session...' : 'Complete Session'}
-        </button>
-      </section>
-
-      <SessionSummary session={summarySession} onClose={closeSummary} />
-    </main>
+        <SessionSummary session={summarySession} onClose={closeSummary} />
+      </FeaturePage>
+    </>
   );
 }

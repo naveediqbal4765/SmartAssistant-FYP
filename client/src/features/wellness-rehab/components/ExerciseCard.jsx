@@ -1,40 +1,53 @@
 // Module: Wellness & Rehabilitation | Phase 1 — Fitness Tracking
+import Button from '../../../components/ui/Button';
+import FeatureCard from '../../../components/ui/FeatureCard';
+
 const categoryClasses = {
-  mobility: 'bg-blue-100 text-blue-800',
-  strength: 'bg-emerald-100 text-emerald-800',
-  balance: 'bg-purple-100 text-purple-800',
-  breathing: 'bg-cyan-100 text-cyan-800',
-  stretching: 'bg-amber-100 text-amber-800'
+  mobility: 'bg-blue-100 text-blue-700',
+  strength: 'bg-red-100 text-red-700',
+  balance: 'bg-purple-100 text-purple-700',
+  breathing: 'bg-teal-100 text-teal-700',
+  stretching: 'bg-amber-100 text-amber-700'
 };
 
+const difficultyClasses = {
+  beginner: 'bg-emerald-100 text-emerald-700',
+  intermediate: 'bg-amber-100 text-amber-700',
+  advanced: 'bg-red-100 text-red-700'
+};
+
+const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
+
 export default function ExerciseCard({ exercise, onStart }) {
+  const difficulty = exercise.difficulty || 'beginner';
+  const category = exercise.category || 'general';
+
   return (
-    <article className="flex h-full flex-col rounded-[1.5rem] border border-emerald-100 bg-white p-6">
-      <div className="flex-1">
-        <h2 className="text-2xl font-bold text-brand-primary">{exercise.name}</h2>
-        <div className="mt-4 flex flex-wrap gap-3">
-          <span className={`rounded-full px-4 py-2 text-lg font-bold ${categoryClasses[exercise.category] || 'bg-gray-100 text-gray-800'}`}>
-            {exercise.category || 'general'}
+    <FeatureCard className="flex flex-col gap-4 p-5 md:flex-row md:items-start md:justify-between">
+      <div className="min-w-0 flex-1">
+        <h2 className="text-lg font-bold text-brand-primary">{exercise.name}</h2>
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <span className={`rounded-full px-2 py-1 text-xs font-semibold ${categoryClasses[category] || 'bg-gray-100 text-gray-700'}`}>
+            {capitalize(category)}
           </span>
-          <span className="rounded-full bg-green-100 px-4 py-2 text-lg font-bold text-green-800">
-            {exercise.difficulty || 'beginner'}
+          <span className={`rounded-full px-2 py-1 text-xs font-semibold ${difficultyClasses[difficulty] || difficultyClasses.beginner}`}>
+            {capitalize(difficulty)}
           </span>
         </div>
-        <p className="mt-5 text-lg font-semibold text-gray-800">
-          Target area: <span className="text-gray-950">{exercise.target_area || '--'}</span>
+        <p className="mt-2 text-sm text-gray-500">
+        Target Area: {exercise.target_area ? capitalize(exercise.target_area) : '--'}
         </p>
-        <p className="mt-3 text-lg font-semibold text-gray-800">
-          Estimated duration: <span className="text-gray-950">{exercise.estimated_duration || '--'} minutes</span>
+        <p className="text-sm text-gray-500">
+          Duration: {exercise.estimated_duration || '--'} minutes
         </p>
       </div>
 
-      <button
-        type="button"
+      <Button
         onClick={() => onStart(exercise)}
-        className="mt-6 w-full rounded-2xl bg-green-700 px-5 py-4 text-lg font-bold text-white transition hover:bg-green-800 focus:outline-none focus:ring-4 focus:ring-green-200"
+        size="sm"
       >
         Start Exercise
-      </button>
-    </article>
+      </Button>
+    </FeatureCard>
   );
 }

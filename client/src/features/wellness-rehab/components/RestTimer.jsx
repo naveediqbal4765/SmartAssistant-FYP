@@ -1,5 +1,7 @@
 // Module: Wellness & Rehabilitation | Phase 1 — Fitness Tracking
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
+import Button from '../../../components/ui/Button';
+import FeatureCard from '../../../components/ui/FeatureCard';
 
 const formatTime = (seconds) => {
   const minutes = Math.floor(seconds / 60);
@@ -29,48 +31,44 @@ export default function RestTimer({ defaultSeconds = 60 }) {
     return () => window.clearInterval(timerId);
   }, [status]);
 
-  const statusClasses = useMemo(() => {
-    if (status === 'running') return 'border-green-300 bg-green-50 text-green-800';
-    if (status === 'paused') return 'border-amber-300 bg-amber-50 text-amber-800';
-    return 'border-gray-200 bg-gray-50 text-gray-800';
-  }, [status]);
-
   const resetTimer = () => {
     setRemainingSeconds(defaultSeconds);
     setStatus('idle');
   };
 
   return (
-    <section className={`rounded-[1.5rem] border p-6 ${statusClasses}`}>
-      <h2 className="text-2xl font-bold">Rest Timer</h2>
-      <p className="mt-4 text-5xl font-bold tracking-wider">{formatTime(remainingSeconds)}</p>
+    <FeatureCard className="p-5">
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-bold text-brand-primary">Rest Timer</h3>
+        <p className="text-2xl font-bold tracking-wider text-gray-950">{formatTime(remainingSeconds)}</p>
+      </div>
       {status === 'complete' && (
-        <p className="mt-4 text-2xl font-bold text-green-800">Rest Complete! Resume Exercise.</p>
+        <p className="mt-3 text-sm font-semibold text-emerald-600">Rest Complete! Resume Exercise.</p>
       )}
 
-      <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <button
-          type="button"
+      <div className="mt-3 flex gap-2">
+        <Button
           onClick={() => setStatus('running')}
-          className="rounded-2xl bg-green-700 px-5 py-4 text-lg font-bold text-white transition hover:bg-green-800"
+          size="sm"
+          variant="success"
         >
           Start Rest
-        </button>
-        <button
-          type="button"
+        </Button>
+        <Button
           onClick={() => setStatus('paused')}
-          className="rounded-2xl bg-amber-500 px-5 py-4 text-lg font-bold text-white transition hover:bg-amber-600"
+          size="sm"
+          variant="secondary"
         >
           Pause
-        </button>
-        <button
-          type="button"
+        </Button>
+        <Button
           onClick={resetTimer}
-          className="rounded-2xl bg-gray-700 px-5 py-4 text-lg font-bold text-white transition hover:bg-gray-800"
+          size="sm"
+          variant="ghost"
         >
           Reset
-        </button>
+        </Button>
       </div>
-    </section>
+    </FeatureCard>
   );
 }
