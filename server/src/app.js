@@ -40,6 +40,7 @@ app.use('/api/communication', require('./modules/communication/communication.rou
 app.use('/api/messages', require('./modules/communication/chat/messageReaction.routes'));
 app.use('/api/voice-notes', require('./modules/communication/chat/voiceNoteReaction.routes'));
 app.use('/api/emergency', require('./modules/emergency/emergency.routes'));
+app.use('/api/community', require('./modules/community/community.routes'));
 
 app.get('/', (req, res) => {
   res.json({ message: 'Smart Assistant Backend is Running!' });

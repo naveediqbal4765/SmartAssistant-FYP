@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { LogOut, MessageCircle, User } from 'lucide-react';
+import { LogOut, MessageCircle, User, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import NotificationBell from '../../features/communication/notifications/NotificationBell';
 import BrandMark from './BrandMark';
@@ -98,6 +98,23 @@ export default function AppHeader({ role, onLogout, notificationState }) {
             aria-label="Open Care Connect"
           >
             <MessageCircle size={22} />
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate('/community')}
+            className="motion-interactive hidden items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white hover:bg-white/20 sm:inline-flex"
+            aria-label="Open Community"
+          >
+            <Users size={18} />
+            Community
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate('/community')}
+            className="motion-interactive flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 sm:hidden"
+            aria-label="Open Community"
+          >
+            <Users size={22} />
           </button>
           <NotificationBell
             className="relative right-auto top-auto z-auto"

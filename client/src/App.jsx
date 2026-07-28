@@ -25,6 +25,13 @@ import WellnessDashboard from './features/wellness-rehab/pages/WellnessDashboard
 import ExerciseLibraryPage from './features/wellness-rehab/pages/ExerciseLibraryPage';
 import ActiveSessionPage from './features/wellness-rehab/pages/ActiveSessionPage';
 import NutritionPage from './features/wellness-rehab/pages/NutritionPage';
+import CommunityHub from './features/community/CommunityHub';
+import ForumsPage from './features/community/forums/ForumsPage';
+import ForumDetailPage from './features/community/forums/ForumDetailPage';
+import EventsPage from './features/community/events/EventsPage';
+import ActivitiesPage from './features/community/activities/ActivitiesPage';
+import AnnouncementsPage from './features/community/announcements/AnnouncementsPage';
+import AutoReplySettingsPage from './features/community/autoreply/AutoReplySettingsPage';
 import { disconnectChatSocket, getChatSocket } from './features/communication/chat/services/socket';
 import { CallStateProvider } from './features/communication/calls/CallStateContext';
 import GlobalCallHandler from './features/communication/calls/GlobalCallHandler';
@@ -281,6 +288,69 @@ function App() {
             element={
               <PrivateRoute>
                 <CommunicationHub />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/community"
+            element={
+              <PrivateRoute>
+                <CommunityHub />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/community/forums"
+            element={
+              <PrivateRoute>
+                <ForumsPage />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/community/forums/:forumId"
+            element={
+              <PrivateRoute>
+                <ForumDetailPage />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/community/events"
+            element={
+              <PrivateRoute>
+                <EventsPage />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/community/activities"
+            element={
+              <PrivateRoute>
+                <ActivitiesPage />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/community/announcements"
+            element={
+              <PrivateRoute>
+                <AnnouncementsPage />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/community/autoreply"
+            element={
+              <PrivateRoute>
+                <AutoReplySettingsPage />
               </PrivateRoute>
             }
           />
