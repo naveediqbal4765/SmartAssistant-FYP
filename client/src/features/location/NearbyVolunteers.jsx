@@ -5,6 +5,8 @@ import 'leaflet/dist/leaflet.css';
 import { MessageCircle, RefreshCw, UserRound, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { resolveConversation } from '../communication/chat/services/chatApi';
+import useAutoLocationSync from './useAutoLocationSync';
+import useLocationUpdater from './useLocationUpdater';
 
 const seniorIcon = L.divIcon({
   className: '',
@@ -153,7 +155,11 @@ function NearbyVolunteersMap({ origin, volunteers, selectedVolunteer, onSelectVo
   return <div ref={mapContainerRef} className="h-[280px] w-full overflow-hidden rounded-2xl border border-blue-100 sm:h-[320px]" />;
 }
 
-export default function NearbyVolunteers({ mapView = false }) {
+// syncOwnLocation (off by default) is for the senior dashboard. When on, the
+// browser's GPS is saved to the profile on open and every 60 seconds (after
+// 50 m of movement), and Refresh saves the current GPS before reloading the
+// map. With it off, this component behaves exactly as before.
+export default function NearbyVolunteers({ mapView = false, syncOwnLocation = false }) {
   const navigate = useNavigate();
   const [within5km, setWithin5km] = useState([]);
   const [within10km, setWithin10km] = useState([]);
@@ -163,6 +169,11 @@ export default function NearbyVolunteers({ mapView = false }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const mappedVolunteers = useMemo(() => flattenVolunteers(within5km, within10km), [within5km, within10km]);
+  const { updateLocation, updating: updatingLocation, error: locationUpdateError } = useLocationUpdater();
+  const { permissionDenied, lastSyncAt } = useAutoLocationSync({
+    enabled: syncOwnLocation,
+    latestLocation: null
+  });
 
   const loadNearbyVolunteers = useCallback(async () => {
     setLoading(true);
@@ -195,9 +206,21 @@ export default function NearbyVolunteers({ mapView = false }) {
     }
   }, []);
 
+  // After the senior's location is auto-saved (syncedAt changes), the map is
+  // reloaded around it. syncedAt stays null when syncOwnLocation is off, so
+  // other pages load exactly once, as before.
+  const syncedAt = syncOwnLocation ? lastSyncAt : null;
+
   useEffect(() => {
     loadNearbyVolunteers();
-  }, [loadNearbyVolunteers]);
+  }, [loadNearbyVolunteers, syncedAt]);
+
+  // Refresh for seniors: save the current GPS first, then reload the map.
+  // If GPS is unavailable the map still reloads around the last saved location.
+  const refreshWithLocation = async () => {
+    await updateLocation();
+    loadNearbyVolunteers();
+  };
 
   const openVolunteerProfile = () => {
     if (selectedVolunteer?._id) {
@@ -233,7 +256,7 @@ export default function NearbyVolunteers({ mapView = false }) {
 
         <button
           type="button"
-          onClick={loadNearbyVolunteers}
+          onClick={syncOwnLocation ? refreshWithLocation : loadNearbyVolunteers}
           disabled={loading}
           className="self-start flex items-center gap-2 rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-800 disabled:opacity-50"
         >
@@ -245,6 +268,20 @@ export default function NearbyVolunteers({ mapView = false }) {
       {error && (
         <div className="mt-4 rounded-xl bg-yellow-50 p-3 text-sm text-yellow-700">
           {error}
+        </div>
+      )}
+
+      {syncOwnLocation && updatingLocation && (
+        <div className="mt-4 rounded-xl bg-blue-50 p-3 text-sm text-blue-700">
+          Updating your location...
+        </div>
+      )}
+
+      {syncOwnLocation && !updatingLocation && (permissionDenied || locationUpdateError) && (
+        <div className="mt-4 rounded-xl bg-yellow-50 p-3 text-sm text-yellow-700">
+          {permissionDenied
+            ? 'Location permission is off, so the map uses your last saved location. Allow location access in your browser to keep it current.'
+            : `Could not update your location: ${locationUpdateError}`}
         </div>
       )}
 
