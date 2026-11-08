@@ -39,6 +39,7 @@ import { NotificationProvider, useNotificationState } from './features/communica
 import AutoNotificationConsumer from './features/communication/notifications/AutoNotificationConsumer';
 import GlobalSeniorReminderPopups from './features/health/reminders/GlobalSeniorReminderPopups';
 import ActionableTaskNotifications from './features/tasks/ActionableTaskNotifications';
+import SosButton from './features/emergency/SosButton';
 import AppShell from './components/layout/AppShell';
 import { GlobalDialogProvider } from './components/ui/GlobalDialogProvider';
 
@@ -85,6 +86,7 @@ function AuthenticatedGlobalOverlays({ userRole }) {
         <GlobalCallHandler />
       </CallStateProvider>
       <GroupCallInviteHandler />
+      <SosButton enabled={isSenior} />
     </>
   );
 }
