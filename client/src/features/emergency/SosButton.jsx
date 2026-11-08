@@ -8,14 +8,14 @@ import { getEmergencyErrorMessage, triggerEmergency } from './emergencyApi';
 const COUNTDOWN_SECONDS = 5;
 const TICK_MS = 250;
 
-const BUTTON_SIZE = 80; // matches the h-20 w-20 classes on the button
+const BUTTON_SIZE = 80; 
 const EDGE_MARGIN = 8;
 const DEFAULT_MARGIN = 24;
-const DRAG_THRESHOLD_PX = 6; // smaller movements still count as a tap
+const DRAG_THRESHOLD_PX = 6; 
 const KEY_STEP_PX = 24;
 const POSITION_STORAGE_KEY = 'sosButtonPosition';
 
-// Keeps the whole button inside the visible window.
+
 const clampPosition = ({ x, y }) => ({
   x: Math.min(
     Math.max(x, EDGE_MARGIN),
@@ -39,7 +39,7 @@ const loadPosition = () => {
       return clampPosition(saved);
     }
   } catch {
-    // Saved position is a convenience only; fall back to the default corner.
+    
   }
 
   return getDefaultPosition();
@@ -49,7 +49,7 @@ const savePosition = (position) => {
   try {
     localStorage.setItem(POSITION_STORAGE_KEY, JSON.stringify(position));
   } catch {
-    // Best effort only; the button still works without remembering its spot.
+    
   }
 };
 
