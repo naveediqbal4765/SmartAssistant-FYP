@@ -31,6 +31,12 @@ export const fetchActiveEmergencies = async () => {
   return response.data.incidents || [];
 };
 
+// Recent emergencies (waiting or accepted) a caregiver was alerted about.
+export const fetchCaregiverEmergencies = async () => {
+  const response = await axios.get(`${API_BASE_URL}/caregiver`, { headers: authHeaders() });
+  return response.data.incidents || [];
+};
+
 export const acceptEmergency = async (emergencyId) => {
   const response = await axios.post(`${API_BASE_URL}/accept`, { emergencyId }, { headers: authHeaders() });
   return response.data;

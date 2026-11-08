@@ -41,6 +41,7 @@ import GlobalSeniorReminderPopups from './features/health/reminders/GlobalSenior
 import ActionableTaskNotifications from './features/tasks/ActionableTaskNotifications';
 import SosButton from './features/emergency/SosButton';
 import ActionableEmergencyNotifications from './features/emergency/ActionableEmergencyNotifications';
+import CaregiverEmergencyNotifications from './features/emergency/CaregiverEmergencyNotifications';
 import AppShell from './components/layout/AppShell';
 import { GlobalDialogProvider } from './components/ui/GlobalDialogProvider';
 
@@ -91,6 +92,10 @@ function AuthenticatedGlobalOverlays({ userRole }) {
       <ActionableEmergencyNotifications
         notificationState={notificationState}
         enabled={userRole === 'volunteer'}
+      />
+      <CaregiverEmergencyNotifications
+        notificationState={notificationState}
+        enabled={userRole === 'caregiver'}
       />
     </>
   );
