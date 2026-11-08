@@ -40,6 +40,7 @@ import AutoNotificationConsumer from './features/communication/notifications/Aut
 import GlobalSeniorReminderPopups from './features/health/reminders/GlobalSeniorReminderPopups';
 import ActionableTaskNotifications from './features/tasks/ActionableTaskNotifications';
 import SosButton from './features/emergency/SosButton';
+import ActionableEmergencyNotifications from './features/emergency/ActionableEmergencyNotifications';
 import AppShell from './components/layout/AppShell';
 import { GlobalDialogProvider } from './components/ui/GlobalDialogProvider';
 
@@ -87,6 +88,10 @@ function AuthenticatedGlobalOverlays({ userRole }) {
       </CallStateProvider>
       <GroupCallInviteHandler />
       <SosButton enabled={isSenior} />
+      <ActionableEmergencyNotifications
+        notificationState={notificationState}
+        enabled={userRole === 'volunteer'}
+      />
     </>
   );
 }

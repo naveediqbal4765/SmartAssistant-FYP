@@ -189,7 +189,32 @@ const acceptEmergency = async (req, res) => {
   }
 };
 
+// Emergencies older than this are no longer offered as popups.
+const ACTIVE_EMERGENCY_WINDOW_MS = 2 * 60 * 60 * 1000;
+
+// Returns the still-ACTIVE emergencies this user was alerted about, so the
+// accept popup can be shown again after a page reload or a late login.
+const getActiveEmergencies = async (req, res) => {
+  try {
+    const since = new Date(Date.now() - ACTIVE_EMERGENCY_WINDOW_MS);
+    const incidents = await EmergencyIncident.find({
+      status: 'ACTIVE',
+      'recipients.userId': req.user._id,
+      createdAt: { $gte: since }
+    })
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .select('seniorId seniorName message location status createdAt');
+
+    return res.json({ success: true, incidents });
+  } catch (err) {
+    console.error('Active emergencies error:', err);
+    return res.status(500).json({ success: false, msg: 'Server error' });
+  }
+};
+
 module.exports = {
   triggerEmergency,
-  acceptEmergency
+  acceptEmergency,
+  getActiveEmergencies
 };

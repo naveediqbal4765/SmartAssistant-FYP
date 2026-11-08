@@ -25,6 +25,12 @@ export const triggerEmergency = async ({ location, message } = {}) => {
   return response.data;
 };
 
+// Still-ACTIVE emergencies the logged-in user was alerted about.
+export const fetchActiveEmergencies = async () => {
+  const response = await axios.get(`${API_BASE_URL}/active`, { headers: authHeaders() });
+  return response.data.incidents || [];
+};
+
 export const acceptEmergency = async (emergencyId) => {
   const response = await axios.post(`${API_BASE_URL}/accept`, { emergencyId }, { headers: authHeaders() });
   return response.data;
