@@ -337,7 +337,7 @@ function SeniorReadinessPanel() {
           title="Live Health Telemetry"
           description="Your latest vitals and emergency readiness status."
         />
-        <NearbyVolunteers mapView />
+        <NearbyVolunteers mapView syncOwnLocation />
       </div>
     </RoleStabilityPanel>
   );
