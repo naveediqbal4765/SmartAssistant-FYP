@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
-import { Activity, Calendar, ChevronRight, Clipboard, FileText, Pill } from 'lucide-react';
+import { Activity, Calendar, ChevronRight, Clipboard, FileText, Map, Pill } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import CallReminderPanel from '../../components/CallReminderPanel';
 import { getChatSocket } from '../../features/communication/chat/services/socket';
@@ -10,6 +10,7 @@ import { fetchMedications } from '../../features/health/medications/medicationAp
 import LocationStatusCard from '../../features/location/LocationStatusCard';
 import NearbyVolunteers from '../../features/location/NearbyVolunteers';
 import { fetchTaskRequests } from '../../features/tasks/taskApi';
+import { getCaregiverActiveJourney, getCaregiverJourneys } from '../../features/travel/services/travelApi';
 import WellnessIntelligenceCard from '../../features/wellness-rehab/components/WellnessIntelligenceCard';
 import RoleStabilityPanel from './RoleStabilityPanel';
 
@@ -778,6 +779,77 @@ function CaregiverHealthVaultCard({ linkedSenior }) {
   );
 }
 
+const journeyStatusConfig = {
+  active: { label: 'Active Journey', className: 'bg-green-100 text-green-700' },
+  planned: { label: 'Journey Planned', className: 'bg-amber-100 text-amber-700' },
+  none: { label: 'No Planned Journey', className: 'bg-gray-100 text-gray-600' }
+};
+
+function CaregiverTravelAssistanceCard() {
+  const navigate = useNavigate();
+  const [journeyStatus, setJourneyStatus] = useState('none');
+  const [loading, setLoading] = useState(true);
+
+  const loadJourneyStatus = useCallback(async () => {
+    try {
+      setLoading(true);
+      // First check for active journey
+      const activeData = await getCaregiverActiveJourney();
+      if (activeData?.journey?.status === 'active') {
+        setJourneyStatus('active');
+        return;
+      }
+      // No active journey - check for planned journeys
+      const plannedData = await getCaregiverJourneys({ status: 'planned' });
+      if (plannedData?.journeys?.length > 0) {
+        setJourneyStatus('planned');
+      } else {
+        setJourneyStatus('none');
+      }
+    } catch {
+      setJourneyStatus('none');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadJourneyStatus();
+  }, [loadJourneyStatus]);
+
+  const status = journeyStatusConfig[journeyStatus] || journeyStatusConfig.none;
+
+  return (
+    <button
+      type="button"
+      onClick={() => navigate('/caregiver/journey')}
+      className="group motion-card motion-interactive flex flex-col rounded-2xl border border-gray-200 bg-white/90 p-5 text-left transition hover:border-blue-200 hover:bg-blue-50/40 focus:outline-none focus:ring-2 focus:ring-blue-400 lg:col-span-2"
+    >
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-100 text-blue-700">
+            <Map size={22} />
+          </span>
+          <div>
+            <h3 className="text-lg font-semibold text-brand-primary">Travel Assistance</h3>
+            <p className="mt-1 text-sm text-gray-700">View planned journeys and monitor your loved one's active journeys.</p>
+          </div>
+        </div>
+        <ChevronRight size={22} className="shrink-0 text-blue-700 transition group-hover:translate-x-1" />
+      </div>
+
+      <div className="mt-4 flex items-center justify-between rounded-xl bg-blue-50 p-4">
+        <p className="text-sm text-gray-700">
+          Create travel plans, monitor active journeys, and share live location with caregivers.
+        </p>
+        <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold ${status.className}`}>
+          {loading ? 'Loading...' : status.label}
+        </span>
+      </div>
+    </button>
+  );
+}
+
 function CaregiverAlertCenter({ linkedSenior }) {
   return (
     <RoleStabilityPanel
@@ -803,6 +875,7 @@ function CaregiverAlertCenter({ linkedSenior }) {
           <CaregiverTaskRequestsCard linkedSenior={linkedSenior} />
           <CaregiverWellnessCard linkedSenior={linkedSenior} />
           <CaregiverHealthVaultCard linkedSenior={linkedSenior} />
+          <CaregiverTravelAssistanceCard />
         </div>
       ) : (
         <div className="rounded-2xl border border-yellow-200 bg-yellow-50 p-5 text-yellow-800">

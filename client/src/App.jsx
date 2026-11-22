@@ -25,6 +25,8 @@ import WellnessDashboard from './features/wellness-rehab/pages/WellnessDashboard
 import ExerciseLibraryPage from './features/wellness-rehab/pages/ExerciseLibraryPage';
 import ActiveSessionPage from './features/wellness-rehab/pages/ActiveSessionPage';
 import NutritionPage from './features/wellness-rehab/pages/NutritionPage';
+import TravelAssistance from './features/travel/TravelAssistance';
+import CaregiverJourneyTracker from './features/travel/CaregiverJourneyTracker';
 import CommunityHub from './features/community/CommunityHub';
 import ForumsPage from './features/community/forums/ForumsPage';
 import ForumDetailPage from './features/community/forums/ForumDetailPage';
@@ -498,6 +500,24 @@ function App() {
             element={
               <PrivateRoute>
                 <NutritionPage />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/travel"
+            element={
+              <PrivateRoute>
+                <TravelAssistance />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/caregiver/journey"
+            element={
+              <PrivateRoute>
+                <CaregiverJourneyTracker />
               </PrivateRoute>
             }
           />

@@ -1,4 +1,4 @@
-import { Activity, Award, Bell, Calendar, CheckCircle, Clipboard, FileText, Heart, Users } from 'lucide-react';
+import { Activity, Award, Bell, Calendar, CheckCircle, Clipboard, FileText, Heart, Map, Users } from 'lucide-react';
 
 export const normalizeDashboardRole = (role) => {
   const normalizedRole = String(role || '').trim().toLowerCase();
@@ -22,7 +22,8 @@ export const roleConfig = {
       { title: 'Digital Health Vault', icon: FileText, tone: 'indigo', vaultTarget: 'self' },
       { title: 'Appointments', icon: Calendar, tone: 'teal', route: '/health/appointments' },
       { title: 'Drug Interaction Checker', icon: Heart, tone: 'danger', route: '/health/interactions' },
-      { title: 'Wellness & Rehab', icon: Activity, tone: 'lime', route: '/wellness' }
+      { title: 'Wellness & Rehab', icon: Activity, tone: 'lime', route: '/wellness' },
+      { title: 'Travel Assistance', icon: Map, tone: 'info', route: '/travel' }
     ]
   },
   volunteer: {
